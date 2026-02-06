@@ -1,84 +1,83 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, Menu, Camera } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Menu, Search, ShoppingCart, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useCategories } from '@/hooks/useProducts';
 import { useCart } from '@/contexts/CartContext';
-import { useCategories } from '@/hooks/useCategories';
-import { CartDrawer } from '@/components/cart/CartDrawer';
-
+import { CartDrawer } from './CartDrawer';
 export function Header() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
-  const { getItemCount, setIsOpen } = useCart();
-  const { data: categories } = useCategories();
-
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const {
+    data: categories
+  } = useCategories();
+  const {
+    getItemCount,
+    setIsCartOpen
+  } = useCart();
+  const itemCount = getItemCount();
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/busca?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
+    if (searchTerm.trim()) {
+      window.location.href = `/busca?q=${encodeURIComponent(searchTerm)}`;
     }
   };
-
-  const navItems = categories?.map(cat => ({
-    label: cat.name.toUpperCase(),
-    href: `/categoria/${cat.slug}`,
-  })) || [];
-
-  return (
-    <header className="sticky top-0 z-50 bg-background border-b border-border">
-      {/* Top bar with info */}
-      <div className="hidden md:block border-b border-border/50">
-        <div className="container-custom py-2">
-          <div className="flex items-center justify-center gap-8 text-xs text-muted-foreground">
-            <span className="flex items-center gap-2">
-              <span className="text-primary">📦</span> Frete Grátis - Entrega em todo Brasil
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="text-primary">💳</span> Parcelamento em até 3x sem juros
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="text-primary">💰</span> Pagamento à vista - Ganhe desconto
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="text-primary">🔒</span> Loja com SSL de proteção
-            </span>
-          </div>
-        </div>
-      </div>
+  return <header className="sticky top-0 z-50 bg-background border-b">
+      {/* Top bar */}
+      
 
       {/* Main header */}
       <div className="container-custom py-4">
         <div className="flex items-center justify-between gap-4">
+          {/* Mobile menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="lg:hidden">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-80">
+              <nav className="flex flex-col gap-4 mt-8">
+                <Link to="/" className="text-lg font-semibold hover:text-primary">
+                  Início
+                </Link>
+                <div className="border-t pt-4">
+                  <p className="text-sm font-semibold text-muted-foreground mb-2">Categorias</p>
+                  {categories?.map(category => <Link key={category.id} to={`/categoria/${category.slug}`} className="block py-2 hover:text-primary">
+                      {category.name}
+                    </Link>)}
+                </div>
+                <div className="border-t pt-4">
+                  <Link to="/rastreio" className="block py-2 hover:text-primary">
+                    Rastrear Pedido
+                  </Link>
+                  <Link to="/sobre" className="block py-2 hover:text-primary">
+                    Sobre Nós
+                  </Link>
+                  <Link to="/contato" className="block py-2 hover:text-primary">
+                    Contato
+                  </Link>
+                </div>
+              </nav>
+            </SheetContent>
+          </Sheet>
+
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="bg-primary p-2 rounded-lg">
-              <Camera className="h-6 w-6 text-primary-foreground" />
+          <Link to="/" className="flex items-center gap-2">
+            <div className="bg-primary text-primary-foreground font-bold text-xl sm:text-2xl px-3 py-1 rounded">
+              CF
             </div>
-            <div className="hidden sm:block">
-              <span className="text-xl font-bold text-primary">câmera</span>
-              <span className="text-xl font-bold text-foreground">&foto</span>
-            </div>
+            <span className="hidden sm:block text-lg font-semibold">Câmera & Foto</span>
           </Link>
 
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden md:flex">
+          {/* Search - Desktop */}
+          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl">
             <div className="relative w-full">
-              <Input
-                type="search"
-                placeholder="O que está buscando?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-12 bg-secondary border-border"
-              />
-              <Button
-                type="submit"
-                size="icon"
-                className="absolute right-0 top-0 rounded-l-none"
-              >
+              <Input type="search" placeholder="Buscar produtos..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pr-10" />
+              <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-0">
                 <Search className="h-4 w-4" />
               </Button>
             </div>
@@ -86,99 +85,68 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Cart button */}
-            <Button
-              variant="outline"
-              className="relative"
-              onClick={() => setIsOpen(true)}
-            >
-              <ShoppingCart className="h-5 w-5" />
-              <span className="hidden sm:inline ml-2">Carrinho</span>
-              {getItemCount() > 0 && (
-                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {getItemCount()}
-                </span>
-              )}
+            {/* Mobile search toggle */}
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsSearchOpen(!isSearchOpen)}>
+              <Search className="h-5 w-5" />
             </Button>
 
-            {/* Mobile menu */}
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild className="md:hidden">
-                <Button variant="outline" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-80">
-                <div className="flex flex-col gap-4 mt-6">
-                  {/* Mobile search */}
-                  <form onSubmit={handleSearch} className="flex gap-2">
-                    <Input
-                      type="search"
-                      placeholder="Buscar..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button type="submit" size="icon">
-                      <Search className="h-4 w-4" />
-                    </Button>
-                  </form>
-
-                  {/* Mobile navigation */}
-                  <nav className="flex flex-col gap-2">
-                    {navItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        to={item.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="px-4 py-3 rounded-lg hover:bg-secondary transition-colors font-medium"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </nav>
-
-                  <hr className="border-border" />
-
-                  {/* Footer links */}
-                  <nav className="flex flex-col gap-2 text-sm">
-                    <Link to="/rastreio" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 hover:text-primary">
-                      Rastrear Pedido
-                    </Link>
-                    <Link to="/sobre" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 hover:text-primary">
-                      Sobre Nós
-                    </Link>
-                    <Link to="/contato" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 hover:text-primary">
-                      Contato
-                    </Link>
-                  </nav>
-                </div>
-              </SheetContent>
-            </Sheet>
+            {/* Cart */}
+            <Button variant="ghost" size="icon" className="relative" onClick={() => setIsCartOpen(true)}>
+              <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {itemCount}
+                </span>}
+            </Button>
           </div>
         </div>
+
+        {/* Mobile search */}
+        {isSearchOpen && <form onSubmit={handleSearch} className="mt-4 md:hidden">
+            <div className="relative">
+              <Input type="search" placeholder="Buscar produtos..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pr-10" />
+              <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-0">
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
+          </form>}
       </div>
 
-      {/* Desktop navigation */}
-      <nav className="hidden md:block border-t border-border/50">
+      {/* Categories bar - Desktop */}
+      <nav className="hidden lg:block border-t bg-muted/30">
         <div className="container-custom">
-          <ul className="flex items-center justify-center gap-1">
-            {navItems.map((item) => (
-              <li key={item.href}>
-                <Link
-                  to={item.href}
-                  className="px-4 py-3 inline-block font-medium text-sm hover:text-primary transition-colors"
-                >
-                  {item.label}
+          <ul className="flex items-center gap-8 py-3">
+            <li>
+              <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
+                Início
+              </Link>
+            </li>
+            <li>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
+                  Categorias <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {categories?.map(category => <DropdownMenuItem key={category.id} asChild>
+                      <Link to={`/categoria/${category.slug}`}>{category.name}</Link>
+                    </DropdownMenuItem>)}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </li>
+            {categories?.slice(0, 5).map(category => <li key={category.id}>
+                <Link to={`/categoria/${category.slug}`} className="text-sm font-medium hover:text-primary transition-colors">
+                  {category.name}
                 </Link>
-              </li>
-            ))}
+              </li>)}
+            <li>
+              <Link to="/rastreio" className="text-sm font-medium hover:text-primary transition-colors">
+                Rastrear Pedido
+              </Link>
+            </li>
           </ul>
         </div>
       </nav>
 
       {/* Cart Drawer */}
       <CartDrawer />
-    </header>
-  );
+    </header>;
 }
