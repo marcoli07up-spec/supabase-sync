@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, Package, Truck, CheckCircle, Clock, AlertCircle, Copy } from 'lucide-react';
+import { Search, Package, Truck, CheckCircle, Clock, AlertCircle, Copy, MapPin, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Layout } from '@/components/layout';
 import { useOrder, useOrderItems } from '@/hooks/useOrders';
 import { formatCurrency, formatDateTime } from '@/lib/format';
+import { getTrackingInfo, getNextUpdateMessage, TrackingInfo } from '@/lib/tracking';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 const statusConfig = {
   pending: { label: 'Pendente', icon: Clock, color: 'text-yellow-500', step: 1 },
@@ -44,6 +46,9 @@ export default function TrackingPage() {
   const status = order?.status || 'pending';
   const statusInfo = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
   const StatusIcon = statusInfo.icon;
+
+  // Get tracking info
+  const trackingInfo = order?.created_at ? getTrackingInfo(order.id, order.created_at) : null;
 
   return (
     <Layout>
@@ -104,40 +109,45 @@ export default function TrackingPage() {
                   </p>
                 </div>
 
-                {/* Status timeline */}
-                <div className="bg-card p-6 rounded-lg border border-border">
-                  <h3 className="font-semibold mb-4">Status do Pedido</h3>
-                  <div className="flex justify-between relative">
-                    {/* Progress line */}
-                    <div className="absolute top-4 left-0 right-0 h-1 bg-border">
-                      <div
-                        className="h-full bg-primary transition-all"
-                        style={{ width: `${(statusInfo.step / 4) * 100}%` }}
-                      />
-                    </div>
+                {/* Jadlog Tracking Section */}
+                {trackingInfo && (status === 'shipped' || status === 'processing' || status === 'paid') && (
+                  <JadlogTrackingCard trackingInfo={trackingInfo} orderCreatedAt={order.created_at || ''} />
+                )}
 
-                    {/* Steps */}
-                    {[
-                      { step: 1, label: 'Pedido Recebido', icon: Package },
-                      { step: 2, label: 'Em Preparação', icon: Package },
-                      { step: 3, label: 'Enviado', icon: Truck },
-                      { step: 4, label: 'Entregue', icon: CheckCircle },
-                    ].map(({ step, label, icon: Icon }) => (
-                      <div key={step} className="relative z-10 flex flex-col items-center">
+                {/* Status timeline for non-shipped orders */}
+                {status !== 'shipped' && (
+                  <div className="bg-card p-6 rounded-lg border border-border">
+                    <h3 className="font-semibold mb-4">Status do Pedido</h3>
+                    <div className="flex justify-between relative">
+                      <div className="absolute top-4 left-0 right-0 h-1 bg-border">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            statusInfo.step >= step
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <span className="text-xs mt-2 text-center max-w-[80px]">{label}</span>
+                          className="h-full bg-primary transition-all"
+                          style={{ width: `${(statusInfo.step / 4) * 100}%` }}
+                        />
                       </div>
-                    ))}
+
+                      {[
+                        { step: 1, label: 'Pedido Recebido', icon: Package },
+                        { step: 2, label: 'Em Preparação', icon: Package },
+                        { step: 3, label: 'Enviado', icon: Truck },
+                        { step: 4, label: 'Entregue', icon: CheckCircle },
+                      ].map(({ step, label, icon: Icon }) => (
+                        <div key={step} className="relative z-10 flex flex-col items-center">
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              statusInfo.step >= step
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted text-muted-foreground'
+                            }`}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <span className="text-xs mt-2 text-center max-w-[80px]">{label}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* PIX payment info */}
                 {order.payment_method === 'pix' && order.status === 'awaiting_payment' && order.pix_code && (
@@ -215,5 +225,104 @@ export default function TrackingPage() {
         )}
       </div>
     </Layout>
+  );
+}
+
+// Jadlog Tracking Card Component
+function JadlogTrackingCard({ trackingInfo, orderCreatedAt }: { trackingInfo: TrackingInfo; orderCreatedAt: string }) {
+  const orderDate = new Date(orderCreatedAt);
+  const now = new Date();
+  const daysSinceOrder = Math.floor((now.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  return (
+    <div className="bg-card p-6 rounded-lg border border-border">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
+            <Truck className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold">Rastreio Jadlog</h3>
+            <p className="text-sm text-muted-foreground font-mono">{trackingInfo.trackingCode}</p>
+          </div>
+        </div>
+        {trackingInfo.isReturned ? (
+          <Badge variant="destructive">Devolvido</Badge>
+        ) : trackingInfo.deliveryAttempts > 0 ? (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            {trackingInfo.deliveryAttempts}/3 Tentativas
+          </Badge>
+        ) : (
+          <Badge variant="secondary">Em Trânsito</Badge>
+        )}
+      </div>
+
+      {/* Current Status */}
+      <div className="bg-muted p-4 rounded-lg mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+          <span className="font-semibold">{trackingInfo.currentStatus}</span>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {trackingInfo.events[0]?.description}
+        </p>
+        {!trackingInfo.isReturned && (
+          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+            <RefreshCw className="h-3 w-3" />
+            {getNextUpdateMessage(daysSinceOrder)}
+          </p>
+        )}
+      </div>
+
+      {/* Warning for delivery attempts */}
+      {trackingInfo.deliveryAttempts > 0 && !trackingInfo.isReturned && (
+        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
+          <p className="text-sm text-yellow-800">
+            <strong>Atenção:</strong> Já foram realizadas {trackingInfo.deliveryAttempts} tentativa(s) de entrega. 
+            Após 3 tentativas sem sucesso, o produto será devolvido ao remetente.
+          </p>
+        </div>
+      )}
+
+      {/* Returned warning */}
+      {trackingInfo.isReturned && (
+        <div className="bg-red-50 border border-red-200 p-4 rounded-lg mb-4">
+          <p className="text-sm text-red-800">
+            <strong>Produto devolvido ao remetente.</strong> Após 3 tentativas de entrega sem sucesso, 
+            o objeto foi devolvido. Entre em contato conosco para reagendar a entrega.
+          </p>
+        </div>
+      )}
+
+      {/* Timeline */}
+      <div className="space-y-0">
+        <h4 className="text-sm font-semibold mb-3">Histórico de Movimentação</h4>
+        {trackingInfo.events.map((event, index) => (
+          <div key={index} className="flex gap-4">
+            <div className="flex flex-col items-center">
+              <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+              {index < trackingInfo.events.length - 1 && (
+                <div className="w-0.5 h-full min-h-[40px] bg-muted-foreground/20" />
+              )}
+            </div>
+            <div className="pb-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                <span>{event.date}</span>
+                <span>•</span>
+                <span>{event.time}</span>
+              </div>
+              <p className={`font-medium text-sm ${index === 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                {event.status}
+              </p>
+              <p className="text-xs text-muted-foreground">{event.description}</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                <MapPin className="h-3 w-3" />
+                {event.location}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

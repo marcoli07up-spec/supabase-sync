@@ -19,6 +19,16 @@ import TermsPage from "./pages/TermsPage";
 import ExchangesPage from "./pages/ExchangesPage";
 import NotFound from "./pages/NotFound";
 
+// Admin Pages
+import {
+  AdminLayout,
+  AdminDashboard,
+  AdminOrders,
+  AdminProducts,
+  AdminCategories,
+  AdminAbandonedCarts,
+} from "./pages/admin";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -40,6 +50,16 @@ const App = () => (
             <Route path="/politica-privacidade" element={<PrivacyPage />} />
             <Route path="/termos-uso" element={<TermsPage />} />
             <Route path="/trocas-devolucoes" element={<ExchangesPage />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="pedidos" element={<AdminOrders />} />
+              <Route path="produtos" element={<AdminProducts />} />
+              <Route path="categorias" element={<AdminCategories />} />
+              <Route path="carrinhos-abandonados" element={<AdminAbandonedCarts />} />
+            </Route>
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
