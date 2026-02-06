@@ -22,6 +22,12 @@ import audioImg from '@/assets/categories/audio.png';
 import mochilasImg from '@/assets/categories/mochilas.png';
 import iluminacaoImg from '@/assets/categories/iluminacao.png';
 
+// Promo images
+import freteGratisImg from '@/assets/promos/frete-gratis.png';
+import pixDescontoImg from '@/assets/promos/pix-desconto.png';
+import garantiaImg from '@/assets/promos/garantia.png';
+import pagamentoSeguroImg from '@/assets/promos/pagamento-seguro.png';
+
 const categoryImages: Record<string, string> = {
   cameras: camerasImg,
   lentes: lentesImg,
@@ -29,6 +35,13 @@ const categoryImages: Record<string, string> = {
   mochilas: mochilasImg,
   iluminacao: iluminacaoImg,
 };
+
+const promoImages = [
+  { src: freteGratisImg, alt: 'Frete Grátis' },
+  { src: pixDescontoImg, alt: 'Desconto no PIX' },
+  { src: garantiaImg, alt: '1 Ano de Garantia' },
+  { src: pagamentoSeguroImg, alt: 'Pagamento Seguro' },
+];
 
 export default function HomePage() {
   const { data: banners, isLoading: bannersLoading } = useBanners();
