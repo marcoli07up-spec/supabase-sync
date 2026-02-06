@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useCategories } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 import { useCart } from '@/contexts/CartContext';
-import { CartDrawer } from './CartDrawer';
+import { CartDrawer } from '@/components/cart/CartDrawer';
 export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,7 +16,7 @@ export function Header() {
   } = useCategories();
   const {
     getItemCount,
-    setIsCartOpen
+    setIsOpen
   } = useCart();
   const itemCount = getItemCount();
   const handleSearch = (e: React.FormEvent) => {
@@ -91,7 +91,7 @@ export function Header() {
             </Button>
 
             {/* Cart */}
-            <Button variant="ghost" size="icon" className="relative" onClick={() => setIsCartOpen(true)}>
+            <Button variant="ghost" size="icon" className="relative" onClick={() => setIsOpen(true)}>
               <ShoppingCart className="h-5 w-5" />
               {itemCount > 0 && <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                   {itemCount}
