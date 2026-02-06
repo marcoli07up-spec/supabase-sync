@@ -59,9 +59,6 @@ export function CartDrawer() {
               {items.map((item) => (
                 <CartItem key={item.product.id} item={item} />
               ))}
-
-              {/* Upsell */}
-              <CartUpsell />
             </div>
 
             {/* Totals and checkout */}

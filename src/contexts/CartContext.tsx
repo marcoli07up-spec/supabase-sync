@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { Product, CartItem } from '@/types';
+import { toast } from 'sonner';
 
 interface CartContextType {
   items: CartItem[];
@@ -12,6 +13,7 @@ interface CartContextType {
   getItemCount: () => number;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  isAnimating: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -21,6 +23,7 @@ const CART_STORAGE_KEY = 'camera-foto-cart';
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -39,7 +42,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
-  const addItem = (product: Product, quantity = 1) => {
+  const addItem = useCallback((product: Product, quantity = 1) => {
     setItems(currentItems => {
       const existingItem = currentItems.find(item => item.product.id === product.id);
       
@@ -53,8 +56,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       
       return [...currentItems, { product, quantity }];
     });
-    // Don't auto-open drawer - we now have a floating cart button
-  };
+    
+    // Trigger animation and show toast
+    setIsAnimating(true);
+    toast.success(`${product.name} adicionado ao carrinho!`, {
+      position: 'bottom-right',
+      duration: 2000,
+    });
+    
+    // Reset animation after delay
+    setTimeout(() => setIsAnimating(false), 600);
+  }, []);
 
   const removeItem = (productId: string) => {
     setItems(currentItems => currentItems.filter(item => item.product.id !== productId));
@@ -105,6 +117,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         getItemCount,
         isOpen,
         setIsOpen,
+        isAnimating,
       }}
     >
       {children}
