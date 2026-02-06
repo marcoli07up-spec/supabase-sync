@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Camera, Phone, Mail, MapPin, Instagram, Facebook, Youtube } from 'lucide-react';
+import { Phone, Mail, MapPin, Instagram, Facebook, Youtube } from 'lucide-react';
+import logoImg from '@/assets/logo.png';
 
 export function Footer() {
   return (
@@ -9,17 +10,12 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* About */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="bg-primary p-2 rounded-lg">
-                <Camera className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div className="flex flex-col leading-tight">
-                <span className="text-lg font-bold">
-                  <span className="text-primary">i</span>
-                  <span className="text-foreground">Cam</span>
-                  <span className="text-primary">Store</span>
-                </span>
-              </div>
+            <div className="mb-4">
+              <img 
+                src={logoImg} 
+                alt="iCamStore" 
+                className="h-10"
+              />
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Paixão por imagem e compromisso com confiança. Somos uma loja especializada em câmeras e equipamentos fotográficos seminovos.

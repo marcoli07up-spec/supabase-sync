@@ -27,6 +27,7 @@ export function useCreateOrder() {
           customer_name: formData.customer_name,
           customer_email: formData.customer_email,
           customer_phone: formData.customer_phone,
+          customer_cpf: formData.customer_cpf.replace(/\D/g, ''),
           customer_address: formData.customer_address,
           customer_city: formData.customer_city,
           customer_state: formData.customer_state,

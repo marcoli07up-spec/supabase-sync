@@ -4,12 +4,18 @@ import { Search, Package, Truck, CheckCircle, Clock, AlertCircle, Copy, MapPin, 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Layout } from '@/components/layout';
-import { useOrder, useOrderItems } from '@/hooks/useOrders';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import { getTrackingInfo, getNextUpdateMessage, TrackingInfo } from '@/lib/tracking';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { Order, OrderItem } from '@/types';
+import logoImg from '@/assets/logo.png';
+
+// Jadlog logo URL
+const jadlogLogo = 'https://www.jadlog.com.br/jadlog/images/logo-jadlog.png';
 
 const statusConfig = {
   pending: { label: 'Pendente', icon: Clock, color: 'text-yellow-500', step: 1 },
@@ -21,19 +27,76 @@ const statusConfig = {
   cancelled: { label: 'Cancelado', icon: AlertCircle, color: 'text-red-500', step: 0 },
 };
 
+// Hook to fetch order by CPF
+function useOrderByCpf(cpf: string) {
+  return useQuery({
+    queryKey: ['orders', 'cpf', cpf],
+    queryFn: async () => {
+      const cleanCpf = cpf.replace(/\D/g, '');
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('customer_cpf', cleanCpf)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as Order | null;
+    },
+    enabled: cpf.replace(/\D/g, '').length === 11,
+  });
+}
+
+// Hook to fetch order items
+function useOrderItemsByCpf(orderId: string) {
+  return useQuery({
+    queryKey: ['order_items', orderId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', orderId);
+
+      if (error) throw error;
+      return data as OrderItem[];
+    },
+    enabled: !!orderId,
+  });
+}
+
+// CPF formatting function
+function formatCpf(value: string): string {
+  const cleaned = value.replace(/\D/g, '');
+  if (cleaned.length <= 3) return cleaned;
+  if (cleaned.length <= 6) return `${cleaned.slice(0, 3)}.${cleaned.slice(3)}`;
+  if (cleaned.length <= 9) return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6)}`;
+  return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6, 9)}-${cleaned.slice(9, 11)}`;
+}
+
 export default function TrackingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const orderId = searchParams.get('pedido') || '';
-  const [searchInput, setSearchInput] = useState(orderId);
+  const cpfParam = searchParams.get('cpf') || '';
+  const [searchInput, setSearchInput] = useState(cpfParam);
+  const [searched, setSearched] = useState(!!cpfParam);
   
-  const { data: order, isLoading: orderLoading, error } = useOrder(orderId);
-  const { data: orderItems, isLoading: itemsLoading } = useOrderItems(orderId);
+  const { data: order, isLoading: orderLoading, error } = useOrderByCpf(searched ? searchInput : '');
+  const { data: orderItems, isLoading: itemsLoading } = useOrderItemsByCpf(order?.id || '');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchInput.trim()) {
-      setSearchParams({ pedido: searchInput.trim() });
+    const cleanCpf = searchInput.replace(/\D/g, '');
+    if (cleanCpf.length === 11) {
+      setSearched(true);
+      setSearchParams({ cpf: cleanCpf });
+    } else {
+      toast.error('CPF inválido. Digite os 11 dígitos.');
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCpf(e.target.value);
+    setSearchInput(formatted);
   };
 
   const copyPixCode = () => {
@@ -57,11 +120,15 @@ export default function TrackingPage() {
 
         {/* Search form */}
         <form onSubmit={handleSearch} className="max-w-md mx-auto mb-8">
+          <p className="text-sm text-muted-foreground text-center mb-3">
+            Digite o CPF utilizado na compra para rastrear seu pedido
+          </p>
           <div className="flex gap-2">
             <Input
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Digite o código do pedido"
+              onChange={handleInputChange}
+              placeholder="000.000.000-00"
+              maxLength={14}
               className="flex-1"
             />
             <Button type="submit">
@@ -71,7 +138,7 @@ export default function TrackingPage() {
         </form>
 
         {/* Order details */}
-        {orderId && (
+        {searched && (
           <>
             {orderLoading ? (
               <div className="max-w-2xl mx-auto space-y-4">
@@ -84,7 +151,7 @@ export default function TrackingPage() {
                 <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h2 className="text-xl font-semibold mb-2">Pedido não encontrado</h2>
                 <p className="text-muted-foreground mb-4">
-                  Verifique o código do pedido e tente novamente.
+                  Não encontramos nenhum pedido com este CPF. Verifique e tente novamente.
                 </p>
                 <Link to="/">
                   <Button>Voltar para a loja</Button>
@@ -92,6 +159,29 @@ export default function TrackingPage() {
               </div>
             ) : (
               <div className="max-w-2xl mx-auto space-y-6">
+                {/* Logos header */}
+                <div className="bg-card p-6 rounded-lg border border-border">
+                  <div className="flex items-center justify-center gap-6 mb-4">
+                    <img 
+                      src={logoImg} 
+                      alt="iCamStore" 
+                      className="h-10"
+                    />
+                    <div className="text-2xl text-muted-foreground">+</div>
+                    <img 
+                      src={jadlogLogo} 
+                      alt="Jadlog" 
+                      className="h-8"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                  <p className="text-center text-sm text-muted-foreground">
+                    Entrega realizada pela transportadora Jadlog
+                  </p>
+                </div>
+
                 {/* Order header */}
                 <div className="bg-card p-6 rounded-lg border border-border">
                   <div className="flex items-center justify-between mb-4">
@@ -115,7 +205,7 @@ export default function TrackingPage() {
                 )}
 
                 {/* Status timeline for non-shipped orders */}
-                {status !== 'shipped' && (
+                {status !== 'shipped' && status !== 'processing' && status !== 'paid' && (
                   <div className="bg-card p-6 rounded-lg border border-border">
                     <h3 className="font-semibold mb-4">Status do Pedido</h3>
                     <div className="flex justify-between relative">
@@ -214,12 +304,12 @@ export default function TrackingPage() {
         )}
 
         {/* Empty state */}
-        {!orderId && (
+        {!searched && (
           <div className="text-center py-12">
             <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Rastreie seu pedido</h2>
             <p className="text-muted-foreground">
-              Digite o código do pedido acima para ver o status da entrega.
+              Digite seu CPF acima para ver o status da entrega.
             </p>
           </div>
         )}

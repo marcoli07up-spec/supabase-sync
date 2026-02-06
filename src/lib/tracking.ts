@@ -1,5 +1,6 @@
 // Jadlog Tracking Simulation
-// 12-day delivery simulation with progressive updates
+// 14-day delivery simulation with progressive updates
+// Delivery attempts on days 12, 13, 14
 
 export interface TrackingEvent {
   date: string;
@@ -30,11 +31,14 @@ const trackingSteps: { day: number; status: string; description: string; locatio
   { day: 5, status: 'Em Trânsito', description: 'Objeto saiu para a unidade de destino', location: 'Hub Jadlog' },
   { day: 6, status: 'Em Trânsito', description: 'Objeto chegou à cidade de destino', location: 'Unidade Local Jadlog' },
   { day: 7, status: 'Em Trânsito', description: 'Objeto em roteirização para entrega', location: 'Unidade Local Jadlog' },
-  { day: 8, status: 'Saiu para Entrega', description: 'Objeto saiu para entrega ao destinatário', location: 'Rota de Entrega' },
-  { day: 9, status: 'Tentativa de Entrega 1', description: 'Primeira tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
-  { day: 10, status: 'Tentativa de Entrega 2', description: 'Segunda tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
-  { day: 11, status: 'Tentativa de Entrega 3', description: 'Terceira tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
-  { day: 12, status: 'Devolvido ao Remetente', description: 'Objeto devolvido ao remetente após 3 tentativas de entrega', location: 'Centro de Distribuição - SP' },
+  { day: 8, status: 'Em Trânsito', description: 'Objeto aguardando disponibilidade de rota', location: 'Unidade Local Jadlog' },
+  { day: 9, status: 'Em Trânsito', description: 'Objeto em separação para entrega', location: 'Unidade Local Jadlog' },
+  { day: 10, status: 'Saiu para Entrega', description: 'Objeto saiu para entrega ao destinatário', location: 'Rota de Entrega' },
+  { day: 11, status: 'Em Rota', description: 'Objeto em rota de entrega', location: 'Rota de Entrega' },
+  { day: 12, status: 'Tentativa de Entrega 1', description: 'Primeira tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
+  { day: 13, status: 'Tentativa de Entrega 2', description: 'Segunda tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
+  { day: 14, status: 'Tentativa de Entrega 3', description: 'Terceira tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
+  { day: 15, status: 'Devolvido ao Remetente', description: 'Objeto devolvido ao remetente após 3 tentativas de entrega', location: 'Centro de Distribuição - SP' },
 ];
 
 function generateTrackingCode(orderId: string): string {
@@ -72,10 +76,10 @@ export function getTrackingInfo(orderId: string, orderCreatedAt: string): Tracki
   const daysSinceOrder = Math.floor((now.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
   
   const trackingCode = generateTrackingCode(orderId);
-  const estimatedDelivery = addDays(orderDate, 8);
+  const estimatedDelivery = addDays(orderDate, 10);
   
   // Only show events up to current day
-  const visibleDays = Math.min(daysSinceOrder, 12);
+  const visibleDays = Math.min(daysSinceOrder, 15);
   
   const events: TrackingEvent[] = [];
   
@@ -98,14 +102,14 @@ export function getTrackingInfo(orderId: string, orderCreatedAt: string): Tracki
   events.reverse();
   
   const latestEvent = events[0];
-  const isReturned = visibleDays >= 12;
+  const isReturned = visibleDays >= 15;
   const isDelivered = false; // In this simulation, delivery always fails
   
-  // Count delivery attempts
+  // Count delivery attempts (days 12, 13, 14)
   let deliveryAttempts = 0;
-  if (visibleDays >= 9) deliveryAttempts = 1;
-  if (visibleDays >= 10) deliveryAttempts = 2;
-  if (visibleDays >= 11) deliveryAttempts = 3;
+  if (visibleDays >= 12) deliveryAttempts = 1;
+  if (visibleDays >= 13) deliveryAttempts = 2;
+  if (visibleDays >= 14) deliveryAttempts = 3;
   
   return {
     carrier: 'Jadlog',
@@ -120,7 +124,7 @@ export function getTrackingInfo(orderId: string, orderCreatedAt: string): Tracki
 }
 
 export function getNextUpdateMessage(daysSinceOrder: number): string {
-  if (daysSinceOrder < 12) {
+  if (daysSinceOrder < 15) {
     return 'Próxima atualização amanhã';
   }
   return 'Rastreio finalizado';
