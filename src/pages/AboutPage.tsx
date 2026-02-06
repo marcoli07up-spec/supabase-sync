@@ -15,7 +15,7 @@ export default function AboutPage() {
                 <Camera className="h-8 w-8 text-primary-foreground" />
               </div>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Sobre a Câmera & Foto</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">Sobre a iCamStore</h1>
             <p className="text-lg text-muted-foreground">
               Paixão por imagem e compromisso com confiança desde 2018
             </p>
@@ -24,9 +24,9 @@ export default function AboutPage() {
           {/* Story */}
           <div className="prose prose-invert max-w-none mb-12">
             <p className="text-lg leading-relaxed">
-              Somos uma loja especializada em <strong>câmeras e equipamentos fotográficos</strong>, 
+              Somos uma loja especializada em <strong>câmeras e equipamentos fotográficos seminovos</strong>, 
               com <strong>loja física</strong>, atendimento especializado e envio para todo o Brasil. 
-              Trabalhamos com produtos novos e seminovos revisados, <strong>nota fiscal</strong>, 
+              Trabalhamos com produtos revisados, <strong>nota fiscal</strong>, 
               <strong> rastreio</strong> e <strong>1 ano de garantia</strong> para sua total tranquilidade.
             </p>
             <p className="text-lg leading-relaxed">

@@ -82,7 +82,7 @@ export default function ExchangesPage() {
             </p>
             <ul>
               <li>WhatsApp: (11) 99999-9999</li>
-              <li>Email: contato@cameraefoto.com.br</li>
+              <li>Email: contato@icamstore.com.br</li>
             </ul>
           </div>
         </div>

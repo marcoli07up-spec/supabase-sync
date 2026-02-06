@@ -13,13 +13,16 @@ export function Footer() {
               <div className="bg-primary p-2 rounded-lg">
                 <Camera className="h-5 w-5 text-primary-foreground" />
               </div>
-              <div>
-                <span className="text-lg font-bold text-primary">câmera</span>
-                <span className="text-lg font-bold text-foreground">&foto</span>
+              <div className="flex flex-col leading-tight">
+                <span className="text-lg font-bold">
+                  <span className="text-primary">i</span>
+                  <span className="text-foreground">Cam</span>
+                  <span className="text-primary">Store</span>
+                </span>
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Paixão por imagem e compromisso com confiança. Somos uma loja especializada em câmeras e equipamentos fotográficos.
+              Paixão por imagem e compromisso com confiança. Somos uma loja especializada em câmeras e equipamentos fotográficos seminovos.
             </p>
             <div className="flex gap-3">
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
@@ -113,7 +116,7 @@ export function Footer() {
               </li>
               <li className="flex items-start gap-2 text-muted-foreground">
                 <Mail className="h-4 w-4 mt-0.5 text-primary" />
-                <span>contato@cameraefoto.com.br</span>
+                <span>contato@icamstore.com.br</span>
               </li>
               <li className="flex items-start gap-2 text-muted-foreground">
                 <MapPin className="h-4 w-4 mt-0.5 text-primary" />
@@ -136,7 +139,7 @@ export function Footer() {
       <div className="border-t border-border">
         <div className="container-custom py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-            <p>© 2024 Câmera & Foto. Todos os direitos reservados.</p>
+            <p>© 2024 iCamStore. Todos os direitos reservados.</p>
             <div className="flex items-center gap-4">
               <span>Pagamento seguro</span>
               <div className="flex gap-2">
