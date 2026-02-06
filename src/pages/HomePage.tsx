@@ -22,6 +22,12 @@ import audioImg from '@/assets/categories/audio.png';
 import mochilasImg from '@/assets/categories/mochilas.png';
 import iluminacaoImg from '@/assets/categories/iluminacao.png';
 
+// Promo images
+import freteGratisImg from '@/assets/promos/frete-gratis.png';
+import pixDescontoImg from '@/assets/promos/pix-desconto.png';
+import garantiaImg from '@/assets/promos/garantia.png';
+import pagamentoSeguroImg from '@/assets/promos/pagamento-seguro.png';
+
 const categoryImages: Record<string, string> = {
   cameras: camerasImg,
   lentes: lentesImg,
@@ -29,6 +35,13 @@ const categoryImages: Record<string, string> = {
   mochilas: mochilasImg,
   iluminacao: iluminacaoImg,
 };
+
+const promoImages = [
+  { src: freteGratisImg, alt: 'Frete Grátis' },
+  { src: pixDescontoImg, alt: 'Desconto no PIX' },
+  { src: garantiaImg, alt: '1 Ano de Garantia' },
+  { src: pagamentoSeguroImg, alt: 'Pagamento Seguro' },
+];
 
 export default function HomePage() {
   const { data: banners, isLoading: bannersLoading } = useBanners();
@@ -95,38 +108,19 @@ export default function HomePage() {
         ) : null}
       </section>
 
-      {/* Benefits bar */}
-      <section className="bg-secondary py-4 md:py-6">
+      {/* Benefits bar with promo images */}
+      <section className="py-4 md:py-6">
         <div className="container-custom">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="flex items-center gap-3">
-              <Truck className="h-8 w-8 text-primary shrink-0" />
-              <div>
-                <p className="font-semibold text-sm">Frete Grátis</p>
-                <p className="text-xs text-muted-foreground">Entrega em todo Brasil</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {promoImages.map((promo, index) => (
+              <div key={index} className="aspect-video overflow-hidden rounded-xl">
+                <img
+                  src={promo.src}
+                  alt={promo.alt}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <CreditCard className="h-8 w-8 text-primary shrink-0" />
-              <div>
-                <p className="font-semibold text-sm">Parcelamento</p>
-                <p className="text-xs text-muted-foreground">Em até 3x sem juros</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <RefreshCw className="h-8 w-8 text-primary shrink-0" />
-              <div>
-                <p className="font-semibold text-sm">Pagamento à vista</p>
-                <p className="text-xs text-muted-foreground">Ganhe 5% desconto</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Shield className="h-8 w-8 text-primary shrink-0" />
-              <div>
-                <p className="font-semibold text-sm">Segurança</p>
-                <p className="text-xs text-muted-foreground">Loja com SSL</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -151,12 +145,12 @@ export default function HomePage() {
       <section className="py-8 md:py-12 bg-background">
         <div className="container-custom">
           <h2 className="text-xl md:text-2xl font-bold mb-6 text-center">Navegue por Categoria</h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="flex flex-col md:grid md:grid-cols-5 gap-3 md:gap-4">
             {categories.map((category) => (
               <Link
                 key={category.id}
                 to={`/categoria/${category.slug}`}
-                className="relative aspect-[3/4] rounded-xl overflow-hidden group"
+                className="relative aspect-[16/9] md:aspect-[3/4] rounded-2xl overflow-hidden group"
               >
                 <img
                   src={categoryImages[category.slug]}
