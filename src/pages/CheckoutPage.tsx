@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, ArrowRight, CreditCard, QrCode, Lock, Loader2, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard, QrCode, Lock, Loader2, ShoppingBag, Clock, MessageCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,6 +46,10 @@ export default function CheckoutPage() {
   const createOrder = useCreateOrder();
   const [currentStep, setCurrentStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
+  const [showCreditCardAnalysis, setShowCreditCardAnalysis] = useState(false);
+
+  // Check if order is above R$500 for WhatsApp redirect
+  const isHighValueOrder = getTotal() >= 500;
 
   const {
     register,
@@ -88,6 +92,56 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: CheckoutFormData) => {
     try {
+      // For credit card, show analysis message
+      if (data.payment_method === 'credit_card') {
+        setShowCreditCardAnalysis(true);
+        await createOrder.mutateAsync({
+          formData: data,
+          cartItems: items,
+          total,
+        });
+        // Don't clear cart or navigate yet - keep showing analysis
+        return;
+      }
+
+      // For PIX with high value order, redirect to WhatsApp
+      if (data.payment_method === 'pix' && isHighValueOrder) {
+        await createOrder.mutateAsync({
+          formData: data,
+          cartItems: items,
+          total,
+        });
+
+        // Build WhatsApp message with order summary
+        const orderSummary = items.map(item => 
+          `• ${item.product.name} (x${item.quantity}) - ${formatCurrency(item.product.price * item.quantity)}`
+        ).join('\n');
+
+        const message = encodeURIComponent(
+          `🛒 *PEDIDO - iCamStore*\n\n` +
+          `*Cliente:* ${data.customer_name}\n` +
+          `*CPF:* ${data.customer_cpf}\n` +
+          `*Telefone:* ${data.customer_phone}\n` +
+          `*Email:* ${data.customer_email}\n\n` +
+          `*Endereço de Entrega:*\n` +
+          `${data.customer_address}\n` +
+          `${data.customer_city} - ${data.customer_state}\n` +
+          `CEP: ${data.customer_cep}\n\n` +
+          `*Itens do Pedido:*\n${orderSummary}\n\n` +
+          `*Total:* ${formatCurrency(total)} (PIX com 5% de desconto)\n\n` +
+          `Gostaria de finalizar minha compra via PIX!`
+        );
+
+        const phone = '5511999999999'; // Replace with actual store phone
+        window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+        
+        clearCart();
+        toast.success('Redirecionando para o WhatsApp...');
+        navigate('/');
+        return;
+      }
+
+      // Regular flow for PIX below R$500
       await createOrder.mutateAsync({
         formData: data,
         cartItems: items,
@@ -102,6 +156,49 @@ export default function CheckoutPage() {
       console.error(error);
     }
   };
+
+  // Credit card analysis screen
+  if (showCreditCardAnalysis) {
+    return (
+      <Layout>
+        <div className="container-custom py-12">
+          <div className="max-w-md mx-auto text-center">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Clock className="h-10 w-10 text-primary animate-pulse" />
+            </div>
+            <h1 className="text-2xl font-bold mb-4">Sua compra está em análise</h1>
+            <p className="text-muted-foreground mb-6">
+              Estamos verificando os dados do seu pagamento. Você receberá uma confirmação em breve via e-mail e WhatsApp.
+            </p>
+            <div className="bg-secondary rounded-xl p-6 mb-6">
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
+                <CreditCard className="h-4 w-4" />
+                <span>Pagamento via Cartão de Crédito</span>
+              </div>
+              <p className="text-2xl font-bold text-primary">{formatCurrency(total)}</p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Button onClick={() => { clearCart(); navigate('/'); }} className="w-full">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Voltar para a loja
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  const phone = '5511999999999';
+                  const message = encodeURIComponent('Olá! Gostaria de verificar o status do meu pedido.');
+                  window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+                }}
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Falar no WhatsApp
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   if (items.length === 0) {
     return (

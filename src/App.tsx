@@ -28,6 +28,7 @@ import {
   AdminCategories,
   AdminAbandonedCarts,
 } from "./pages/admin";
+import AdminTracking from "./pages/admin/AdminTracking";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="pedidos" element={<AdminOrders />} />
               <Route path="produtos" element={<AdminProducts />} />
               <Route path="categorias" element={<AdminCategories />} />
+              <Route path="rastreios" element={<AdminTracking />} />
               <Route path="carrinhos-abandonados" element={<AdminAbandonedCarts />} />
             </Route>
             

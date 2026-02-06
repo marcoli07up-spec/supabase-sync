@@ -1,21 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Search, ShoppingCart, ChevronDown } from 'lucide-react';
+import { Menu, Search, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useCategories } from '@/hooks/useCategories';
-import { useCart } from '@/contexts/CartContext';
-import { CartDrawer } from '@/components/cart/CartDrawer';
 import logoImg from '@/assets/logo.png';
 
 export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { data: categories } = useCategories();
-  const { getItemCount, setIsOpen } = useCart();
-  const itemCount = getItemCount();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,16 +91,6 @@ export function Header() {
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsSearchOpen(!isSearchOpen)}>
               <Search className="h-5 w-5" />
             </Button>
-
-            {/* Cart */}
-            <Button variant="ghost" size="icon" className="relative" onClick={() => setIsOpen(true)}>
-              <ShoppingCart className="h-5 w-5" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {itemCount}
-                </span>
-              )}
-            </Button>
           </div>
         </div>
 
@@ -165,9 +151,6 @@ export function Header() {
           </ul>
         </div>
       </nav>
-
-      {/* Cart Drawer */}
-      <CartDrawer />
     </header>
   );
 }
