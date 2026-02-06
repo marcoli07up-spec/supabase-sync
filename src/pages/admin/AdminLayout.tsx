@@ -7,7 +7,8 @@ import {
   LayoutDashboard,
   Menu,
   X,
-  ChevronLeft
+  ChevronLeft,
+  Truck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,7 @@ const navItems = [
   { to: '/admin/pedidos', icon: ShoppingCart, label: 'Pedidos' },
   { to: '/admin/produtos', icon: Package, label: 'Produtos' },
   { to: '/admin/categorias', icon: Tags, label: 'Categorias' },
+  { to: '/admin/rastreios', icon: Truck, label: 'Rastreios' },
   { to: '/admin/carrinhos-abandonados', icon: ShoppingCart, label: 'Carrinhos Abandonados' },
 ];
 

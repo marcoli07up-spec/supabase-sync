@@ -53,7 +53,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       
       return [...currentItems, { product, quantity }];
     });
-    setIsOpen(true);
+    // Don't auto-open drawer - we now have a floating cart button
   };
 
   const removeItem = (productId: string) => {

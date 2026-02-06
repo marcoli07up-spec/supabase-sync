@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, ShoppingCart, Truck, Shield, RefreshCw, Star, Check, Clock, Award, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout';
-import { ProductGrid } from '@/components/products';
+import { ProductGrid, SocialProof } from '@/components/products';
 import { useProduct, useRelatedProducts } from '@/hooks/useProducts';
 import { useProductReviews } from '@/hooks/useReviews';
 import { useCart } from '@/contexts/CartContext';
@@ -263,7 +263,8 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* Reviews */}
+      {/* Social Proof Section */}
+      <SocialProof />
       {reviews && reviews.length > 0 && (
         <section className="py-8 bg-secondary">
           <div className="container-custom">
