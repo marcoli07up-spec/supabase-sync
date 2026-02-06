@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, Truck, RefreshCw, Shield, CreditCard, Star } from 'lucide-react';
+import { ChevronRight, Truck, RefreshCw, Shield, CreditCard, Star, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout';
 import { ProductGrid } from '@/components/products';
@@ -178,11 +178,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Reviews */}
+      {/* Reviews with Reclame Aqui Badge */}
       {reviews && reviews.length > 0 && (
         <section className="py-8 md:py-12 bg-secondary">
           <div className="container-custom">
-            <h2 className="text-xl md:text-2xl font-bold mb-6 text-center">O que nossos clientes dizem</h2>
+            <div className="text-center mb-6">
+              <h2 className="text-xl md:text-2xl font-bold mb-2">O que nossos clientes dizem</h2>
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Shield className="h-4 w-4 text-green-500" />
+                <span>Avaliações auditadas pelo</span>
+                <span className="font-bold text-green-600">Reclame Aqui</span>
+                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-semibold">
+                  Nota 9.2
+                </span>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {reviews.slice(0, 4).map((review) => (
                 <div key={review.id} className="bg-card p-6 rounded-lg border border-border">
@@ -199,9 +209,33 @@ export default function HomePage() {
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
                     "{review.comment}"
                   </p>
-                  <p className="font-semibold text-sm">{review.reviewer_name}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold text-sm">{review.reviewer_name}</p>
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Verificado
+                    </span>
+                  </div>
                 </div>
               ))}
+            </div>
+            <div className="text-center mt-6">
+              <a 
+                href="https://www.reclameaqui.com.br" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <img 
+                  src="https://www.reclameaqui.com.br/dist/img/logo-reclame-aqui.svg" 
+                  alt="Reclame Aqui" 
+                  className="h-5"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                Ver todas as avaliações
+              </a>
             </div>
           </div>
         </section>

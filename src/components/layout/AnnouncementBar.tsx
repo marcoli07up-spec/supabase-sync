@@ -1,4 +1,6 @@
-export function AnnouncementBar() {
+import { forwardRef } from 'react';
+
+export const AnnouncementBar = forwardRef<HTMLDivElement>((_, ref) => {
   const announcements = [
     '📦 Frete Grátis para todo o Brasil',
     '🛒 Trocas e Devoluções em até 90 dias',
@@ -6,7 +8,7 @@ export function AnnouncementBar() {
   ];
 
   return (
-    <div className="bg-primary text-primary-foreground py-2 overflow-hidden">
+    <div ref={ref} className="bg-primary text-primary-foreground py-2 overflow-hidden">
       <div className="flex animate-marquee whitespace-nowrap">
         {[...announcements, ...announcements, ...announcements].map((text, index) => (
           <span key={index} className="mx-8 text-sm font-medium">
@@ -16,4 +18,6 @@ export function AnnouncementBar() {
       </div>
     </div>
   );
-}
+});
+
+AnnouncementBar.displayName = 'AnnouncementBar';
