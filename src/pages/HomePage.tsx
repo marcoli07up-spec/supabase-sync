@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, Star } from 'lucide-react';
+import { ChevronRight, Truck, RefreshCw, Shield, CreditCard, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout';
 import { ProductGrid } from '@/components/products';
