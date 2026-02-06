@@ -20,6 +20,7 @@ const personalInfoSchema = z.object({
   customer_name: z.string().min(3, 'Nome completo é obrigatório'),
   customer_email: z.string().email('Email inválido'),
   customer_phone: z.string().min(10, 'Telefone inválido'),
+  customer_cpf: z.string().min(11, 'CPF inválido').max(14, 'CPF inválido'),
 });
 
 const addressSchema = z.object({
@@ -52,7 +53,6 @@ export default function CheckoutPage() {
     formState: { errors },
     setValue,
     trigger,
-    getValues,
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(fullSchema),
     defaultValues: {
@@ -67,7 +67,7 @@ export default function CheckoutPage() {
     let isValid = false;
     
     if (currentStep === 1) {
-      isValid = await trigger(['customer_name', 'customer_email', 'customer_phone']);
+      isValid = await trigger(['customer_name', 'customer_email', 'customer_phone', 'customer_cpf']);
     } else if (currentStep === 2) {
       isValid = await trigger(['customer_cep', 'customer_address', 'customer_city', 'customer_state']);
     }
@@ -88,7 +88,7 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: CheckoutFormData) => {
     try {
-      const order = await createOrder.mutateAsync({
+      await createOrder.mutateAsync({
         formData: data,
         cartItems: items,
         total,
@@ -96,7 +96,7 @@ export default function CheckoutPage() {
 
       clearCart();
       toast.success('Pedido realizado com sucesso!');
-      navigate(`/rastreio?pedido=${order.id}`);
+      navigate(`/rastreio?cpf=${encodeURIComponent(data.customer_cpf.replace(/\D/g, ''))}`);
     } catch (error) {
       toast.error('Erro ao processar pedido. Tente novamente.');
       console.error(error);
@@ -186,6 +186,18 @@ export default function CheckoutPage() {
                         />
                         {errors.customer_phone && (
                           <p className="text-destructive text-sm mt-1">{errors.customer_phone.message}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="customer_cpf">CPF *</Label>
+                        <Input
+                          id="customer_cpf"
+                          {...register('customer_cpf')}
+                          placeholder="000.000.000-00"
+                          className="mt-1"
+                        />
+                        {errors.customer_cpf && (
+                          <p className="text-destructive text-sm mt-1">{errors.customer_cpf.message}</p>
                         )}
                       </div>
                     </div>

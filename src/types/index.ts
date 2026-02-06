@@ -81,6 +81,7 @@ export interface CheckoutFormData {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  customer_cpf: string;
   customer_cep: string;
   customer_address: string;
   customer_city: string;

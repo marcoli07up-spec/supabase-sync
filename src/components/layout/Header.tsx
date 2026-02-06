@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Search, ShoppingCart, ChevronDown, Camera } from 'lucide-react';
+import { Menu, Search, ShoppingCart, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useCategories } from '@/hooks/useCategories';
 import { useCart } from '@/contexts/CartContext';
 import { CartDrawer } from '@/components/cart/CartDrawer';
+import logoImg from '@/assets/logo.png';
 
 export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -64,17 +65,12 @@ export function Header() {
           </Sheet>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="bg-primary text-primary-foreground p-2 rounded-lg">
-              <Camera className="h-5 w-5 sm:h-6 sm:w-6" />
-            </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-lg sm:text-xl font-bold">
-                <span className="text-primary">i</span>
-                <span className="text-foreground">Cam</span>
-                <span className="text-primary">Store</span>
-              </span>
-            </div>
+          <Link to="/" className="flex items-center">
+            <img 
+              src={logoImg} 
+              alt="iCamStore" 
+              className="h-10 sm:h-12"
+            />
           </Link>
 
           {/* Search - Desktop */}
