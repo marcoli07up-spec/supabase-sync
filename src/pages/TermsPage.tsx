@@ -10,7 +10,7 @@ export default function TermsPage() {
 
           <h2>1. Aceitação dos Termos</h2>
           <p>
-            Ao acessar e usar o site Câmera & Foto, você concorda em cumprir estes 
+            Ao acessar e usar o site iCamStore, você concorda em cumprir estes 
             termos de uso. Se você não concordar com qualquer parte destes termos, 
             não deve usar nosso site.
           </p>
@@ -49,13 +49,13 @@ export default function TermsPage() {
           <h2>6. Propriedade Intelectual</h2>
           <p>
             Todo o conteúdo do site, incluindo textos, imagens, logotipos e design, 
-            é propriedade da Câmera & Foto ou de seus licenciadores e está protegido 
+            é propriedade da iCamStore ou de seus licenciadores e está protegido 
             por leis de direitos autorais.
           </p>
 
           <h2>7. Limitação de Responsabilidade</h2>
           <p>
-            A Câmera & Foto não se responsabiliza por danos indiretos, incidentais 
+            A iCamStore não se responsabiliza por danos indiretos, incidentais 
             ou consequentes decorrentes do uso do site ou da incapacidade de usá-lo.
           </p>
 
@@ -68,7 +68,7 @@ export default function TermsPage() {
           <h2>9. Contato</h2>
           <p>
             Para dúvidas sobre estes termos, entre em contato através do email: 
-            contato@cameraefoto.com.br
+            contato@icamstore.com.br
           </p>
         </div>
       </div>

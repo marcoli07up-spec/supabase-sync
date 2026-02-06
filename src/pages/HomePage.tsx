@@ -5,7 +5,6 @@ import { Layout } from '@/components/layout';
 import { ProductGrid } from '@/components/products';
 import { useBanners } from '@/hooks/useBanners';
 import { useFeaturedProducts, useProducts } from '@/hooks/useProducts';
-import { useCategories } from '@/hooks/useCategories';
 import { useReviews } from '@/hooks/useReviews';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -16,12 +15,34 @@ import {
   CarouselNext,
 } from '@/components/ui/carousel';
 
+// Category images
+import camerasImg from '@/assets/categories/cameras.png';
+import lentesImg from '@/assets/categories/lentes.png';
+import audioImg from '@/assets/categories/audio.png';
+import mochilasImg from '@/assets/categories/mochilas.png';
+import iluminacaoImg from '@/assets/categories/iluminacao.png';
+
+const categoryImages: Record<string, string> = {
+  cameras: camerasImg,
+  lentes: lentesImg,
+  audio: audioImg,
+  mochilas: mochilasImg,
+  iluminacao: iluminacaoImg,
+};
+
 export default function HomePage() {
   const { data: banners, isLoading: bannersLoading } = useBanners();
   const { data: featuredProducts, isLoading: featuredLoading } = useFeaturedProducts();
   const { data: allProducts, isLoading: productsLoading } = useProducts();
-  const { data: categories } = useCategories();
   const { data: reviews } = useReviews();
+
+  const categories = [
+    { id: '1', name: 'Câmeras', slug: 'cameras' },
+    { id: '2', name: 'Lentes', slug: 'lentes' },
+    { id: '3', name: 'Áudio', slug: 'audio' },
+    { id: '4', name: 'Mochilas', slug: 'mochilas' },
+    { id: '5', name: 'Iluminação', slug: 'iluminacao' },
+  ];
 
   return (
     <Layout>
@@ -126,20 +147,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="py-8 md:py-12 bg-secondary">
+      {/* Categories with Images */}
+      <section className="py-8 md:py-12 bg-background">
         <div className="container-custom">
           <h2 className="text-xl md:text-2xl font-bold mb-6 text-center">Navegue por Categoria</h2>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {categories?.map((category) => (
+            {categories.map((category) => (
               <Link
                 key={category.id}
                 to={`/categoria/${category.slug}`}
-                className="p-6 bg-card rounded-lg border border-border hover:border-primary/50 transition-all text-center group"
+                className="relative aspect-[3/4] rounded-xl overflow-hidden group"
               >
-                <h3 className="font-semibold group-hover:text-primary transition-colors">
-                  {category.name}
-                </h3>
+                <img
+                  src={categoryImages[category.slug]}
+                  alt={category.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="text-white font-bold text-lg">{category.name}</h3>
+                </div>
               </Link>
             ))}
           </div>
@@ -190,11 +217,11 @@ export default function HomePage() {
       <section className="py-8 md:py-12">
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-xl md:text-2xl font-bold mb-4">Sobre nós</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-4">Sobre a iCamStore</h2>
             <p className="text-muted-foreground mb-6">
               Paixão por imagem e compromisso com confiança. Somos uma loja especializada em{' '}
-              <strong className="text-foreground">câmeras e equipamentos fotográficos</strong>, com loja física, 
-              atendimento especializado e envio para todo o Brasil. Trabalhamos com produtos novos e seminovos revisados,{' '}
+              <strong className="text-foreground">câmeras e equipamentos fotográficos seminovos</strong>, com loja física, 
+              atendimento especializado e envio para todo o Brasil. Trabalhamos com produtos revisados,{' '}
               <strong className="text-foreground">nota fiscal</strong>,{' '}
               <strong className="text-foreground">rastreio</strong> e{' '}
               <strong className="text-foreground">1 ano de garantia</strong> para sua total tranquilidade.

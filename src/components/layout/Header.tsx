@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Search, ShoppingCart, ChevronDown } from 'lucide-react';
+import { Menu, Search, ShoppingCart, ChevronDown, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -8,27 +8,23 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useCategories } from '@/hooks/useCategories';
 import { useCart } from '@/contexts/CartContext';
 import { CartDrawer } from '@/components/cart/CartDrawer';
+
 export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const {
-    data: categories
-  } = useCategories();
-  const {
-    getItemCount,
-    setIsOpen
-  } = useCart();
+  const { data: categories } = useCategories();
+  const { getItemCount, setIsOpen } = useCart();
   const itemCount = getItemCount();
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
       window.location.href = `/busca?q=${encodeURIComponent(searchTerm)}`;
     }
   };
-  return <header className="sticky top-0 z-50 bg-background border-b">
-      {/* Top bar */}
-      
 
+  return (
+    <header className="sticky top-0 z-50 bg-background border-b">
       {/* Main header */}
       <div className="container-custom py-4">
         <div className="flex items-center justify-between gap-4">
@@ -46,9 +42,11 @@ export function Header() {
                 </Link>
                 <div className="border-t pt-4">
                   <p className="text-sm font-semibold text-muted-foreground mb-2">Categorias</p>
-                  {categories?.map(category => <Link key={category.id} to={`/categoria/${category.slug}`} className="block py-2 hover:text-primary">
+                  {categories?.map(category => (
+                    <Link key={category.id} to={`/categoria/${category.slug}`} className="block py-2 hover:text-primary">
                       {category.name}
-                    </Link>)}
+                    </Link>
+                  ))}
                 </div>
                 <div className="border-t pt-4">
                   <Link to="/rastreio" className="block py-2 hover:text-primary">
@@ -67,16 +65,28 @@ export function Header() {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="bg-primary text-primary-foreground font-bold text-xl sm:text-2xl px-3 py-1 rounded">
-              CF
+            <div className="bg-primary text-primary-foreground p-2 rounded-lg">
+              <Camera className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <span className="hidden sm:block text-lg font-semibold">Câmera & Foto</span>
+            <div className="flex flex-col leading-tight">
+              <span className="text-lg sm:text-xl font-bold">
+                <span className="text-primary">i</span>
+                <span className="text-foreground">Cam</span>
+                <span className="text-primary">Store</span>
+              </span>
+            </div>
           </Link>
 
           {/* Search - Desktop */}
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl">
             <div className="relative w-full">
-              <Input type="search" placeholder="Buscar produtos..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pr-10" />
+              <Input
+                type="search"
+                placeholder="Buscar produtos..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="pr-10"
+              />
               <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-0">
                 <Search className="h-4 w-4" />
               </Button>
@@ -93,22 +103,32 @@ export function Header() {
             {/* Cart */}
             <Button variant="ghost" size="icon" className="relative" onClick={() => setIsOpen(true)}>
               <ShoppingCart className="h-5 w-5" />
-              {itemCount > 0 && <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                   {itemCount}
-                </span>}
+                </span>
+              )}
             </Button>
           </div>
         </div>
 
         {/* Mobile search */}
-        {isSearchOpen && <form onSubmit={handleSearch} className="mt-4 md:hidden">
+        {isSearchOpen && (
+          <form onSubmit={handleSearch} className="mt-4 md:hidden">
             <div className="relative">
-              <Input type="search" placeholder="Buscar produtos..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pr-10" />
+              <Input
+                type="search"
+                placeholder="Buscar produtos..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="pr-10"
+              />
               <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-0">
                 <Search className="h-4 w-4" />
               </Button>
             </div>
-          </form>}
+          </form>
+        )}
       </div>
 
       {/* Categories bar - Desktop */}
@@ -126,17 +146,21 @@ export function Header() {
                   Categorias <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  {categories?.map(category => <DropdownMenuItem key={category.id} asChild>
+                  {categories?.map(category => (
+                    <DropdownMenuItem key={category.id} asChild>
                       <Link to={`/categoria/${category.slug}`}>{category.name}</Link>
-                    </DropdownMenuItem>)}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </li>
-            {categories?.slice(0, 5).map(category => <li key={category.id}>
+            {categories?.slice(0, 5).map(category => (
+              <li key={category.id}>
                 <Link to={`/categoria/${category.slug}`} className="text-sm font-medium hover:text-primary transition-colors">
                   {category.name}
                 </Link>
-              </li>)}
+              </li>
+            ))}
             <li>
               <Link to="/rastreio" className="text-sm font-medium hover:text-primary transition-colors">
                 Rastrear Pedido
@@ -148,5 +172,6 @@ export function Header() {
 
       {/* Cart Drawer */}
       <CartDrawer />
-    </header>;
+    </header>
+  );
 }

@@ -38,7 +38,7 @@ export default function ContactPage() {
                 <Mail className="h-6 w-6 text-primary shrink-0" />
                 <div>
                   <p className="font-medium">Email</p>
-                  <p className="text-muted-foreground">contato@cameraefoto.com.br</p>
+                  <p className="text-muted-foreground">contato@icamstore.com.br</p>
                 </div>
               </div>
 
