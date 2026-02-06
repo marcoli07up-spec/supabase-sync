@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,21 +13,27 @@ import { CheckoutSteps, CheckoutUpsell } from '@/components/checkout';
 import { useCart } from '@/contexts/CartContext';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { formatCurrency } from '@/lib/format';
+import { formatPhone, formatCPF, formatCEP, formatCardNumber, formatCardExpiry, formatCVV, isValidCPF, isValidEmail } from '@/lib/masks';
 import { toast } from 'sonner';
 import { CheckoutFormData, PaymentMethod, Product } from '@/types';
 
 const personalInfoSchema = z.object({
   customer_name: z.string().min(3, 'Nome completo é obrigatório'),
-  customer_email: z.string().email('Email inválido'),
-  customer_phone: z.string().min(10, 'Telefone inválido'),
-  customer_cpf: z.string().min(11, 'CPF inválido').max(14, 'CPF inválido'),
+  customer_email: z.string()
+    .min(1, 'Email é obrigatório')
+    .email('Email inválido')
+    .refine((email) => isValidEmail(email), 'Email inválido'),
+  customer_phone: z.string().min(14, 'Telefone inválido'),
+  customer_cpf: z.string()
+    .min(14, 'CPF inválido')
+    .refine((cpf) => isValidCPF(cpf), 'CPF inválido'),
 });
 
 const addressSchema = z.object({
-  customer_cep: z.string().min(8, 'CEP inválido'),
+  customer_cep: z.string().min(9, 'CEP inválido'),
   customer_address: z.string().min(5, 'Endereço é obrigatório'),
   customer_city: z.string().min(2, 'Cidade é obrigatória'),
-  customer_state: z.string().min(2, 'Estado é obrigatório'),
+  customer_state: z.string().min(2, 'Estado é obrigatório').max(2, 'Use a sigla do estado'),
 });
 
 const paymentSchema = z.object({
@@ -57,6 +63,7 @@ export default function CheckoutPage() {
     formState: { errors },
     setValue,
     trigger,
+    watch,
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(fullSchema),
     defaultValues: {
@@ -66,6 +73,42 @@ export default function CheckoutPage() {
 
   const pixDiscount = 5;
   const total = paymentMethod === 'pix' ? getTotalWithDiscount(pixDiscount) : getTotal();
+
+  // Scroll to top on step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
+
+  // Handle input masking
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setValue('customer_phone', formatted);
+  };
+
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPF(e.target.value);
+    setValue('customer_cpf', formatted);
+  };
+
+  const handleCEPChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCEP(e.target.value);
+    setValue('customer_cep', formatted);
+  };
+
+  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCardNumber(e.target.value);
+    setValue('card_number', formatted);
+  };
+
+  const handleCardExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCardExpiry(e.target.value);
+    setValue('card_expiry', formatted);
+  };
+
+  const handleCardCVVChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCVV(e.target.value);
+    setValue('card_cvv', formatted);
+  };
 
   const handleNextStep = async () => {
     let isValid = false;
@@ -232,29 +275,30 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="container-custom py-8">
-        <h1 className="text-2xl font-bold mb-6 text-center">Finalizar Compra</h1>
+      <div className="container-custom py-6 md:py-8">
+        <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-center">Finalizar Compra</h1>
 
         {/* Steps indicator */}
         <CheckoutSteps currentStep={currentStep} />
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
           {/* Checkout form */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit(onSubmit)}>
               {/* Step 1: Personal info + Upsell + Order Summary */}
               {currentStep === 1 && (
-                <div className="space-y-6">
-                  <div className="bg-card p-6 rounded-xl border border-border">
+                <div className="space-y-4 md:space-y-6">
+                  <div className="bg-card p-4 md:p-6 rounded-xl border border-border">
                     <h2 className="font-semibold mb-4 text-lg">Dados Pessoais</h2>
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="sm:col-span-2">
+                    <div className="grid gap-4">
+                      <div>
                         <Label htmlFor="customer_name">Nome Completo *</Label>
                         <Input
                           id="customer_name"
                           {...register('customer_name')}
                           placeholder="Seu nome completo"
-                          className="mt-1"
+                          className="mt-1 text-base"
+                          autoComplete="name"
                         />
                         {errors.customer_name && (
                           <p className="text-destructive text-sm mt-1">{errors.customer_name.message}</p>
@@ -267,35 +311,46 @@ export default function CheckoutPage() {
                           type="email"
                           {...register('customer_email')}
                           placeholder="seu@email.com"
-                          className="mt-1"
+                          className="mt-1 text-base"
+                          autoComplete="email"
+                          inputMode="email"
                         />
                         {errors.customer_email && (
                           <p className="text-destructive text-sm mt-1">{errors.customer_email.message}</p>
                         )}
                       </div>
-                      <div>
-                        <Label htmlFor="customer_phone">Telefone/WhatsApp *</Label>
-                        <Input
-                          id="customer_phone"
-                          {...register('customer_phone')}
-                          placeholder="(11) 99999-9999"
-                          className="mt-1"
-                        />
-                        {errors.customer_phone && (
-                          <p className="text-destructive text-sm mt-1">{errors.customer_phone.message}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label htmlFor="customer_cpf">CPF *</Label>
-                        <Input
-                          id="customer_cpf"
-                          {...register('customer_cpf')}
-                          placeholder="000.000.000-00"
-                          className="mt-1"
-                        />
-                        {errors.customer_cpf && (
-                          <p className="text-destructive text-sm mt-1">{errors.customer_cpf.message}</p>
-                        )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="customer_phone">Telefone/WhatsApp *</Label>
+                          <Input
+                            id="customer_phone"
+                            {...register('customer_phone')}
+                            onChange={handlePhoneChange}
+                            placeholder="(11) 99999-9999"
+                            className="mt-1 text-base"
+                            autoComplete="tel"
+                            inputMode="tel"
+                            maxLength={15}
+                          />
+                          {errors.customer_phone && (
+                            <p className="text-destructive text-sm mt-1">{errors.customer_phone.message}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label htmlFor="customer_cpf">CPF *</Label>
+                          <Input
+                            id="customer_cpf"
+                            {...register('customer_cpf')}
+                            onChange={handleCPFChange}
+                            placeholder="000.000.000-00"
+                            className="mt-1 text-base"
+                            inputMode="numeric"
+                            maxLength={14}
+                          />
+                          {errors.customer_cpf && (
+                            <p className="text-destructive text-sm mt-1">{errors.customer_cpf.message}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -307,7 +362,7 @@ export default function CheckoutPage() {
                   />
 
                   {/* Order summary in step 1 */}
-                  <div className="bg-card p-6 rounded-xl border border-border">
+                  <div className="bg-card p-4 md:p-6 rounded-xl border border-border">
                     <h2 className="font-semibold mb-4 text-lg">Resumo do Pedido</h2>
                     <div className="space-y-3">
                       {items.map((item) => (
@@ -327,7 +382,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <Button type="button" size="lg" className="w-full" onClick={handleNextStep}>
+                  <Button type="button" size="lg" className="w-full h-12 md:h-14 text-base" onClick={handleNextStep}>
                     Continuar para Endereço
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
@@ -336,68 +391,77 @@ export default function CheckoutPage() {
 
               {/* Step 2: Address */}
               {currentStep === 2 && (
-                <div className="space-y-6">
-                  <div className="bg-card p-6 rounded-xl border border-border">
+                <div className="space-y-4 md:space-y-6">
+                  <div className="bg-card p-4 md:p-6 rounded-xl border border-border">
                     <h2 className="font-semibold mb-4 text-lg">Endereço de Entrega</h2>
-                    <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="grid gap-4">
                       <div>
                         <Label htmlFor="customer_cep">CEP *</Label>
                         <Input
                           id="customer_cep"
                           {...register('customer_cep')}
+                          onChange={handleCEPChange}
                           placeholder="00000-000"
-                          className="mt-1"
+                          className="mt-1 text-base"
+                          inputMode="numeric"
+                          maxLength={9}
                         />
                         {errors.customer_cep && (
                           <p className="text-destructive text-sm mt-1">{errors.customer_cep.message}</p>
                         )}
                       </div>
-                      <div className="sm:col-span-2">
+                      <div>
                         <Label htmlFor="customer_address">Endereço Completo *</Label>
                         <Input
                           id="customer_address"
                           {...register('customer_address')}
                           placeholder="Rua, número, complemento"
-                          className="mt-1"
+                          className="mt-1 text-base"
+                          autoComplete="street-address"
                         />
                         {errors.customer_address && (
                           <p className="text-destructive text-sm mt-1">{errors.customer_address.message}</p>
                         )}
                       </div>
-                      <div>
-                        <Label htmlFor="customer_city">Cidade *</Label>
-                        <Input
-                          id="customer_city"
-                          {...register('customer_city')}
-                          placeholder="São Paulo"
-                          className="mt-1"
-                        />
-                        {errors.customer_city && (
-                          <p className="text-destructive text-sm mt-1">{errors.customer_city.message}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label htmlFor="customer_state">Estado *</Label>
-                        <Input
-                          id="customer_state"
-                          {...register('customer_state')}
-                          placeholder="SP"
-                          className="mt-1"
-                        />
-                        {errors.customer_state && (
-                          <p className="text-destructive text-sm mt-1">{errors.customer_state.message}</p>
-                        )}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="customer_city">Cidade *</Label>
+                          <Input
+                            id="customer_city"
+                            {...register('customer_city')}
+                            placeholder="São Paulo"
+                            className="mt-1 text-base"
+                            autoComplete="address-level2"
+                          />
+                          {errors.customer_city && (
+                            <p className="text-destructive text-sm mt-1">{errors.customer_city.message}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label htmlFor="customer_state">Estado *</Label>
+                          <Input
+                            id="customer_state"
+                            {...register('customer_state')}
+                            placeholder="SP"
+                            className="mt-1 text-base uppercase"
+                            autoComplete="address-level1"
+                            maxLength={2}
+                          />
+                          {errors.customer_state && (
+                            <p className="text-destructive text-sm mt-1">{errors.customer_state.message}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex gap-3">
-                    <Button type="button" variant="outline" size="lg" onClick={handlePrevStep} className="flex-1">
+                    <Button type="button" variant="outline" size="lg" onClick={handlePrevStep} className="flex-1 h-12">
                       <ArrowLeft className="h-4 w-4 mr-2" />
                       Voltar
                     </Button>
-                    <Button type="button" size="lg" className="flex-1" onClick={handleNextStep}>
-                      Continuar para Pagamento
+                    <Button type="button" size="lg" className="flex-1 h-12" onClick={handleNextStep}>
+                      Pagamento
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </div>
@@ -406,8 +470,8 @@ export default function CheckoutPage() {
 
               {/* Step 3: Payment */}
               {currentStep === 3 && (
-                <div className="space-y-6">
-                  <div className="bg-card p-6 rounded-xl border border-border">
+                <div className="space-y-4 md:space-y-6">
+                  <div className="bg-card p-4 md:p-6 rounded-xl border border-border">
                     <h2 className="font-semibold mb-4 text-lg">Forma de Pagamento</h2>
                     
                     <RadioGroup
@@ -456,56 +520,71 @@ export default function CheckoutPage() {
 
                     {/* Credit card fields */}
                     {paymentMethod === 'credit_card' && (
-                      <div className="mt-6 pt-6 border-t border-border grid sm:grid-cols-2 gap-4">
-                        <div className="sm:col-span-2">
+                      <div className="mt-6 pt-6 border-t border-border grid gap-4">
+                        <div>
                           <Label htmlFor="card_number">Número do Cartão</Label>
                           <Input
                             id="card_number"
                             {...register('card_number')}
+                            onChange={handleCardNumberChange}
                             placeholder="0000 0000 0000 0000"
-                            className="mt-1"
+                            className="mt-1 text-base"
+                            inputMode="numeric"
+                            maxLength={19}
+                            autoComplete="cc-number"
                           />
                         </div>
-                        <div className="sm:col-span-2">
+                        <div>
                           <Label htmlFor="card_holder">Nome no Cartão</Label>
                           <Input
                             id="card_holder"
                             {...register('card_holder')}
                             placeholder="Nome como está no cartão"
-                            className="mt-1"
+                            className="mt-1 text-base uppercase"
+                            autoComplete="cc-name"
                           />
                         </div>
-                        <div>
-                          <Label htmlFor="card_expiry">Validade</Label>
-                          <Input
-                            id="card_expiry"
-                            {...register('card_expiry')}
-                            placeholder="MM/AA"
-                            className="mt-1"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="card_cvv">CVV</Label>
-                          <Input
-                            id="card_cvv"
-                            {...register('card_cvv')}
-                            placeholder="123"
-                            className="mt-1"
-                          />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="card_expiry">Validade</Label>
+                            <Input
+                              id="card_expiry"
+                              {...register('card_expiry')}
+                              onChange={handleCardExpiryChange}
+                              placeholder="MM/AA"
+                              className="mt-1 text-base"
+                              inputMode="numeric"
+                              maxLength={5}
+                              autoComplete="cc-exp"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="card_cvv">CVV</Label>
+                            <Input
+                              id="card_cvv"
+                              {...register('card_cvv')}
+                              onChange={handleCardCVVChange}
+                              placeholder="123"
+                              className="mt-1 text-base"
+                              inputMode="numeric"
+                              maxLength={4}
+                              autoComplete="cc-csc"
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
                   </div>
 
                   <div className="flex gap-3">
-                    <Button type="button" variant="outline" size="lg" onClick={handlePrevStep} className="flex-1">
+                    <Button type="button" variant="outline" size="lg" onClick={handlePrevStep} className="flex-1 h-12">
                       <ArrowLeft className="h-4 w-4 mr-2" />
                       Voltar
                     </Button>
                     <Button
                       type="submit"
                       size="lg"
-                      className="flex-1"
+                      className="flex-1 h-12"
                       disabled={createOrder.isPending}
                     >
                       {createOrder.isPending ? (
@@ -526,8 +605,8 @@ export default function CheckoutPage() {
             </form>
           </div>
 
-          {/* Order summary sidebar */}
-          <div className="lg:col-span-1">
+          {/* Order summary sidebar - hidden on mobile for steps 1 */}
+          <div className="lg:col-span-1 hidden lg:block">
             <div className="bg-card p-6 rounded-xl border border-border sticky top-24">
               <h2 className="font-semibold mb-4">Resumo</h2>
               

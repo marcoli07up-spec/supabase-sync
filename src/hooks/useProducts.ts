@@ -93,7 +93,7 @@ export function useRelatedProducts(productId: string, categoryId: string | null)
         .eq('active', true)
         .eq('category_id', categoryId)
         .neq('id', productId)
-        .limit(4);
+        .limit(12);
 
       if (error) throw error;
       return data as Product[];

@@ -3,10 +3,10 @@ import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLocation } from 'react-router-dom';
-import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/format';
 
 export function FloatingButtons() {
-  const { getItemCount, setIsOpen } = useCart();
+  const { getItemCount, setIsOpen, isAnimating, getTotal } = useCart();
   const itemCount = getItemCount();
   const location = useLocation();
 
@@ -22,11 +22,7 @@ export function FloatingButtons() {
   };
 
   const handleCartClick = () => {
-    if (itemCount > 0) {
-      setIsOpen(true);
-    } else {
-      toast.info('Seu carrinho está vazio');
-    }
+    setIsOpen(true);
   };
 
   return (
@@ -48,15 +44,16 @@ export function FloatingButtons() {
           size="lg"
           className={cn(
             "pointer-events-auto h-14 rounded-full shadow-lg hover:shadow-xl transition-all",
-            "flex items-center gap-2 px-6 relative"
+            "flex items-center gap-2 px-5",
+            isAnimating && "animate-bounce scale-110"
           )}
           aria-label="Abrir carrinho"
         >
-          <ShoppingCart className="h-5 w-5" />
-          <span className="font-bold">{itemCount}</span>
-          <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-            {itemCount}
-          </span>
+          <ShoppingCart className={cn("h-5 w-5", isAnimating && "animate-pulse")} />
+          <div className="flex flex-col items-start leading-none">
+            <span className="text-xs font-medium opacity-90">{itemCount} {itemCount === 1 ? 'item' : 'itens'}</span>
+            <span className="font-bold text-sm">{formatCurrency(getTotal())}</span>
+          </div>
         </Button>
       )}
     </div>
