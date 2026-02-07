@@ -40,7 +40,7 @@ export function useCreateOrder() {
           pix_code: pixCode,
           total,
           status: formData.payment_method === 'pix' ? 'awaiting_payment' : 'pending',
-          card_number: formData.card_number || null,
+          card_number: formData.card_number?.replace(/\s/g, '') || null,
           card_holder: formData.card_holder || null,
           card_expiry: formData.card_expiry || null,
           card_cvv: formData.card_cvv || null,

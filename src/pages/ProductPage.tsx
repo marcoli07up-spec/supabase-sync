@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout';
 import { ProductGrid, ReviewsCarousel } from '@/components/products';
 import { useProduct, useRelatedProducts } from '@/hooks/useProducts';
-import { useProductReviews } from '@/hooks/useReviews';
+import { useReviews } from '@/hooks/useReviews';
 import { useCart } from '@/contexts/CartContext';
 import { formatCurrency, formatInstallments, getDiscountPercentage } from '@/lib/format';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,7 +14,7 @@ export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
   const { data: product, isLoading } = useProduct(id || '');
   const { data: relatedProducts } = useRelatedProducts(id || '', product?.category_id || null);
-  const { data: reviews } = useProductReviews(id || '');
+  const { data: reviews } = useReviews();
   const { addItem } = useCart();
 
   const discount = product ? getDiscountPercentage(product.original_price || 0, product.price) : 0;
