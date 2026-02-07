@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageCircle, Copy, Eye } from 'lucide-react';
+import { MessageCircle, Copy, Eye, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -131,6 +131,17 @@ function OrderCard({
         </div>
 
         <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-2">
+          {order.status !== 'approved' && (
+            <Button 
+              size="sm" 
+              className="bg-emerald-500 hover:bg-emerald-600 text-white"
+              onClick={() => onStatusChange('approved')}
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Aprovar
+            </Button>
+          )}
+
           <Button size="sm" variant="outline" onClick={onView}>
             <Eye className="h-4 w-4 mr-2" />
             Ver Detalhes
