@@ -163,13 +163,13 @@ export default function TrackingPage() {
                     <img 
                       src={logoImg} 
                       alt="iCamStore" 
-                      className="h-10"
+                      className="h-8 w-auto"
                     />
                     <div className="text-2xl text-muted-foreground">+</div>
                     <img 
                       src={jadlogLogoImg} 
                       alt="Jadlog" 
-                      className="h-8"
+                      className="h-8 w-auto"
                     />
                   </div>
                   <p className="text-center text-sm text-muted-foreground">
