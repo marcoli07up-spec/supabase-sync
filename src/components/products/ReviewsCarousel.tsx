@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Star, CheckCircle, Users, Package } from 'lucide-react';
 import { Review } from '@/types';
 import {
@@ -7,12 +8,18 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+import Autoplay from 'embla-carousel-autoplay';
+import reclameAquiLogo from '@/assets/reclame-aqui-logo.png';
 
 interface ReviewsCarouselProps {
   reviews: Review[];
 }
 
 export function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
+  const autoplayPlugin = useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: false })
+  );
+  
   // Take only first 8 reviews for carousel
   const displayReviews = reviews.slice(0, 8);
 
@@ -27,7 +34,21 @@ export function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
             <span className="text-sm font-medium">Avaliações Verificadas</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold mb-2">O que nossos clientes dizem</h2>
-          <div className="flex items-center justify-center gap-4 text-muted-foreground flex-wrap">
+          
+          {/* Reclame Aqui Badge */}
+          <div className="flex items-center justify-center gap-3 mt-4 mb-2">
+            <img 
+              src={reclameAquiLogo} 
+              alt="Reclame Aqui" 
+              className="h-10 w-10 object-contain"
+            />
+            <div className="text-left">
+              <p className="text-sm font-semibold text-foreground">Auditada pelo Reclame Aqui</p>
+              <p className="text-xs text-muted-foreground">Nota 9.2 • Ótimo atendimento</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-center gap-4 text-muted-foreground flex-wrap mt-4">
             <div className="flex items-center gap-1">
               <Users className="h-4 w-4" />
               <span className="text-sm">+5.000 clientes satisfeitos</span>
@@ -45,6 +66,7 @@ export function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
               align: "start",
               loop: true,
             }}
+            plugins={[autoplayPlugin.current]}
             className="w-full"
           >
             <CarouselContent className="-ml-4">

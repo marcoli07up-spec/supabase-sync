@@ -131,11 +131,14 @@ function OrderCard({
         </div>
 
         <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-2">
-          {order.status !== 'approved' && (
+          {order.status !== 'approved' && order.status !== 'delivered' && (
             <Button 
               size="sm" 
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
-              onClick={() => onStatusChange('approved')}
+              onClick={() => {
+                onStatusChange('approved');
+                toast.success('Pedido aprovado com sucesso!');
+              }}
             >
               <CheckCircle className="h-4 w-4 mr-2" />
               Aprovar
