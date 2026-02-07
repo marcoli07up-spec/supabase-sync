@@ -46,6 +46,29 @@ const paymentSchema = z.object({
 
 const fullSchema = personalInfoSchema.merge(addressSchema).merge(paymentSchema);
 
+// CEP lookup function
+async function fetchAddressFromCEP(cep: string) {
+  const cleanCep = cep.replace(/\D/g, '');
+  if (cleanCep.length !== 8) return null;
+  
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+    const data = await response.json();
+    
+    if (data.erro) return null;
+    
+    return {
+      address: data.logradouro || '',
+      city: data.localidade || '',
+      state: data.uf || '',
+      neighborhood: data.bairro || '',
+    };
+  } catch (error) {
+    console.error('CEP lookup failed:', error);
+    return null;
+  }
+}
+
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { items, getTotal, getTotalWithDiscount, clearCart, addItem } = useCart();
@@ -90,9 +113,25 @@ export default function CheckoutPage() {
     setValue('customer_cpf', formatted);
   };
 
-  const handleCEPChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCEPChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCEP(e.target.value);
     setValue('customer_cep', formatted);
+    
+    // Auto-fill address when CEP is complete
+    if (formatted.length === 9) {
+      const addressData = await fetchAddressFromCEP(formatted);
+      if (addressData) {
+        if (addressData.address) {
+          const fullAddress = addressData.neighborhood 
+            ? `${addressData.address}, ${addressData.neighborhood}`
+            : addressData.address;
+          setValue('customer_address', fullAddress);
+        }
+        if (addressData.city) setValue('customer_city', addressData.city);
+        if (addressData.state) setValue('customer_state', addressData.state);
+        toast.success('Endereço preenchido automaticamente!');
+      }
+    }
   };
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,13 +314,13 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="container-custom py-6 md:py-8">
+      <div className="container-custom py-4 sm:py-6 md:py-8 px-3 sm:px-4">
         <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-center">Finalizar Compra</h1>
 
         {/* Steps indicator */}
         <CheckoutSteps currentStep={currentStep} />
 
-        <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {/* Checkout form */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -468,10 +507,10 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {/* Step 3: Payment */}
+              {/* Step 3: Payment - Mobile optimized with reduced padding */}
               {currentStep === 3 && (
-                <div className="space-y-4 md:space-y-6">
-                  <div className="bg-card p-4 md:p-6 rounded-xl border border-border">
+                <div className="space-y-4">
+                  <div className="bg-card p-3 sm:p-4 md:p-6 rounded-xl border border-border">
                     <h2 className="font-semibold mb-4 text-lg">Forma de Pagamento</h2>
                     
                     <RadioGroup
@@ -484,35 +523,35 @@ export default function CheckoutPage() {
                     >
                       <label
                         htmlFor="pix"
-                        className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
                           paymentMethod === 'pix' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           <RadioGroupItem value="pix" id="pix" />
-                          <QrCode className="h-6 w-6 text-primary" />
+                          <QrCode className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                           <div>
-                            <p className="font-medium">PIX</p>
-                            <p className="text-sm text-muted-foreground">Pagamento instantâneo</p>
+                            <p className="font-medium text-sm sm:text-base">PIX</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">Pagamento instantâneo</p>
                           </div>
                         </div>
-                        <span className="bg-primary text-primary-foreground font-bold text-sm px-3 py-1 rounded-full">
+                        <span className="bg-primary text-primary-foreground font-bold text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">
                           5% OFF
                         </span>
                       </label>
 
                       <label
                         htmlFor="credit_card"
-                        className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
                           paymentMethod === 'credit_card' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           <RadioGroupItem value="credit_card" id="credit_card" />
-                          <CreditCard className="h-6 w-6" />
+                          <CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />
                           <div>
-                            <p className="font-medium">Cartão de Crédito</p>
-                            <p className="text-sm text-muted-foreground">Em até 12x</p>
+                            <p className="font-medium text-sm sm:text-base">Cartão de Crédito</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">Em até 12x</p>
                           </div>
                         </div>
                       </label>

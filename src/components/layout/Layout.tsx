@@ -11,19 +11,17 @@ interface LayoutProps {
 export function Layout({
   children
 }: LayoutProps) {
-  return <div className="min-h-screen flex flex-col">
+  return (
+    <div className="min-h-screen flex flex-col">
       <AnnouncementBar />
       <Header />
       <main className="flex-1">
         {children}
       </main>
       <StoreLocation />
-      <AboutSection />
       <Footer />
       <FloatingButtons />
       <CartDrawer />
-    </div>;
-}
-function AboutSection() {
-  return;
+    </div>
+  );
 }
