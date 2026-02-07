@@ -195,7 +195,7 @@ export default function ProductPage() {
                   disabled={(product.stock ?? 0) <= 0}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
-                  Comprar Agora
+                  comprar agora
                 </Button>
                 
                 <p className="text-xs text-center text-muted-foreground">

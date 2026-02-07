@@ -15,11 +15,16 @@ import audioImg from '@/assets/categories/audio.png';
 import mochilasImg from '@/assets/categories/mochilas.png';
 import iluminacaoImg from '@/assets/categories/iluminacao.png';
 
-// Banner images
+// Banner images - Desktop
 import bannerLentesImg from '@/assets/banners/lentes-premium.png';
 import bannerAudioImg from '@/assets/banners/audio-premium.png';
 import bannerIluminacaoImg from '@/assets/banners/iluminacao-premium.png';
 import bannerUsadosImg from '@/assets/banners/usados-premium.png';
+
+// Banner images - Mobile
+import mobileCamera from '@/assets/banners/mobile-cameras.png';
+import mobileAudio from '@/assets/banners/mobile-audio.png';
+import mobileTripe from '@/assets/banners/mobile-tripe.png';
 
 // Promo images
 import freteGratisImg from '@/assets/promos/frete-gratis.png';
@@ -35,11 +40,17 @@ const categoryImages: Record<string, string> = {
   iluminacao: iluminacaoImg
 };
 
-const bannerImages = [
+const bannerImagesDesktop = [
   { src: bannerLentesImg, alt: 'Lentes', link: '/categoria/lentes' },
   { src: bannerAudioImg, alt: 'Áudio', link: '/categoria/audio' },
   { src: bannerIluminacaoImg, alt: 'Iluminação', link: '/categoria/iluminacao' },
   { src: bannerUsadosImg, alt: 'Usados', link: '/categoria/cameras-seminovas' },
+];
+
+const bannerImagesMobile = [
+  { src: mobileCamera, alt: 'Câmeras de Ação', link: '/categoria/cameras' },
+  { src: mobileAudio, alt: 'Áudio Pro', link: '/categoria/audio' },
+  { src: mobileTripe, alt: 'Tripés', link: '/categoria/acessorios' },
 ];
 const promoImages = [{
   src: freteGratisImg,
@@ -91,8 +102,8 @@ export default function HomePage() {
     slug: 'iluminacao'
   }];
   return <Layout>
-      {/* Hero Banner Carousel */}
-      <section className="relative">
+      {/* Hero Banner Carousel - Mobile */}
+      <section className="relative md:hidden">
         <Carousel 
           className="w-full"
           opts={{
@@ -102,8 +113,28 @@ export default function HomePage() {
           plugins={[autoplayPlugin.current]}
         >
           <CarouselContent>
-            {bannerImages.map((banner, index) => <CarouselItem key={index}>
-                <Link to={banner.link} className="block relative aspect-[21/9] md:aspect-[3/1] overflow-hidden">
+            {bannerImagesMobile.map((banner, index) => <CarouselItem key={index}>
+                <Link to={banner.link} className="block relative aspect-[2/3] overflow-hidden">
+                  <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover" />
+                </Link>
+              </CarouselItem>)}
+          </CarouselContent>
+        </Carousel>
+      </section>
+
+      {/* Hero Banner Carousel - Desktop */}
+      <section className="relative hidden md:block">
+        <Carousel 
+          className="w-full"
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          plugins={[autoplayPlugin.current]}
+        >
+          <CarouselContent>
+            {bannerImagesDesktop.map((banner, index) => <CarouselItem key={index}>
+                <Link to={banner.link} className="block relative aspect-[3/1] overflow-hidden">
                   <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover" />
                 </Link>
               </CarouselItem>)}
