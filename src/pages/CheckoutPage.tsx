@@ -230,8 +230,8 @@ export default function CheckoutPage() {
         window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
         
         clearCart();
-        toast.success('Redirecionando para o WhatsApp...');
-        navigate('/');
+        toast.success('Pedido enviado para o WhatsApp!');
+        // Permanece na página atual, não redireciona
         return;
       }
 
