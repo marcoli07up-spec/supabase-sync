@@ -1,12 +1,9 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, Truck, RefreshCw, Shield, CreditCard, Star, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Truck, RefreshCw, Shield, CreditCard, Star, CheckCircle } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { ProductGrid } from '@/components/products';
-import { useBanners } from '@/hooks/useBanners';
 import { useFeaturedProducts, useProducts } from '@/hooks/useProducts';
 import { useReviews } from '@/hooks/useReviews';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 
 // Category images
@@ -16,11 +13,18 @@ import audioImg from '@/assets/categories/audio.png';
 import mochilasImg from '@/assets/categories/mochilas.png';
 import iluminacaoImg from '@/assets/categories/iluminacao.png';
 
+// Banner images
+import bannerLentesImg from '@/assets/banners/lentes-premium.png';
+import bannerAudioImg from '@/assets/banners/audio-premium.png';
+import bannerIluminacaoImg from '@/assets/banners/iluminacao-premium.png';
+import bannerUsadosImg from '@/assets/banners/usados-premium.png';
+
 // Promo images
 import freteGratisImg from '@/assets/promos/frete-gratis.png';
 import pixDescontoImg from '@/assets/promos/pix-desconto.png';
 import garantiaImg from '@/assets/promos/garantia.png';
 import pagamentoSeguroImg from '@/assets/promos/pagamento-seguro.png';
+
 const categoryImages: Record<string, string> = {
   cameras: camerasImg,
   lentes: lentesImg,
@@ -28,6 +32,13 @@ const categoryImages: Record<string, string> = {
   mochilas: mochilasImg,
   iluminacao: iluminacaoImg
 };
+
+const bannerImages = [
+  { src: bannerLentesImg, alt: 'Lentes', link: '/categoria/lentes' },
+  { src: bannerAudioImg, alt: 'Áudio', link: '/categoria/audio' },
+  { src: bannerIluminacaoImg, alt: 'Iluminação', link: '/categoria/iluminacao' },
+  { src: bannerUsadosImg, alt: 'Usados', link: '/categoria/cameras-seminovas' },
+];
 const promoImages = [{
   src: freteGratisImg,
   alt: 'Frete Grátis'
@@ -42,10 +53,6 @@ const promoImages = [{
   alt: 'Pagamento Seguro'
 }];
 export default function HomePage() {
-  const {
-    data: banners,
-    isLoading: bannersLoading
-  } = useBanners();
   const {
     data: featuredProducts,
     isLoading: featuredLoading
@@ -81,20 +88,17 @@ export default function HomePage() {
   return <Layout>
       {/* Hero Banner Carousel */}
       <section className="relative">
-        {bannersLoading ? <Skeleton className="w-full aspect-[21/9] md:aspect-[3/1]" /> : banners && banners.length > 0 ? <Carousel className="w-full">
-            <CarouselContent>
-              {banners.map(banner => <CarouselItem key={banner.id}>
-                  <div className="relative aspect-[21/9] md:aspect-[3/1] overflow-hidden">
-                    <img src={banner.image_url} alt={banner.title || 'Banner'} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-transparent flex items-center">
-                      
-                    </div>
-                  </div>
-                </CarouselItem>)}
-            </CarouselContent>
-            <CarouselPrevious className="left-4" />
-            <CarouselNext className="right-4" />
-          </Carousel> : null}
+        <Carousel className="w-full">
+          <CarouselContent>
+            {bannerImages.map((banner, index) => <CarouselItem key={index}>
+                <Link to={banner.link} className="block relative aspect-[21/9] md:aspect-[3/1] overflow-hidden">
+                  <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover" />
+                </Link>
+              </CarouselItem>)}
+          </CarouselContent>
+          <CarouselPrevious className="left-4" />
+          <CarouselNext className="right-4" />
+        </Carousel>
       </section>
 
       {/* Benefits bar with promo images */}
