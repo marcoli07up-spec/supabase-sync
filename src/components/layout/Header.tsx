@@ -65,7 +65,7 @@ export function Header() {
             <img 
               src={logoImg} 
               alt="iCamStore" 
-              className="h-10 sm:h-12"
+              className="h-8 sm:h-12"
             />
           </Link>
 

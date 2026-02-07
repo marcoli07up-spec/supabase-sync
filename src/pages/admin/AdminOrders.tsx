@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MessageCircle, Copy, Eye, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,6 +35,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminOrders() {
+  const navigate = useNavigate();
   const { data: orders, isLoading } = useAllOrders();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const updateStatus = useUpdateOrderStatus();
@@ -56,6 +58,14 @@ export default function AdminOrders() {
               order={order} 
               onView={() => setSelectedOrder(order)}
               onStatusChange={(status) => updateStatus.mutate({ orderId: order.id, status })}
+              onApproveAndRedirect={() => {
+                updateStatus.mutate({ orderId: order.id, status: 'approved' }, {
+                  onSuccess: () => {
+                    toast.success('Pedido aprovado com sucesso!');
+                    navigate('/admin/rastreio');
+                  }
+                });
+              }}
             />
           ))}
         </div>
@@ -79,11 +89,13 @@ export default function AdminOrders() {
 function OrderCard({ 
   order, 
   onView, 
-  onStatusChange 
+  onStatusChange,
+  onApproveAndRedirect 
 }: { 
   order: Order; 
   onView: () => void;
   onStatusChange: (status: string) => void;
+  onApproveAndRedirect: () => void;
 }) {
   const copyPixCode = () => {
     if (order.pix_code) {
@@ -131,14 +143,20 @@ function OrderCard({
         </div>
 
         <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-2">
-          {order.status !== 'approved' && order.status !== 'delivered' && (
+          {order.status === 'approved' ? (
+            <Button 
+              size="sm" 
+              className="bg-emerald-600 text-white cursor-not-allowed opacity-80"
+              disabled
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Aprovado
+            </Button>
+          ) : order.status !== 'delivered' && (
             <Button 
               size="sm" 
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
-              onClick={() => {
-                onStatusChange('approved');
-                toast.success('Pedido aprovado com sucesso!');
-              }}
+              onClick={onApproveAndRedirect}
             >
               <CheckCircle className="h-4 w-4 mr-2" />
               Aprovar

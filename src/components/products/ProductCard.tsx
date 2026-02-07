@@ -77,7 +77,7 @@ export function ProductCard({ product }: ProductCardProps) {
           size="sm"
         >
           <ShoppingCart className="h-4 w-4 mr-2" />
-          Add ao carrinho
+          Comprar agora
         </Button>
       </div>
     </div>
