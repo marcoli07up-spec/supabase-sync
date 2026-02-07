@@ -88,7 +88,19 @@ export default function HomePage() {
   return <Layout>
       {/* Hero Banner Carousel */}
       <section className="relative">
-        <Carousel className="w-full">
+        <Carousel 
+          className="w-full"
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          plugins={[
+            require("embla-carousel-autoplay").default({
+              delay: 4000,
+              stopOnInteraction: false,
+            })
+          ]}
+        >
           <CarouselContent>
             {bannerImages.map((banner, index) => <CarouselItem key={index}>
                 <Link to={banner.link} className="block relative aspect-[21/9] md:aspect-[3/1] overflow-hidden">

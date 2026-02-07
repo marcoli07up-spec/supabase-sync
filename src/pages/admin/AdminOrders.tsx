@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 const statusOptions = [
   { value: 'pending', label: 'Pendente' },
   { value: 'awaiting_payment', label: 'Aguardando Pagamento' },
+  { value: 'approved', label: 'Aprovado' },
   { value: 'paid', label: 'Pago' },
   { value: 'processing', label: 'Em Preparação' },
   { value: 'shipped', label: 'Enviado' },
@@ -24,6 +25,7 @@ const statusOptions = [
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500',
   awaiting_payment: 'bg-orange-500',
+  approved: 'bg-emerald-500',
   paid: 'bg-green-500',
   processing: 'bg-blue-500',
   shipped: 'bg-purple-500',
