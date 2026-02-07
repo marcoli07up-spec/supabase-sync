@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, ShoppingCart, Truck, Shield, RefreshCw, Star, Check, Clock, Award, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { useCart } from '@/contexts/CartContext';
 import { formatCurrency, formatInstallments, getDiscountPercentage } from '@/lib/format';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { trackViewContent } from '@/lib/facebook-pixel';
 
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +21,19 @@ export default function ProductPage() {
 
   const discount = product ? getDiscountPercentage(product.original_price || 0, product.price) : 0;
   const pixPrice = product ? product.price * 0.95 : 0;
+
+  // Track View Content when product loads
+  useEffect(() => {
+    if (product) {
+      trackViewContent({
+        content_name: product.name,
+        content_ids: [product.id],
+        content_type: 'product',
+        value: product.price,
+        currency: 'BRL',
+      });
+    }
+  }, [product]);
 
   const handleBuyNow = () => {
     if (product) {

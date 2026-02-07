@@ -1,13 +1,26 @@
+import { useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { ProductGrid } from '@/components/products';
 import { useSearchProducts } from '@/hooks/useProducts';
+import { trackSearch } from '@/lib/facebook-pixel';
 
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const { data: products, isLoading } = useSearchProducts(query);
+
+  // Track Search event
+  useEffect(() => {
+    if (query && query.length >= 2) {
+      trackSearch({
+        search_string: query,
+        content_ids: products?.map(p => p.id),
+        content_type: 'product',
+      });
+    }
+  }, [query, products]);
 
   return (
     <Layout>

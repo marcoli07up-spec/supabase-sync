@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, X, Upload, Link as LinkIcon } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Plus, Pencil, Trash2, X, Upload, Link as LinkIcon, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/format';
 import { Product } from '@/types';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,6 +70,9 @@ export default function AdminProducts() {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [formData, setFormData] = useState<ProductFormData>(emptyProduct);
   const [newImageUrl, setNewImageUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const secondaryFileInputRef = useRef<HTMLInputElement>(null);
 
   const openCreateDialog = () => {
     setSelectedProduct(null);
@@ -145,6 +149,73 @@ export default function AdminProducts() {
       images: newImages,
       image_url: newImages[0] || '',
     });
+  };
+
+  const setAsMainImage = (index: number) => {
+    const newImages = [...formData.images];
+    const [selectedImage] = newImages.splice(index, 1);
+    newImages.unshift(selectedImage);
+    setFormData({
+      ...formData,
+      images: newImages,
+      image_url: selectedImage,
+    });
+    toast.success('Imagem definida como principal!');
+  };
+
+  const uploadImage = async (file: File, isMain = false) => {
+    try {
+      setIsUploading(true);
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+      
+      if (isMain) {
+        setFormData({
+          ...formData,
+          images: [publicUrl, ...formData.images],
+          image_url: publicUrl,
+        });
+      } else {
+        setFormData({
+          ...formData,
+          images: [...formData.images, publicUrl],
+          image_url: formData.image_url || publicUrl,
+        });
+      }
+      
+      toast.success('Imagem enviada com sucesso!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Erro ao enviar imagem');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleMainImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadImage(file, true);
+    }
+  };
+
+  const handleSecondaryImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      Array.from(files).forEach(file => uploadImage(file, false));
+    }
   };
 
   return (
@@ -319,16 +390,80 @@ export default function AdminProducts() {
             </div>
 
             {/* Images Section */}
-            <div>
-              <Label>Imagens (até 10)</Label>
-              <div className="mt-2 space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                    placeholder="Cole a URL da imagem"
-                    disabled={formData.images.length >= 10}
+            <div className="md:col-span-2">
+              <Label className="text-base font-semibold">Imagens do Produto</Label>
+              
+              {/* Main Image Upload */}
+              <div className="mt-3 mb-4">
+                <Label className="text-sm text-muted-foreground mb-2 block">Imagem Destaque</Label>
+                <div className="flex gap-3">
+                  <div 
+                    className="w-32 h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {formData.image_url ? (
+                      <img src={formData.image_url} alt="Principal" className="w-full h-full object-cover rounded-lg" />
+                    ) : (
+                      <>
+                        <ImagePlus className="h-8 w-8 text-muted-foreground mb-2" />
+                        <span className="text-xs text-muted-foreground">Clique para enviar</span>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleMainImageUpload}
+                    className="hidden"
                   />
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Esta será a imagem principal exibida no card do produto.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {isUploading ? 'Enviando...' : 'Upload Destaque'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Secondary Images */}
+              <div className="mb-4">
+                <Label className="text-sm text-muted-foreground mb-2 block">Imagens Secundárias</Label>
+                <div className="flex gap-2 mb-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => secondaryFileInputRef.current?.click()}
+                    disabled={isUploading || formData.images.length >= 10}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Imagens
+                  </Button>
+                  <input
+                    ref={secondaryFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleSecondaryImageUpload}
+                    className="hidden"
+                  />
+                  <div className="flex-1">
+                    <Input
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      placeholder="Ou cole URL da imagem"
+                      disabled={formData.images.length >= 10}
+                    />
+                  </div>
                   <Button 
                     type="button" 
                     variant="outline"
@@ -336,24 +471,37 @@ export default function AdminProducts() {
                     disabled={!newImageUrl.trim() || formData.images.length >= 10}
                   >
                     <LinkIcon className="h-4 w-4 mr-2" />
-                    Adicionar
+                    Adicionar URL
                   </Button>
                 </div>
 
                 {formData.images.length > 0 && (
                   <div className="grid grid-cols-5 gap-2">
                     {formData.images.map((url, index) => (
-                      <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
+                      <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
                         <img src={url} alt="" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                          {index !== 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setAsMainImage(index)}
+                              className="p-1.5 bg-primary text-primary-foreground rounded-full text-xs"
+                              title="Definir como principal"
+                            >
+                              ★
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="p-1.5 bg-destructive text-destructive-foreground rounded-full"
+                            title="Remover"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
                         {index === 0 && (
-                          <span className="absolute bottom-1 left-1 text-xs bg-primary text-primary-foreground px-1 rounded">
+                          <span className="absolute bottom-1 left-1 text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
                             Principal
                           </span>
                         )}
@@ -361,8 +509,8 @@ export default function AdminProducts() {
                     ))}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">
-                  {formData.images.length}/10 imagens
+                <p className="text-xs text-muted-foreground mt-2">
+                  {formData.images.length}/10 imagens • Clique em ★ para definir como principal
                 </p>
               </div>
             </div>

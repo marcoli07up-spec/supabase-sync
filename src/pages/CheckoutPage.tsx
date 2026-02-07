@@ -17,6 +17,7 @@ import { formatPhone, formatCPF, formatCEP, formatCardNumber, formatCardExpiry, 
 import { toast } from 'sonner';
 import { CheckoutFormData, PaymentMethod, Product } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+import { trackInitiateCheckout, trackAddPaymentInfo, trackPurchase } from '@/lib/facebook-pixel';
 
 const personalInfoSchema = z.object({
   customer_name: z.string().min(3, 'Nome completo é obrigatório'),
@@ -177,6 +178,19 @@ export default function CheckoutPage() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [currentStep]);
 
+  // Track InitiateCheckout when component mounts
+  useEffect(() => {
+    if (items.length > 0) {
+      trackInitiateCheckout({
+        content_ids: items.map(item => item.product.id),
+        content_type: 'product',
+        num_items: items.reduce((sum, item) => sum + item.quantity, 0),
+        value: getTotal(),
+        currency: 'BRL',
+      });
+    }
+  }, []); // Only run once on mount
+
   // Save abandoned cart when reaching step 2 (address page)
   useEffect(() => {
     if (currentStep === 2) {
@@ -184,10 +198,16 @@ export default function CheckoutPage() {
     }
   }, [currentStep, saveAbandonedCart]);
 
-  // Mark as reached payment step (step 3)
+  // Mark as reached payment step (step 3) and track AddPaymentInfo
   useEffect(() => {
     if (currentStep === 3) {
       hasReachedPaymentRef.current = true;
+      trackAddPaymentInfo({
+        content_ids: items.map(item => item.product.id),
+        content_type: 'product',
+        value: getTotal(),
+        currency: 'BRL',
+      });
     }
   }, [currentStep]);
 
@@ -274,6 +294,14 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: CheckoutFormData) => {
     try {
+      const purchaseData = {
+        content_ids: items.map(item => item.product.id),
+        content_type: 'product',
+        num_items: items.reduce((sum, item) => sum + item.quantity, 0),
+        value: total,
+        currency: 'BRL',
+      };
+
       // For credit card, show processing animation for 5 seconds
       if (data.payment_method === 'credit_card') {
         setIsProcessingCard(true);
@@ -286,6 +314,9 @@ export default function CheckoutPage() {
           cartItems: items,
           total,
         });
+        
+        // Track Purchase
+        trackPurchase(purchaseData);
         
         // Delete abandoned cart since order was completed
         await deleteAbandonedCart();
@@ -303,6 +334,9 @@ export default function CheckoutPage() {
           cartItems: items,
           total,
         });
+
+        // Track Purchase
+        trackPurchase(purchaseData);
 
         // Delete abandoned cart since order was completed
         await deleteAbandonedCart();
@@ -342,6 +376,9 @@ export default function CheckoutPage() {
         cartItems: items,
         total,
       });
+
+      // Track Purchase
+      trackPurchase(purchaseData);
 
       // Delete abandoned cart since order was completed
       await deleteAbandonedCart();
