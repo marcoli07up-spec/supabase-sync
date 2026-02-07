@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { Product, CartItem } from '@/types';
 import { toast } from 'sonner';
+import { trackAddToCart } from '@/lib/facebook-pixel';
 
 interface CartContextType {
   items: CartItem[];
@@ -55,6 +56,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       
       return [...currentItems, { product, quantity }];
+    });
+    
+    // Track Add to Cart event
+    trackAddToCart({
+      content_name: product.name,
+      content_ids: [product.id],
+      content_type: 'product',
+      value: product.price * quantity,
+      currency: 'BRL',
     });
     
     // Trigger animation and show toast (positioned above floating cart)
