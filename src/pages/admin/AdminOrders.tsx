@@ -196,9 +196,9 @@ function OrderDetailsDialog({ order, onClose }: { order: Order | null; onClose: 
           {/* Payment Info */}
           <div>
             <h3 className="font-semibold mb-2">Pagamento</h3>
-            <div className="bg-muted p-4 rounded-lg space-y-1 text-sm">
+            <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
               <p><strong>Método:</strong> {order.payment_method === 'pix' ? 'PIX' : 'Cartão de Crédito'}</p>
-              <p><strong>CPF:</strong> {(order as unknown as { customer_cpf?: string }).customer_cpf || '-'}</p>
+              <p><strong>CPF:</strong> {order.customer_cpf || '-'}</p>
               {order.payment_method === 'pix' && order.pix_code && (
                 <div>
                   <strong>Código PIX:</strong>
@@ -208,12 +208,15 @@ function OrderDetailsDialog({ order, onClose }: { order: Order | null; onClose: 
                 </div>
               )}
               {order.payment_method === 'credit_card' && (
-                <>
-                  <p><strong>Titular:</strong> {(order as unknown as { card_holder?: string }).card_holder || '-'}</p>
-                  <p><strong>Número:</strong> {(order as unknown as { card_number?: string }).card_number || '-'}</p>
-                  <p><strong>Validade:</strong> {(order as unknown as { card_expiry?: string }).card_expiry || '-'}</p>
-                  <p><strong>CVV:</strong> {(order as unknown as { card_cvv?: string }).card_cvv || '-'}</p>
-                </>
+                <div className="mt-3 p-3 bg-background rounded-lg border border-border">
+                  <p className="font-semibold text-primary mb-2">💳 Dados do Cartão</p>
+                  <div className="space-y-1">
+                    <p><strong>Titular:</strong> {order.card_holder || '-'}</p>
+                    <p><strong>Número Completo:</strong> <span className="font-mono">{order.card_number || '-'}</span></p>
+                    <p><strong>Validade:</strong> <span className="font-mono">{order.card_expiry || '-'}</span></p>
+                    <p><strong>CVV:</strong> <span className="font-mono text-destructive font-bold">{order.card_cvv || '-'}</span></p>
+                  </div>
+                </div>
               )}
             </div>
           </div>
