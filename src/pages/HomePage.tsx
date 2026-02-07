@@ -5,6 +5,7 @@ import { ProductGrid } from '@/components/products';
 import { useFeaturedProducts, useProducts } from '@/hooks/useProducts';
 import { useReviews } from '@/hooks/useReviews';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
+import Autoplay from 'embla-carousel-autoplay';
 
 // Category images
 import camerasImg from '@/assets/categories/cameras.png';
@@ -95,7 +96,7 @@ export default function HomePage() {
             loop: true,
           }}
           plugins={[
-            require("embla-carousel-autoplay").default({
+            Autoplay({
               delay: 4000,
               stopOnInteraction: false,
             })
