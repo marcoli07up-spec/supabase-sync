@@ -57,15 +57,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [...currentItems, { product, quantity }];
     });
     
-    // Trigger animation and show toast
+    // Trigger animation and show toast (positioned above floating cart)
     setIsAnimating(true);
     toast.success(`${product.name} adicionado ao carrinho!`, {
-      position: 'bottom-right',
+      position: 'top-center',
       duration: 2000,
     });
     
-    // Reset animation after delay
-    setTimeout(() => setIsAnimating(false), 600);
+    // Extended animation for visibility
+    setTimeout(() => setIsAnimating(false), 1200);
   }, []);
 
   const removeItem = (productId: string) => {
