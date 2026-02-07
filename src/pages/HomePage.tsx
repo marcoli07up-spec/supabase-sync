@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, RefreshCw, Shield, CreditCard, Star, CheckCircle } from 'lucide-react';
 import { Layout } from '@/components/layout';
@@ -54,6 +55,9 @@ const promoImages = [{
   alt: 'Pagamento Seguro'
 }];
 export default function HomePage() {
+  const autoplayPlugin = useRef(
+    Autoplay({ delay: 4000, stopOnInteraction: false })
+  );
   const {
     data: featuredProducts,
     isLoading: featuredLoading
@@ -95,12 +99,7 @@ export default function HomePage() {
             align: "start",
             loop: true,
           }}
-          plugins={[
-            Autoplay({
-              delay: 4000,
-              stopOnInteraction: false,
-            })
-          ]}
+          plugins={[autoplayPlugin.current]}
         >
           <CarouselContent>
             {bannerImages.map((banner, index) => <CarouselItem key={index}>
