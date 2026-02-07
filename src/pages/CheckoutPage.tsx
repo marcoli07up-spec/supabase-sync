@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +16,7 @@ import { formatCurrency } from '@/lib/format';
 import { formatPhone, formatCPF, formatCEP, formatCardNumber, formatCardExpiry, formatCVV, isValidCPF, isValidEmail } from '@/lib/masks';
 import { toast } from 'sonner';
 import { CheckoutFormData, PaymentMethod, Product } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
 const personalInfoSchema = z.object({
   customer_name: z.string().min(3, 'Nome completo é obrigatório'),
@@ -102,15 +103,109 @@ export default function CheckoutPage() {
   const pixDiscount = 5;
   const total = paymentMethod === 'pix' ? getTotalWithDiscount(pixDiscount) : getTotal();
 
+  // Track if abandoned cart was already saved
+  const abandonedCartIdRef = useRef<string | null>(null);
+  const hasReachedPaymentRef = useRef(false);
+
+  // Function to save abandoned cart
+  const saveAbandonedCart = useCallback(async () => {
+    if (items.length === 0 || hasReachedPaymentRef.current) return;
+
+    const formData = watch();
+    const hasEmailOrPhone = formData.customer_email || formData.customer_phone;
+    const hasReachedStep2 = currentStep >= 2;
+
+    if (!hasEmailOrPhone && !hasReachedStep2) return;
+
+    const cartData = {
+      customer_name: formData.customer_name || null,
+      customer_email: formData.customer_email || null,
+      customer_phone: formData.customer_phone || null,
+      customer_cep: formData.customer_cep || null,
+      customer_address: formData.customer_address ? 
+        `${formData.customer_address}, ${formData.customer_number || ''}${formData.customer_complement ? ` - ${formData.customer_complement}` : ''}` : null,
+      customer_city: formData.customer_city || null,
+      customer_state: formData.customer_state || null,
+      cart_items: items.map(item => ({
+        product_id: item.product.id,
+        product_name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        image_url: item.product.image_url,
+      })),
+      cart_total: getTotal(),
+      status: 'abandoned',
+    };
+
+    try {
+      if (abandonedCartIdRef.current) {
+        // Update existing
+        await supabase
+          .from('abandoned_carts')
+          .update(cartData)
+          .eq('id', abandonedCartIdRef.current);
+      } else {
+        // Create new
+        const { data } = await supabase
+          .from('abandoned_carts')
+          .insert(cartData)
+          .select('id')
+          .single();
+        
+        if (data) {
+          abandonedCartIdRef.current = data.id;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save abandoned cart:', error);
+    }
+  }, [items, currentStep, watch, getTotal]);
+
+  // Delete abandoned cart when order is completed
+  const deleteAbandonedCart = async () => {
+    if (abandonedCartIdRef.current) {
+      await supabase
+        .from('abandoned_carts')
+        .delete()
+        .eq('id', abandonedCartIdRef.current);
+      abandonedCartIdRef.current = null;
+    }
+  };
+
   // Scroll to top on step change
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentStep]);
+
+  // Save abandoned cart when reaching step 2 (address page)
+  useEffect(() => {
+    if (currentStep === 2) {
+      saveAbandonedCart();
+    }
+  }, [currentStep, saveAbandonedCart]);
+
+  // Mark as reached payment step (step 3)
+  useEffect(() => {
+    if (currentStep === 3) {
+      hasReachedPaymentRef.current = true;
+    }
   }, [currentStep]);
 
   // Handle input masking
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhone(e.target.value);
     setValue('customer_phone', formatted);
+    // Save abandoned cart when phone is filled
+    if (formatted.length >= 14) {
+      saveAbandonedCart();
+    }
+  };
+
+  const handleEmailBlur = () => {
+    const email = watch('customer_email');
+    if (email && isValidEmail(email)) {
+      saveAbandonedCart();
+    }
   };
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,6 +287,9 @@ export default function CheckoutPage() {
           total,
         });
         
+        // Delete abandoned cart since order was completed
+        await deleteAbandonedCart();
+        
         setIsProcessingCard(false);
         setShowCreditCardAnalysis(true);
         // Don't clear cart or navigate yet - keep showing analysis
@@ -205,6 +303,9 @@ export default function CheckoutPage() {
           cartItems: items,
           total,
         });
+
+        // Delete abandoned cart since order was completed
+        await deleteAbandonedCart();
 
         // Build WhatsApp message with order summary
         const orderSummary = items.map(item => 
@@ -241,6 +342,9 @@ export default function CheckoutPage() {
         cartItems: items,
         total,
       });
+
+      // Delete abandoned cart since order was completed
+      await deleteAbandonedCart();
 
       clearCart();
       toast.success('Pedido realizado com sucesso!');
@@ -395,6 +499,7 @@ export default function CheckoutPage() {
                           className="mt-1 text-base"
                           autoComplete="email"
                           inputMode="email"
+                          onBlur={handleEmailBlur}
                         />
                         {errors.customer_email && (
                           <p className="text-destructive text-sm mt-1">{errors.customer_email.message}</p>
