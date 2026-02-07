@@ -7,13 +7,7 @@ import { useBanners } from '@/hooks/useBanners';
 import { useFeaturedProducts, useProducts } from '@/hooks/useProducts';
 import { useReviews } from '@/hooks/useReviews';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 
 // Category images
 import camerasImg from '@/assets/categories/cameras.png';
@@ -27,100 +21,89 @@ import freteGratisImg from '@/assets/promos/frete-gratis.png';
 import pixDescontoImg from '@/assets/promos/pix-desconto.png';
 import garantiaImg from '@/assets/promos/garantia.png';
 import pagamentoSeguroImg from '@/assets/promos/pagamento-seguro.png';
-
 const categoryImages: Record<string, string> = {
   cameras: camerasImg,
   lentes: lentesImg,
   audio: audioImg,
   mochilas: mochilasImg,
-  iluminacao: iluminacaoImg,
+  iluminacao: iluminacaoImg
 };
-
-const promoImages = [
-  { src: freteGratisImg, alt: 'Frete Grátis' },
-  { src: pixDescontoImg, alt: 'Desconto no PIX' },
-  { src: garantiaImg, alt: '1 Ano de Garantia' },
-  { src: pagamentoSeguroImg, alt: 'Pagamento Seguro' },
-];
-
+const promoImages = [{
+  src: freteGratisImg,
+  alt: 'Frete Grátis'
+}, {
+  src: pixDescontoImg,
+  alt: 'Desconto no PIX'
+}, {
+  src: garantiaImg,
+  alt: '1 Ano de Garantia'
+}, {
+  src: pagamentoSeguroImg,
+  alt: 'Pagamento Seguro'
+}];
 export default function HomePage() {
-  const { data: banners, isLoading: bannersLoading } = useBanners();
-  const { data: featuredProducts, isLoading: featuredLoading } = useFeaturedProducts();
-  const { data: allProducts, isLoading: productsLoading } = useProducts();
-  const { data: reviews } = useReviews();
-
-  const categories = [
-    { id: '1', name: 'Câmeras', slug: 'cameras' },
-    { id: '2', name: 'Lentes', slug: 'lentes' },
-    { id: '3', name: 'Áudio', slug: 'audio' },
-    { id: '4', name: 'Mochilas', slug: 'mochilas' },
-    { id: '5', name: 'Iluminação', slug: 'iluminacao' },
-  ];
-
-  return (
-    <Layout>
+  const {
+    data: banners,
+    isLoading: bannersLoading
+  } = useBanners();
+  const {
+    data: featuredProducts,
+    isLoading: featuredLoading
+  } = useFeaturedProducts();
+  const {
+    data: allProducts,
+    isLoading: productsLoading
+  } = useProducts();
+  const {
+    data: reviews
+  } = useReviews();
+  const categories = [{
+    id: '1',
+    name: 'Câmeras',
+    slug: 'cameras'
+  }, {
+    id: '2',
+    name: 'Lentes',
+    slug: 'lentes'
+  }, {
+    id: '3',
+    name: 'Áudio',
+    slug: 'audio'
+  }, {
+    id: '4',
+    name: 'Mochilas',
+    slug: 'mochilas'
+  }, {
+    id: '5',
+    name: 'Iluminação',
+    slug: 'iluminacao'
+  }];
+  return <Layout>
       {/* Hero Banner Carousel */}
       <section className="relative">
-        {bannersLoading ? (
-          <Skeleton className="w-full aspect-[21/9] md:aspect-[3/1]" />
-        ) : banners && banners.length > 0 ? (
-          <Carousel className="w-full">
+        {bannersLoading ? <Skeleton className="w-full aspect-[21/9] md:aspect-[3/1]" /> : banners && banners.length > 0 ? <Carousel className="w-full">
             <CarouselContent>
-              {banners.map((banner) => (
-                <CarouselItem key={banner.id}>
+              {banners.map(banner => <CarouselItem key={banner.id}>
                   <div className="relative aspect-[21/9] md:aspect-[3/1] overflow-hidden">
-                    <img
-                      src={banner.image_url}
-                      alt={banner.title || 'Banner'}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={banner.image_url} alt={banner.title || 'Banner'} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-transparent flex items-center">
-                      <div className="container-custom">
-                        <div className="max-w-lg">
-                          {banner.title && (
-                            <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-2 md:mb-4">
-                              {banner.title}
-                            </h1>
-                          )}
-                          {banner.subtitle && (
-                            <p className="text-muted-foreground text-sm md:text-lg mb-4 md:mb-6">
-                              {banner.subtitle}
-                            </p>
-                          )}
-                          {banner.link && (
-                            <Link to={banner.link}>
-                              <Button size="lg" className="group">
-                                {banner.button_text || 'Ver mais'}
-                                <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                              </Button>
-                            </Link>
-                          )}
-                        </div>
-                      </div>
+                      
                     </div>
                   </div>
-                </CarouselItem>
-              ))}
+                </CarouselItem>)}
             </CarouselContent>
             <CarouselPrevious className="left-4" />
             <CarouselNext className="right-4" />
-          </Carousel>
-        ) : null}
+          </Carousel> : null}
       </section>
 
       {/* Benefits bar with promo images */}
       <section className="py-4 md:py-6">
         <div className="container-custom">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            {promoImages.map((promo, index) => (
-              <div key={index} className="aspect-video overflow-hidden rounded-xl">
-                <img
-                  src={promo.src}
-                  alt={promo.alt}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
+            {promoImages.map((promo, index) => <div key={index} className="aspect-video overflow-hidden rounded-xl">
+                <img src={promo.src} alt={promo.alt} className="w-full h-full object-cover" />
+              </div>)}
           </div>
         </div>
       </section>
@@ -134,10 +117,7 @@ export default function HomePage() {
               Ver todos
             </Link>
           </div>
-          <ProductGrid
-            products={featuredProducts || []}
-            isLoading={featuredLoading}
-          />
+          <ProductGrid products={featuredProducts || []} isLoading={featuredLoading} />
         </div>
       </section>
 
@@ -146,23 +126,13 @@ export default function HomePage() {
         <div className="container-custom">
           <h2 className="text-xl md:text-2xl font-bold mb-6 text-center">Navegue por Categoria</h2>
           <div className="flex flex-col md:grid md:grid-cols-5 gap-3 md:gap-4">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                to={`/categoria/${category.slug}`}
-                className="relative aspect-[16/9] md:aspect-[3/4] rounded-2xl overflow-hidden group"
-              >
-                <img
-                  src={categoryImages[category.slug]}
-                  alt={category.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+            {categories.map(category => <Link key={category.id} to={`/categoria/${category.slug}`} className="relative aspect-[16/9] md:aspect-[3/4] rounded-2xl overflow-hidden group">
+                <img src={categoryImages[category.slug]} alt={category.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">
                   <h3 className="text-white font-bold text-lg">{category.name}</h3>
                 </div>
-              </Link>
-            ))}
+              </Link>)}
           </div>
         </div>
       </section>
@@ -171,16 +141,12 @@ export default function HomePage() {
       <section className="py-8 md:py-12">
         <div className="container-custom">
           <h2 className="text-xl md:text-2xl font-bold mb-6">Todos os Produtos</h2>
-          <ProductGrid
-            products={allProducts || []}
-            isLoading={productsLoading}
-          />
+          <ProductGrid products={allProducts || []} isLoading={productsLoading} />
         </div>
       </section>
 
       {/* Reviews with Reclame Aqui Badge */}
-      {reviews && reviews.length > 0 && (
-        <section className="py-8 md:py-12 bg-secondary">
+      {reviews && reviews.length > 0 && <section className="py-8 md:py-12 bg-secondary">
           <div className="container-custom">
             <div className="text-center mb-6">
               <h2 className="text-xl md:text-2xl font-bold mb-2">O que nossos clientes dizem</h2>
@@ -194,17 +160,11 @@ export default function HomePage() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {reviews.slice(0, 4).map((review) => (
-                <div key={review.id} className="bg-card p-6 rounded-lg border border-border">
+              {reviews.slice(0, 4).map(review => <div key={review.id} className="bg-card p-6 rounded-lg border border-border">
                   <div className="flex gap-1 mb-3">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < review.rating ? 'text-primary fill-primary' : 'text-muted'
-                        }`}
-                      />
-                    ))}
+                    {Array.from({
+                length: 5
+              }).map((_, i) => <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'text-primary fill-primary' : 'text-muted'}`} />)}
                   </div>
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
                     "{review.comment}"
@@ -216,30 +176,18 @@ export default function HomePage() {
                       Verificado
                     </span>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
             <div className="text-center mt-6">
-              <a 
-                href="https://www.reclameaqui.com.br" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <img 
-                  src="https://www.reclameaqui.com.br/dist/img/logo-reclame-aqui.svg" 
-                  alt="Reclame Aqui" 
-                  className="h-5"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+              <a href="https://www.reclameaqui.com.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <img src="https://www.reclameaqui.com.br/dist/img/logo-reclame-aqui.svg" alt="Reclame Aqui" className="h-5" onError={e => {
+              e.currentTarget.style.display = 'none';
+            }} />
                 Ver todas as avaliações
               </a>
             </div>
           </div>
-        </section>
-      )}
+        </section>}
 
       {/* About section */}
       <section className="py-8 md:py-12">
@@ -279,6 +227,5 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-    </Layout>
-  );
+    </Layout>;
 }
