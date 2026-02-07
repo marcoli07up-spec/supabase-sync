@@ -1,11 +1,13 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Truck, RefreshCw, Shield, CreditCard, Star, CheckCircle } from 'lucide-react';
+import { Truck, RefreshCw, Shield, CreditCard, Star, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { ProductGrid } from '@/components/products';
 import { useFeaturedProducts, useProducts } from '@/hooks/useProducts';
 import { useReviews } from '@/hooks/useReviews';
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext, type CarouselApi } from '@/components/ui/carousel';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import Autoplay from 'embla-carousel-autoplay';
 
 // Category images
@@ -69,6 +71,24 @@ export default function HomePage() {
   const autoplayPlugin = useRef(
     Autoplay({ delay: 4000, stopOnInteraction: false })
   );
+  const [mobileApi, setMobileApi] = useState<CarouselApi>();
+  const [mobileCurrentIndex, setMobileCurrentIndex] = useState(0);
+  const mobileSlideCount = bannerImagesMobile.length;
+  
+  const onMobileSelect = useCallback(() => {
+    if (!mobileApi) return;
+    setMobileCurrentIndex(mobileApi.selectedScrollSnap());
+  }, [mobileApi]);
+  
+  useEffect(() => {
+    if (!mobileApi) return;
+    onMobileSelect();
+    mobileApi.on("select", onMobileSelect);
+    return () => {
+      mobileApi.off("select", onMobileSelect);
+    };
+  }, [mobileApi, onMobileSelect]);
+  
   const {
     data: featuredProducts,
     isLoading: featuredLoading
@@ -111,6 +131,7 @@ export default function HomePage() {
             loop: true,
           }}
           plugins={[autoplayPlugin.current]}
+          setApi={setMobileApi}
         >
           <CarouselContent>
             {bannerImagesMobile.map((banner, index) => <CarouselItem key={index}>
@@ -119,7 +140,33 @@ export default function HomePage() {
                 </Link>
               </CarouselItem>)}
           </CarouselContent>
+          
+          {/* Mobile navigation arrows */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 rounded-full h-10 w-10"
+            onClick={() => mobileApi?.scrollPrev()}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 rounded-full h-10 w-10"
+            onClick={() => mobileApi?.scrollNext()}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
         </Carousel>
+        
+        {/* Mobile progress bar */}
+        <div className="px-4 py-2">
+          <Progress value={((mobileCurrentIndex + 1) / mobileSlideCount) * 100} className="h-1" />
+          <p className="text-xs text-muted-foreground text-center mt-1">
+            {mobileCurrentIndex + 1} / {mobileSlideCount}
+          </p>
+        </div>
       </section>
 
       {/* Hero Banner Carousel - Desktop */}
