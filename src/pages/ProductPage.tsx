@@ -27,11 +27,6 @@ export default function ProductPage() {
     }
   };
 
-  const handleAddToCart = () => {
-    if (product) {
-      addItem(product, 1);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -201,16 +196,6 @@ export default function ProductPage() {
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Comprar Agora
-                </Button>
-                
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full h-12"
-                  onClick={handleAddToCart}
-                  disabled={(product.stock ?? 0) <= 0}
-                >
-                  Adicionar ao Carrinho
                 </Button>
                 
                 <p className="text-xs text-center text-muted-foreground">

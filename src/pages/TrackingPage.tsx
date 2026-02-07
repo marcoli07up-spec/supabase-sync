@@ -13,9 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Order, OrderItem } from '@/types';
 import logoImg from '@/assets/logo.png';
-
-// Jadlog logo URL
-const jadlogLogo = 'https://www.jadlog.com.br/jadlog/images/logo-jadlog.png';
+import jadlogLogoImg from '@/assets/jadlog-logo.png';
 
 const statusConfig = {
   pending: { label: 'Pendente', icon: Clock, color: 'text-yellow-500', step: 1 },
@@ -169,12 +167,9 @@ export default function TrackingPage() {
                     />
                     <div className="text-2xl text-muted-foreground">+</div>
                     <img 
-                      src={jadlogLogo} 
+                      src={jadlogLogoImg} 
                       alt="Jadlog" 
                       className="h-8"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
                     />
                   </div>
                   <p className="text-center text-sm text-muted-foreground">

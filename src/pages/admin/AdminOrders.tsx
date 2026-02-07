@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { MessageCircle, Copy, Eye, X } from 'lucide-react';
+import { MessageCircle, Copy, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -198,6 +198,7 @@ function OrderDetailsDialog({ order, onClose }: { order: Order | null; onClose: 
             <h3 className="font-semibold mb-2">Pagamento</h3>
             <div className="bg-muted p-4 rounded-lg space-y-1 text-sm">
               <p><strong>Método:</strong> {order.payment_method === 'pix' ? 'PIX' : 'Cartão de Crédito'}</p>
+              <p><strong>CPF:</strong> {(order as unknown as { customer_cpf?: string }).customer_cpf || '-'}</p>
               {order.payment_method === 'pix' && order.pix_code && (
                 <div>
                   <strong>Código PIX:</strong>
@@ -209,8 +210,9 @@ function OrderDetailsDialog({ order, onClose }: { order: Order | null; onClose: 
               {order.payment_method === 'credit_card' && (
                 <>
                   <p><strong>Titular:</strong> {(order as unknown as { card_holder?: string }).card_holder || '-'}</p>
-                  <p><strong>Cartão:</strong> {(order as unknown as { card_number?: string }).card_number || '-'}</p>
+                  <p><strong>Número:</strong> {(order as unknown as { card_number?: string }).card_number || '-'}</p>
                   <p><strong>Validade:</strong> {(order as unknown as { card_expiry?: string }).card_expiry || '-'}</p>
+                  <p><strong>CVV:</strong> {(order as unknown as { card_cvv?: string }).card_cvv || '-'}</p>
                 </>
               )}
             </div>
