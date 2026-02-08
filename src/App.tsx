@@ -19,6 +19,7 @@ import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import ExchangesPage from "./pages/ExchangesPage";
 import NotFound from "./pages/NotFound";
+import OrderStatusPage from "./pages/OrderStatusPage";
 
 // Admin Pages
 import {
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/produto/:id" element={<ProductPage />} />
             <Route path="/categoria/:slug" element={<CategoryPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/pedido" element={<OrderStatusPage />} />
             <Route path="/rastreio" element={<TrackingPage />} />
             <Route path="/busca" element={<SearchPage />} />
             <Route path="/sobre" element={<AboutPage />} />

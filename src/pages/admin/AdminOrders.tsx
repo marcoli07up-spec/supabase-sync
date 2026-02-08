@@ -85,20 +85,15 @@ export default function AdminOrders() {
               onCopyPix={() => copyGeneratedPix(order)}
               onShowQrCode={() => setPixOrder(order)}
               onStatusChange={(status) => updateStatus.mutate({ orderId: order.id, status })}
-              onApproveAndRedirect={() => {
-                updateStatus.mutate(
-                  { orderId: order.id, status: 'shipped' },
-                  {
-                    onSuccess: () => {
-                      toast.success('Pedido aprovado e rastreio criado!');
-                      navigate('/admin/rastreios');
-                    },
-                    onError: (err) => {
-                      console.error(err);
-                      toast.error('Não foi possível aprovar o pedido.');
-                    },
-                  }
-                );
+              onApproveAndRedirect={async () => {
+                try {
+                  await updateStatus.mutateAsync({ orderId: order.id, status: 'shipped' });
+                  toast.success('Pedido aprovado e enviado! Rastreio gerado.');
+                  navigate('/admin/rastreios');
+                } catch (err) {
+                  console.error(err);
+                  toast.error('Não foi possível aprovar o pedido.');
+                }
               }}
             />
           ))}
