@@ -35,14 +35,14 @@ export default function AdminTracking() {
     }
   }, [searchParams]);
 
-  // Get all tracking entries from orders
+  // Get all orders with tracking (approved, shipped, delivered)
   const { data: orders, isLoading, refetch } = useQuery({
     queryKey: ['admin', 'tracking'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
         .select('id, customer_cpf, customer_name, tracking_code, created_at, status')
-        .not('customer_cpf', 'is', null)
+        .in('status', ['approved', 'shipped', 'delivered'])
         .order('created_at', { ascending: false });
       
       if (error) throw error;
