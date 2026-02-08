@@ -62,7 +62,8 @@ export default function AdminOrders() {
                 updateStatus.mutate({ orderId: order.id, status: 'approved' }, {
                   onSuccess: () => {
                     toast.success('Pedido aprovado com sucesso!');
-                    navigate('/admin/rastreio');
+                    // Redireciona para rastreios com o CPF do cliente para pré-popular
+                    navigate(`/admin/rastreios?cpf=${order.customer_cpf || ''}&order_id=${order.id}`);
                   }
                 });
               }}
