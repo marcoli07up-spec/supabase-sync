@@ -20,25 +20,38 @@ export function ProductCard({ product }: ProductCardProps) {
         <img
           src={product.image_url || '/placeholder.svg'}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+            (product.stock ?? 0) <= 0 ? 'grayscale' : ''
+          }`}
         />
         
+        {/* Out of stock overlay */}
+        {(product.stock ?? 0) <= 0 && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+            <span className="bg-destructive text-destructive-foreground text-lg font-bold px-4 py-2 rounded-lg uppercase tracking-wider shadow-lg">
+              Esgotado
+            </span>
+          </div>
+        )}
+        
         {/* Discount badge */}
-        {discount > 0 && (
+        {discount > 0 && (product.stock ?? 0) > 0 && (
           <span className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-xs font-bold px-2 py-1 rounded">
             -{discount}%
           </span>
         )}
 
-        {/* Quick actions overlay */}
-        <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-          <Link to={`/produto/${product.id}`}>
-            <Button size="sm" variant="secondary">
-              <Eye className="h-4 w-4 mr-1" />
-              Ver mais
-            </Button>
-          </Link>
-        </div>
+        {/* Quick actions overlay - only show if in stock */}
+        {(product.stock ?? 0) > 0 && (
+          <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <Link to={`/produto/${product.id}`}>
+              <Button size="sm" variant="secondary">
+                <Eye className="h-4 w-4 mr-1" />
+                Ver mais
+              </Button>
+            </Link>
+          </div>
+        )}
       </Link>
 
       {/* Content */}
