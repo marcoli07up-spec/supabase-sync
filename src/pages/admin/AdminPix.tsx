@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Copy, QrCode, Check, Settings, RefreshCw } from 'lucide-react';
+import { Copy, QrCode, Check, Settings, RefreshCw, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
+import { usePixSettings, useUpdatePixSettings, generatePixEMV } from '@/hooks/usePixSettings';
 
 // Generate unique order ID
 const generateOrderId = () => {
@@ -15,6 +16,9 @@ const generateOrderId = () => {
 };
 
 export default function AdminPix() {
+  const { data: pixSettings, isLoading } = usePixSettings();
+  const updateSettings = useUpdatePixSettings();
+
   const [pixKey, setPixKey] = useState('');
   const [merchantName, setMerchantName] = useState('iCamStore');
   const [merchantCity, setMerchantCity] = useState('SAO PAULO');
@@ -22,6 +26,15 @@ export default function AdminPix() {
   const [orderId, setOrderId] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Load saved settings
+  useEffect(() => {
+    if (pixSettings) {
+      if (pixSettings.pix_key) setPixKey(pixSettings.pix_key);
+      if (pixSettings.merchant_name) setMerchantName(pixSettings.merchant_name);
+      if (pixSettings.merchant_city) setMerchantCity(pixSettings.merchant_city);
+    }
+  }, [pixSettings]);
 
   // Auto-generate order ID on mount
   useEffect(() => {
@@ -33,84 +46,37 @@ export default function AdminPix() {
     toast.success('Novo ID gerado!');
   };
 
-  // Generate PIX EMV code
-  const generatePixCode = () => {
+  const saveSettings = async () => {
+    try {
+      await updateSettings.mutateAsync({
+        pix_key: pixKey,
+        merchant_name: merchantName,
+        merchant_city: merchantCity,
+      });
+      toast.success('Configurações do PIX salvas!');
+    } catch (error) {
+      toast.error('Erro ao salvar configurações');
+      console.error(error);
+    }
+  };
+
+  // Generate PIX code
+  const handleGeneratePixCode = () => {
     if (!pixKey.trim()) {
       toast.error('Informe a chave PIX');
       return;
     }
 
-    const value = parseFloat(amount) || 0;
+    const code = generatePixEMV({
+      pixKey,
+      merchantName,
+      merchantCity,
+      amount: parseFloat(amount) || undefined,
+      txId: orderId,
+    });
 
-    // Build PIX EMV payload
-    let payload = '';
-
-    // Payload Format Indicator
-    payload += '000201';
-
-    // Merchant Account Information (PIX)
-    const gui = '0014br.gov.bcb.pix';
-    const key = `01${String(pixKey.length).padStart(2, '0')}${pixKey}`;
-    const merchantAccount = gui + key;
-    payload += `26${String(merchantAccount.length).padStart(2, '0')}${merchantAccount}`;
-
-    // Merchant Category Code
-    payload += '52040000';
-
-    // Transaction Currency (BRL = 986)
-    payload += '5303986';
-
-    // Transaction Amount (if provided)
-    if (value > 0) {
-      const amountStr = value.toFixed(2);
-      payload += `54${String(amountStr.length).padStart(2, '0')}${amountStr}`;
-    }
-
-    // Country Code
-    payload += '5802BR';
-
-    // Merchant Name (max 25 chars)
-    const name = merchantName.substring(0, 25).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    payload += `59${String(name.length).padStart(2, '0')}${name}`;
-
-    // Merchant City (max 15 chars)
-    const city = merchantCity.substring(0, 15).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    payload += `60${String(city.length).padStart(2, '0')}${city}`;
-
-    // Additional Data Field Template (order ID)
-    if (orderId.trim()) {
-      const txId = orderId.substring(0, 25).toUpperCase().replace(/[^A-Z0-9]/g, '');
-      const additionalData = `05${String(txId.length).padStart(2, '0')}${txId}`;
-      payload += `62${String(additionalData.length).padStart(2, '0')}${additionalData}`;
-    } else {
-      payload += '6207' + '0503***';
-    }
-
-    // CRC16 placeholder
-    payload += '6304';
-
-    // Calculate CRC16
-    const crc = calculateCRC16(payload);
-    payload += crc;
-
-    setGeneratedCode(payload);
+    setGeneratedCode(code);
     toast.success('Código PIX gerado com sucesso!');
-  };
-
-  // CRC16-CCITT calculation
-  const calculateCRC16 = (str: string): string => {
-    let crc = 0xFFFF;
-    for (let i = 0; i < str.length; i++) {
-      crc ^= str.charCodeAt(i) << 8;
-      for (let j = 0; j < 8; j++) {
-        if (crc & 0x8000) {
-          crc = (crc << 1) ^ 0x1021;
-        } else {
-          crc <<= 1;
-        }
-      }
-    }
-    return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
   };
 
   const copyCode = () => {
@@ -132,6 +98,14 @@ export default function AdminPix() {
     const formatted = formatCurrency(e.target.value);
     setAmount(formatted);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -193,8 +167,18 @@ export default function AdminPix() {
               />
             </div>
 
-            {/* Amount */}
-            <div>
+            {/* Save Settings Button */}
+            <Button 
+              variant="outline" 
+              onClick={saveSettings} 
+              className="w-full"
+              disabled={updateSettings.isPending}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {updateSettings.isPending ? 'Salvando...' : 'Salvar Configurações do PIX'}
+            </Button>
+
+            <div className="border-t pt-4">
               <Label htmlFor="amount">Valor (R$)</Label>
               <Input
                 id="amount"
@@ -235,7 +219,7 @@ export default function AdminPix() {
               </p>
             </div>
 
-            <Button onClick={generatePixCode} className="w-full" size="lg">
+            <Button onClick={handleGeneratePixCode} className="w-full" size="lg">
               <QrCode className="h-4 w-4 mr-2" />
               Gerar Código PIX
             </Button>
