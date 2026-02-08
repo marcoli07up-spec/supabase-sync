@@ -194,8 +194,8 @@ export default function TrackingPage() {
                   </p>
                 </div>
 
-                {/* Jadlog Tracking Section */}
-                {trackingInfo && (status === 'shipped' || status === 'processing' || status === 'paid') && (
+                {/* Jadlog Tracking Section - only for shipped orders */}
+                {trackingInfo && status === 'shipped' && (
                   <JadlogTrackingCard trackingInfo={trackingInfo} orderCreatedAt={order.created_at || ''} />
                 )}
 
