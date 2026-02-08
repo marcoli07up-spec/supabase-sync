@@ -77,6 +77,9 @@ export interface Review {
   reviewer_name: string;
   rating: number;
   comment: string;
+  images: string[] | null;
+  approved: boolean;
+  display_date: string;
   created_at: string;
 }
 

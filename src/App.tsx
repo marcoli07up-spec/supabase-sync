@@ -30,6 +30,7 @@ import {
   AdminAbandonedCarts,
 } from "./pages/admin";
 import AdminTracking from "./pages/admin/AdminTracking";
+import AdminReviews from "./pages/admin/AdminReviews";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="produtos" element={<AdminProducts />} />
               <Route path="categorias" element={<AdminCategories />} />
               <Route path="rastreios" element={<AdminTracking />} />
+              <Route path="avaliacoes" element={<AdminReviews />} />
               <Route path="carrinhos-abandonados" element={<AdminAbandonedCarts />} />
             </Route>
             

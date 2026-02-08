@@ -5,18 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout';
 import { ProductGrid, ReviewsCarousel } from '@/components/products';
 import { useProduct, useRelatedProducts } from '@/hooks/useProducts';
-import { useReviews } from '@/hooks/useReviews';
+import { useReviews, useProductReviews } from '@/hooks/useReviews';
 import { useCart } from '@/contexts/CartContext';
 import { formatCurrency, formatInstallments, getDiscountPercentage } from '@/lib/format';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { trackViewContent } from '@/lib/facebook-pixel';
+import { ReviewForm } from '@/components/products/ReviewForm';
+import { ProductReviews } from '@/components/products/ProductReviews';
 
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
   const { data: product, isLoading } = useProduct(id || '');
   const { data: relatedProducts } = useRelatedProducts(id || '', product?.category_id || null);
   const { data: reviews } = useReviews();
+  const { data: productReviews } = useProductReviews(id || '');
   const { addItem } = useCart();
 
   const discount = product ? getDiscountPercentage(product.original_price || 0, product.price) : 0;
@@ -259,6 +262,21 @@ export default function ProductPage() {
                   <p className="text-muted-foreground leading-relaxed">{product.description}</p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Product Reviews Section */}
+      <section className="py-10 bg-secondary/30">
+        <div className="container-custom">
+          <h2 className="text-2xl font-bold mb-6">Avaliações deste produto</h2>
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <ProductReviews productId={id || ''} />
+            </div>
+            <div>
+              <ReviewForm productId={id || ''} productName={product.name} />
             </div>
           </div>
         </div>
