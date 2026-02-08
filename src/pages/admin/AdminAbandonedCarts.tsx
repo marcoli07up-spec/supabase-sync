@@ -1,4 +1,4 @@
-import { MessageCircle, Eye, CheckCircle } from 'lucide-react';
+import { MessageCircle, Eye, CheckCircle, Copy, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { usePixSettings, generatePixEMV } from '@/hooks/usePixSettings';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface CartItem {
   product: {
@@ -51,8 +53,10 @@ const statusLabels: Record<string, string> = {
 
 export default function AdminAbandonedCarts() {
   const { data: carts, isLoading } = useAbandonedCarts();
+  const { data: pixSettings } = usePixSettings();
   const updateStatus = useUpdateAbandonedCartStatus();
   const [selectedCart, setSelectedCart] = useState<AbandonedCart | null>(null);
+  const [pixCart, setPixCart] = useState<AbandonedCart | null>(null);
 
   const openWhatsApp = (cart: AbandonedCart) => {
     if (!cart.customer_phone) {
@@ -95,6 +99,32 @@ export default function AdminAbandonedCarts() {
     toast.success('Carrinho marcado como perdido.');
   };
 
+  const generatePixCode = (cart: AbandonedCart): string => {
+    if (!pixSettings?.pix_key) {
+      return '';
+    }
+    return generatePixEMV({
+      pixKey: pixSettings.pix_key,
+      merchantName: pixSettings.merchant_name,
+      merchantCity: pixSettings.merchant_city,
+      amount: cart.cart_total,
+      txId: cart.id.slice(0, 8).toUpperCase(),
+    });
+  };
+
+  const copyPixCode = (cart: AbandonedCart) => {
+    const code = generatePixCode(cart);
+    if (!code) {
+      toast.error('Configure a chave PIX em Admin > PIX');
+      return;
+    }
+    navigator.clipboard.writeText(code);
+    toast.success('Código PIX copiado!');
+  };
+
+  const validCartItems = (cart: AbandonedCart) => 
+    ((cart.cart_items as CartItem[]) || []).filter(item => item?.product);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Carrinhos Abandonados</h1>
@@ -135,7 +165,7 @@ export default function AdminAbandonedCarts() {
                   <div className="text-right">
                     <p className="text-xl font-bold">{formatCurrency(cart.cart_total)}</p>
                     <p className="text-sm text-muted-foreground">
-                      {((cart.cart_items as CartItem[]) || []).length} itens
+                      {validCartItems(cart).length} itens
                     </p>
                   </div>
                 </div>
@@ -143,11 +173,21 @@ export default function AdminAbandonedCarts() {
                 <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" onClick={() => setSelectedCart(cart)}>
                     <Eye className="h-4 w-4 mr-2" />
-                    Ver Itens
+                    Ver Pedido
+                  </Button>
+
+                  <Button size="sm" variant="outline" onClick={() => copyPixCode(cart)}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar PIX
+                  </Button>
+
+                  <Button size="sm" variant="outline" onClick={() => setPixCart(cart)}>
+                    <QrCode className="h-4 w-4 mr-2" />
+                    QR Code
                   </Button>
 
                   {cart.customer_phone && (
-                    <Button size="sm" variant="outline" onClick={() => openWhatsApp(cart)}>
+                    <Button size="sm" variant="default" onClick={() => openWhatsApp(cart)}>
                       <MessageCircle className="h-4 w-4 mr-2" />
                       WhatsApp
                     </Button>
@@ -180,20 +220,41 @@ export default function AdminAbandonedCarts() {
 
       {/* Cart Details Dialog */}
       <Dialog open={!!selectedCart} onOpenChange={() => setSelectedCart(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              Itens do Carrinho #{selectedCart?.id.slice(0, 8).toUpperCase()}
+              Pedido #{selectedCart?.id.slice(0, 8).toUpperCase()}
             </DialogTitle>
           </DialogHeader>
 
           {selectedCart && (
             <div className="space-y-4">
+              {/* Customer Info */}
+              <div className="p-4 bg-muted rounded-lg space-y-2">
+                <h4 className="font-semibold">Dados do Cliente</h4>
+                <div className="text-sm space-y-1">
+                  <p><strong>Nome:</strong> {selectedCart.customer_name || 'Não informado'}</p>
+                  <p><strong>Telefone:</strong> {selectedCart.customer_phone || 'Não informado'}</p>
+                  {selectedCart.customer_email && (
+                    <p><strong>Email:</strong> {selectedCart.customer_email}</p>
+                  )}
+                  {selectedCart.customer_address && (
+                    <p><strong>Endereço:</strong> {selectedCart.customer_address}</p>
+                  )}
+                  {(selectedCart.customer_city || selectedCart.customer_state) && (
+                    <p><strong>Cidade/UF:</strong> {selectedCart.customer_city} - {selectedCart.customer_state}</p>
+                  )}
+                  {selectedCart.customer_cep && (
+                    <p><strong>CEP:</strong> {selectedCart.customer_cep}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Cart Items */}
               <div className="space-y-2">
-                {((selectedCart.cart_items as CartItem[]) || [])
-                  .filter(item => item?.product)
-                  .map((item, index) => (
-                  <div key={index} className="flex items-center gap-4 p-3 bg-muted rounded-lg">
+                <h4 className="font-semibold">Itens do Carrinho</h4>
+                {validCartItems(selectedCart).map((item, index) => (
+                  <div key={index} className="flex items-center gap-4 p-3 bg-secondary/50 rounded-lg">
                     {item.product?.image_url && (
                       <img 
                         src={item.product.image_url} 
@@ -219,15 +280,69 @@ export default function AdminAbandonedCarts() {
                 <span>{formatCurrency(selectedCart.cart_total)}</span>
               </div>
 
-              {selectedCart.customer_name && (
-                <div className="text-sm space-y-1">
-                  <p><strong>Nome:</strong> {selectedCart.customer_name}</p>
-                  {selectedCart.customer_email && (
-                    <p><strong>Email:</strong> {selectedCart.customer_email}</p>
-                  )}
-                  {selectedCart.customer_phone && (
-                    <p><strong>Telefone:</strong> {selectedCart.customer_phone}</p>
-                  )}
+              {/* Actions */}
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button size="sm" variant="outline" onClick={() => copyPixCode(selectedCart)}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copiar PIX
+                </Button>
+                {selectedCart.customer_phone && (
+                  <Button size="sm" variant="default" onClick={() => openWhatsApp(selectedCart)}>
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    WhatsApp
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* PIX QR Code Dialog */}
+      <Dialog open={!!pixCart} onOpenChange={() => setPixCart(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              PIX - {formatCurrency(pixCart?.cart_total || 0)}
+            </DialogTitle>
+          </DialogHeader>
+
+          {pixCart && (
+            <div className="space-y-4">
+              {pixSettings?.pix_key ? (
+                <>
+                  <div className="flex justify-center p-4 bg-white rounded-lg">
+                    <QRCodeSVG 
+                      value={generatePixCode(pixCart)} 
+                      size={200}
+                      level="M"
+                      includeMargin={true}
+                    />
+                  </div>
+                  
+                  <div className="text-center text-sm text-muted-foreground">
+                    <p>Cliente: {pixCart.customer_name || 'Anônimo'}</p>
+                    <p className="font-mono">#{pixCart.id.slice(0, 8).toUpperCase()}</p>
+                  </div>
+
+                  <Button 
+                    className="w-full" 
+                    onClick={() => {
+                      copyPixCode(pixCart);
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar Código PIX
+                  </Button>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    Configure sua chave PIX em Admin → Ferramenta PIX
+                  </p>
+                  <Button variant="outline" onClick={() => setPixCart(null)}>
+                    Fechar
+                  </Button>
                 </div>
               )}
             </div>
