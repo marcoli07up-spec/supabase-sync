@@ -1,23 +1,47 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, Search, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, Search, ChevronDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useCategories } from '@/hooks/useCategories';
+import { useSearchProducts } from '@/hooks/useProducts';
 import logoImg from '@/assets/logo.png';
+import { formatCurrency } from '@/lib/format';
 
 export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const { data: categories } = useCategories();
+  const { data: suggestions } = useSearchProducts(searchTerm);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      window.location.href = `/busca?q=${encodeURIComponent(searchTerm)}`;
+      setShowSuggestions(false);
+      navigate(`/busca?q=${encodeURIComponent(searchTerm)}`);
     }
+  };
+
+  const handleSelectProduct = (productId: string) => {
+    setShowSuggestions(false);
+    setSearchTerm('');
+    navigate(`/produto/${productId}`);
   };
 
   return (
@@ -70,20 +94,74 @@ export function Header() {
           </Link>
 
           {/* Search - Desktop */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl">
-            <div className="relative w-full">
-              <Input
-                type="search"
-                placeholder="Buscar produtos..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pr-10"
-              />
-              <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-0">
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-          </form>
+          <div ref={searchRef} className="hidden md:flex flex-1 max-w-xl relative">
+            <form onSubmit={handleSearch} className="w-full">
+              <div className="relative w-full">
+                <Input
+                  type="search"
+                  placeholder="Buscar câmeras, lentes, acessórios..."
+                  value={searchTerm}
+                  onChange={e => {
+                    setSearchTerm(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  className="pr-10"
+                />
+                {searchTerm && (
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute right-8 top-0"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setShowSuggestions(false);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-0">
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
+            </form>
+            
+            {/* Search Suggestions Dropdown */}
+            {showSuggestions && searchTerm.length >= 2 && suggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+                {suggestions.slice(0, 6).map(product => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => handleSelectProduct(product.id)}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors text-left"
+                  >
+                    <img 
+                      src={product.image_url || '/placeholder.svg'} 
+                      alt={product.name}
+                      className="w-12 h-12 object-cover rounded"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{product.name}</p>
+                      <p className="text-sm text-primary font-bold">{formatCurrency(product.price)}</p>
+                    </div>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSuggestions(false);
+                    navigate(`/busca?q=${encodeURIComponent(searchTerm)}`);
+                  }}
+                  className="w-full p-3 text-center text-sm text-primary hover:bg-muted transition-colors border-t"
+                >
+                  Ver todos os resultados
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2">

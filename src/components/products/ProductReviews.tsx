@@ -1,6 +1,8 @@
-import { Star, CheckCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Star, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProductReviews } from '@/hooks/useReviews';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -8,8 +10,11 @@ interface ProductReviewsProps {
   productId: string;
 }
 
+const REVIEWS_PER_PAGE = 3;
+
 export function ProductReviews({ productId }: ProductReviewsProps) {
   const { data: reviews, isLoading } = useProductReviews(productId);
+  const [currentPage, setCurrentPage] = useState(1);
 
   if (isLoading) {
     return (
@@ -35,6 +40,9 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
   }
 
   const averageRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+  const totalPages = Math.ceil(reviews.length / REVIEWS_PER_PAGE);
+  const startIndex = (currentPage - 1) * REVIEWS_PER_PAGE;
+  const paginatedReviews = reviews.slice(startIndex, startIndex + REVIEWS_PER_PAGE);
 
   return (
     <div className="space-y-6">
@@ -63,7 +71,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
 
       {/* Reviews list */}
       <div className="space-y-4">
-        {reviews.map((review) => (
+        {paginatedReviews.map((review) => (
           <div
             key={review.id}
             className="bg-card border border-border rounded-xl p-5"
@@ -127,6 +135,31 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
           </div>
         ))}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm text-muted-foreground px-3">
+            {currentPage} de {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

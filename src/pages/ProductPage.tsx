@@ -101,25 +101,36 @@ export default function ProductPage() {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Product image */}
             <div className="relative">
-              <div className="aspect-square rounded-2xl overflow-hidden bg-muted border border-border">
+              <div className={`aspect-square rounded-2xl overflow-hidden bg-muted border border-border ${(product.stock ?? 0) <= 0 ? 'grayscale' : ''}`}>
                 <img
                   src={product.image_url || '/placeholder.svg'}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
+                
+                {/* Out of stock overlay */}
+                {(product.stock ?? 0) <= 0 && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <span className="bg-destructive text-destructive-foreground text-2xl font-bold px-6 py-3 rounded-lg uppercase tracking-wider shadow-lg">
+                      Esgotado
+                    </span>
+                  </div>
+                )}
               </div>
               
               {/* Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2">
-                {discount > 0 && (
-                  <Badge variant="destructive" className="text-sm font-bold px-3 py-1">
-                    -{discount}% OFF
+              {(product.stock ?? 0) > 0 && (
+                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                  {discount > 0 && (
+                    <Badge variant="destructive" className="text-sm font-bold px-3 py-1">
+                      -{discount}% OFF
+                    </Badge>
+                  )}
+                  <Badge variant="secondary" className="bg-primary text-primary-foreground text-sm font-medium px-3 py-1">
+                    Seminovo Revisado
                   </Badge>
-                )}
-                <Badge variant="secondary" className="bg-primary text-primary-foreground text-sm font-medium px-3 py-1">
-                  Seminovo Revisado
-                </Badge>
-              </div>
+                </div>
+              )}
 
               {/* Stock badge - Show "Última unidade disponível!" for seminovos */}
               {(product.stock ?? 0) <= 3 && (product.stock ?? 0) > 0 && (

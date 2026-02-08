@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
+import { removeAccents } from '@/lib/normalize';
 
 export function useProducts() {
   return useQuery({
@@ -108,15 +109,20 @@ export function useSearchProducts(query: string) {
     queryFn: async () => {
       if (!query.trim()) return [];
 
+      // Fetch all active products and filter client-side for accent-insensitive search
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('active', true)
-        .ilike('name', `%${query}%`)
-        .limit(10);
+        .eq('active', true);
 
       if (error) throw error;
-      return data as Product[];
+
+      const normalizedQuery = removeAccents(query.toLowerCase());
+      const filtered = (data as Product[]).filter(product => 
+        removeAccents(product.name.toLowerCase()).includes(normalizedQuery)
+      );
+      
+      return filtered.slice(0, 20);
     },
     enabled: query.length >= 2,
   });
