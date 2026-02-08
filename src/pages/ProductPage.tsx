@@ -270,26 +270,29 @@ export default function ProductPage() {
       </section>
 
       {/* Product Reviews Section */}
-      <section className="py-10 bg-secondary/30">
-        <div className="container-custom">
-          <h2 className="text-2xl font-bold mb-6">
-            {product.name.toLowerCase().includes('seminov') 
-              ? 'Avalie este produto' 
-              : 'Avaliações deste produto'}
-          </h2>
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Hide reviews list for seminovos (unique items) */}
-            {!product.name.toLowerCase().includes('seminov') && (
+      {product.name.toLowerCase().includes('seminov') ? (
+        /* Compact review form for seminovos */
+        <section className="py-6 bg-secondary/20">
+          <div className="container-custom max-w-2xl">
+            <ReviewForm productId={id || ''} productName={product.name} compact />
+          </div>
+        </section>
+      ) : (
+        /* Full reviews section for regular products */
+        <section className="py-10 bg-secondary/30">
+          <div className="container-custom">
+            <h2 className="text-2xl font-bold mb-6">Avaliações deste produto</h2>
+            <div className="grid lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
                 <ProductReviews productId={id || ''} />
               </div>
-            )}
-            <div className={product.name.toLowerCase().includes('seminov') ? 'lg:col-span-3 max-w-lg' : ''}>
-              <ReviewForm productId={id || ''} productName={product.name} />
+              <div>
+                <ReviewForm productId={id || ''} productName={product.name} />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Related products */}
       {relatedProducts && relatedProducts.length > 0 && (
