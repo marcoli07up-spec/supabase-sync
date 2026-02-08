@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, ArrowRight, CreditCard, QrCode, Lock, Loader2, ShoppingBag, Clock, MessageCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard, QrCode, Lock, Loader2, ShoppingBag, Clock, MessageCircle, CheckCircle, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,6 +81,13 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [showCreditCardAnalysis, setShowCreditCardAnalysis] = useState(false);
   const [isProcessingCard, setIsProcessingCard] = useState(false);
+  const [orderCompleted, setOrderCompleted] = useState(false);
+  const [completedOrderData, setCompletedOrderData] = useState<{
+    formData: CheckoutFormData;
+    items: typeof items;
+    total: number;
+    orderId?: string;
+  } | null>(null);
 
   // Check if order is above R$500 for WhatsApp redirect
   const isHighValueOrder = getTotal() >= 500;
@@ -371,7 +378,7 @@ export default function CheckoutPage() {
       }
 
       // Regular flow for PIX below R$500
-      await createOrder.mutateAsync({
+      const orderResult = await createOrder.mutateAsync({
         formData: data,
         cartItems: items,
         total,
@@ -383,9 +390,16 @@ export default function CheckoutPage() {
       // Delete abandoned cart since order was completed
       await deleteAbandonedCart();
 
+      // Store order data and show confirmation
+      setCompletedOrderData({
+        formData: data,
+        items: [...items],
+        total,
+        orderId: orderResult?.id,
+      });
+      setOrderCompleted(true);
       clearCart();
       toast.success('Pedido realizado com sucesso!');
-      navigate(`/rastreio?cpf=${encodeURIComponent(data.customer_cpf.replace(/\D/g, ''))}`);
     } catch (error) {
       toast.error('Erro ao processar pedido. Tente novamente.');
       console.error(error);
@@ -457,6 +471,137 @@ export default function CheckoutPage() {
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Falar no WhatsApp
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Order completed confirmation screen
+  if (orderCompleted && completedOrderData) {
+    return (
+      <Layout>
+        <div className="container-custom py-8">
+          <div className="max-w-2xl mx-auto">
+            {/* Success Header */}
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-10 w-10 text-success" />
+              </div>
+              <h1 className="text-2xl font-bold mb-2">Pedido Realizado com Sucesso!</h1>
+              <p className="text-muted-foreground">
+                Seu pedido foi registrado e está aguardando pagamento via PIX
+              </p>
+            </div>
+
+            {/* Order Summary */}
+            <div className="bg-card border border-border rounded-xl p-6 mb-6">
+              <h2 className="font-bold text-lg mb-4">Resumo do Pedido</h2>
+              
+              {/* Items */}
+              <div className="space-y-3 mb-4">
+                {completedOrderData.items.map((item) => (
+                  <div key={item.product.id} className="flex items-center gap-3">
+                    <img 
+                      src={item.product.image_url || '/placeholder.svg'} 
+                      alt={item.product.name}
+                      className="w-12 h-12 object-cover rounded"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{item.product.name}</p>
+                      <p className="text-xs text-muted-foreground">Qtd: {item.quantity}</p>
+                    </div>
+                    <p className="font-medium">{formatCurrency(item.product.price * item.quantity)}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total</span>
+                  <span className="text-primary">{formatCurrency(completedOrderData.total)}</span>
+                </div>
+                <p className="text-sm text-success mt-1">Inclui 5% de desconto no PIX</p>
+              </div>
+            </div>
+
+            {/* Customer Info */}
+            <div className="bg-secondary/50 rounded-xl p-6 mb-6">
+              <h2 className="font-bold text-lg mb-4">Dados do Pedido</h2>
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Nome</p>
+                  <p className="font-medium">{completedOrderData.formData.customer_name}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">CPF</p>
+                  <p className="font-medium">{completedOrderData.formData.customer_cpf}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Email</p>
+                  <p className="font-medium">{completedOrderData.formData.customer_email}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Telefone</p>
+                  <p className="font-medium">{completedOrderData.formData.customer_phone}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-muted-foreground">Endereço de Entrega</p>
+                  <p className="font-medium">
+                    {completedOrderData.formData.customer_address}, {completedOrderData.formData.customer_number}
+                    {completedOrderData.formData.customer_complement && ` - ${completedOrderData.formData.customer_complement}`}
+                  </p>
+                  <p className="font-medium">
+                    {completedOrderData.formData.customer_city} - {completedOrderData.formData.customer_state}, CEP: {completedOrderData.formData.customer_cep}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* PIX Payment Info */}
+            <div className="bg-primary/10 border border-primary/20 rounded-xl p-6 mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <QrCode className="h-5 w-5 text-primary" />
+                <h2 className="font-bold text-lg">Pagamento via PIX</h2>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                Aguarde o contato da nossa equipe pelo WhatsApp com o código PIX para pagamento.
+              </p>
+              <Button 
+                onClick={() => {
+                  const phone = '5511999999999';
+                  const message = encodeURIComponent(
+                    `Olá! Acabei de fazer um pedido e gostaria de receber o código PIX para pagamento.\n\n` +
+                    `Nome: ${completedOrderData.formData.customer_name}\n` +
+                    `CPF: ${completedOrderData.formData.customer_cpf}\n` +
+                    `Valor: ${formatCurrency(completedOrderData.total)}`
+                  );
+                  window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+                }}
+                className="w-full"
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Solicitar PIX no WhatsApp
+              </Button>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => navigate(`/rastreio?cpf=${encodeURIComponent(completedOrderData.formData.customer_cpf.replace(/\D/g, ''))}`)}
+              >
+                <Truck className="h-4 w-4 mr-2" />
+                Acompanhar Pedido
+              </Button>
+              <Button 
+                className="flex-1"
+                onClick={() => navigate('/')}
+              >
+                Continuar Comprando
               </Button>
             </div>
           </div>
