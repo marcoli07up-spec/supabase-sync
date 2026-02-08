@@ -62,7 +62,10 @@ export default function AdminAbandonedCarts() {
 
     const phone = cart.customer_phone.replace(/\D/g, '');
     const items = (cart.cart_items as CartItem[]) || [];
-    const itemsText = items.map(i => `• ${i.product.name} (${i.quantity}x)`).join('\n');
+    const itemsText = items
+      .filter(i => i?.product?.name)
+      .map(i => `• ${i.product.name} (${i.quantity}x)`)
+      .join('\n');
     
     const message = encodeURIComponent(
       `Olá ${cart.customer_name || 'cliente'}!\n\n` +
@@ -187,23 +190,25 @@ export default function AdminAbandonedCarts() {
           {selectedCart && (
             <div className="space-y-4">
               <div className="space-y-2">
-                {((selectedCart.cart_items as CartItem[]) || []).map((item, index) => (
+                {((selectedCart.cart_items as CartItem[]) || [])
+                  .filter(item => item?.product)
+                  .map((item, index) => (
                   <div key={index} className="flex items-center gap-4 p-3 bg-muted rounded-lg">
-                    {item.product.image_url && (
+                    {item.product?.image_url && (
                       <img 
                         src={item.product.image_url} 
-                        alt={item.product.name}
+                        alt={item.product?.name || 'Produto'}
                         className="w-12 h-12 object-cover rounded"
                       />
                     )}
                     <div className="flex-1">
-                      <p className="font-medium">{item.product.name}</p>
+                      <p className="font-medium">{item.product?.name || 'Produto removido'}</p>
                       <p className="text-sm text-muted-foreground">
-                        {item.quantity}x {formatCurrency(item.product.price)}
+                        {item.quantity}x {formatCurrency(item.product?.price || 0)}
                       </p>
                     </div>
                     <p className="font-medium">
-                      {formatCurrency(item.product.price * item.quantity)}
+                      {formatCurrency((item.product?.price || 0) * item.quantity)}
                     </p>
                   </div>
                 ))}
