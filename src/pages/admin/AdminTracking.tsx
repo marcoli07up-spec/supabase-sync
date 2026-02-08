@@ -53,55 +53,32 @@ export default function AdminTracking() {
   });
 
   const createTracking = useMutation({
-    mutationFn: async ({ cpf, orderId, name }: { cpf: string; orderId?: string | null; name?: string }) => {
+    mutationFn: async ({ cpf, name }: { cpf: string; name?: string }) => {
       const cpfDigits = cpf.replace(/\D/g, '');
       if (!cpfDigits) throw new Error('CPF inválido');
 
-      let resolvedOrderId = orderId ?? null;
-
-      // Se não veio um order_id pela URL, tenta pegar o pedido mais recente desse CPF
-      if (!resolvedOrderId) {
-        const { data: existingOrder, error: findError } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('customer_cpf', cpfDigits)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (findError || !existingOrder?.id) {
-          throw new Error('Pedido não encontrado para este CPF');
-        }
-
-        resolvedOrderId = existingOrder.id;
-      }
-
-      const patch: Record<string, unknown> = {
-        status: 'shipped',
+      // Criar um novo pedido "vazio" só para gerar o rastreio
+      const { error } = await supabase.from('orders').insert({
         customer_cpf: cpfDigits,
-      };
+        customer_name: name?.trim() || 'Cliente',
+        customer_phone: '0',
+        total: 0,
+        status: 'shipped',
+        payment_method: 'pix',
+      });
 
-      if (name?.trim()) {
-        patch.customer_name = name.trim();
-      }
-
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update(patch)
-        .eq('id', resolvedOrderId);
-
-      if (updateError) throw updateError;
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'tracking'] });
-      toast.success('Rastreio criado: pedido marcado como enviado!');
+      toast.success('Rastreio criado com sucesso!');
       setNewCpf('');
       setCustomerName('');
       setTargetOrderId(null);
     },
     onError: (err) => {
       console.error(err);
-      toast.error('Erro ao criar rastreio (marcar como enviado).');
+      toast.error('Erro ao criar rastreio.');
     },
   });
 
@@ -112,7 +89,7 @@ export default function AdminTracking() {
       return;
     }
 
-    createTracking.mutate({ cpf: newCpf, orderId: targetOrderId, name: customerName });
+    createTracking.mutate({ cpf: newCpf, name: customerName });
   };
 
   const copyTrackingLink = (cpf: string) => {
