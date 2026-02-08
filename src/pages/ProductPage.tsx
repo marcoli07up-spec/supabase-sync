@@ -261,7 +261,10 @@ export default function ProductPage() {
               {product.description && (
                 <div className="border-t pt-6">
                   <h3 className="font-semibold mb-3 text-lg">Descrição do Produto</h3>
-                  <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+                  <div 
+                    className="text-muted-foreground leading-relaxed prose prose-sm max-w-none prose-table:border prose-table:border-border prose-td:border prose-td:border-border prose-td:p-2 prose-th:border prose-th:border-border prose-th:p-2 prose-th:bg-muted"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
                 </div>
               )}
             </div>
