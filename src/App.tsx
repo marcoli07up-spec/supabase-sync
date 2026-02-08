@@ -31,6 +31,7 @@ import {
 } from "./pages/admin";
 import AdminTracking from "./pages/admin/AdminTracking";
 import AdminReviews from "./pages/admin/AdminReviews";
+import AdminPix from "./pages/admin/AdminPix";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="categorias" element={<AdminCategories />} />
               <Route path="rastreios" element={<AdminTracking />} />
               <Route path="avaliacoes" element={<AdminReviews />} />
+              <Route path="pix" element={<AdminPix />} />
               <Route path="carrinhos-abandonados" element={<AdminAbandonedCarts />} />
             </Route>
             

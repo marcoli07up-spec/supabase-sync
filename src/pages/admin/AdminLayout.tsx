@@ -9,7 +9,8 @@ import {
   X,
   ChevronLeft,
   Truck,
-  Star
+  Star,
+  QrCode
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -21,7 +22,8 @@ const navItems = [
   { to: '/admin/categorias', icon: Tags, label: 'Categorias' },
   { to: '/admin/rastreios', icon: Truck, label: 'Rastreios' },
   { to: '/admin/avaliacoes', icon: Star, label: 'Avaliações' },
-  { to: '/admin/carrinhos-abandonados', icon: ShoppingCart, label: 'Carrinhos Abandonados' },
+  { to: '/admin/pix', icon: QrCode, label: 'Gerar PIX' },
+  { to: '/admin/carrinhos-abandonados', icon: ShoppingCart, label: 'Carrinhos' },
 ];
 
 export default function AdminLayout() {
