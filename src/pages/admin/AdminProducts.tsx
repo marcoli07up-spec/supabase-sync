@@ -323,12 +323,17 @@ export default function AdminProducts() {
               </div>
 
               <div className="md:col-span-2">
-                <Label>Descrição</Label>
+                <Label>Descrição (HTML)</Label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={4}
+                  rows={8}
+                  placeholder="<p>Descrição do produto...</p>&#10;&#10;<table>&#10;  <tr><th>Especificação</th><th>Valor</th></tr>&#10;  <tr><td>Marca</td><td>Canon</td></tr>&#10;</table>"
+                  className="font-mono text-sm"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Aceita HTML: &lt;p&gt;, &lt;table&gt;, &lt;ul&gt;, &lt;strong&gt;, &lt;em&gt;, etc.
+                </p>
               </div>
 
               <div>
