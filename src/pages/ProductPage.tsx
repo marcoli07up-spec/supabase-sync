@@ -269,22 +269,27 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* Product Reviews Section - Hide for seminovos (unique items) */}
-      {!product.name.toLowerCase().includes('seminov') && (
-        <section className="py-10 bg-secondary/30">
-          <div className="container-custom">
-            <h2 className="text-2xl font-bold mb-6">Avaliações deste produto</h2>
-            <div className="grid lg:grid-cols-3 gap-8">
+      {/* Product Reviews Section */}
+      <section className="py-10 bg-secondary/30">
+        <div className="container-custom">
+          <h2 className="text-2xl font-bold mb-6">
+            {product.name.toLowerCase().includes('seminov') 
+              ? 'Avalie este produto' 
+              : 'Avaliações deste produto'}
+          </h2>
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Hide reviews list for seminovos (unique items) */}
+            {!product.name.toLowerCase().includes('seminov') && (
               <div className="lg:col-span-2">
                 <ProductReviews productId={id || ''} />
               </div>
-              <div>
-                <ReviewForm productId={id || ''} productName={product.name} />
-              </div>
+            )}
+            <div className={product.name.toLowerCase().includes('seminov') ? 'lg:col-span-3 max-w-lg' : ''}>
+              <ReviewForm productId={id || ''} productName={product.name} />
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Related products */}
       {relatedProducts && relatedProducts.length > 0 && (
