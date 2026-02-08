@@ -274,7 +274,7 @@ export default function ProductPage() {
         </section>
       )}
 
-      {/* Social Proof - Customer Reviews Carousel */}
+      {/* Social Proof - Customer Reviews Carousel - Always show for all products */}
       {reviews && reviews.length > 0 && (
         <ReviewsCarousel reviews={reviews} />
       )}
