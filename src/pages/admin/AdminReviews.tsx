@@ -12,7 +12,9 @@ import {
   Image,
   Video,
   X,
-  Upload
+  Upload,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,6 +70,7 @@ export default function AdminReviews() {
   const [editingReview, setEditingReview] = useState<ReviewWithProduct | null>(null);
   const [productSearchOpen, setProductSearchOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
+  const [selectedReviews, setSelectedReviews] = useState<Set<string>>(new Set());
 
   // Form state
   const [selectedProduct, setSelectedProduct] = useState('');
@@ -155,10 +158,55 @@ export default function AdminReviews() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'reviews'] });
+      setSelectedReviews(new Set());
       toast.success('Avaliação removida!');
     },
     onError: () => toast.error('Erro ao remover avaliação'),
   });
+
+  // Bulk delete reviews
+  const bulkDeleteReviews = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase
+        .from('reviews')
+        .delete()
+        .in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'reviews'] });
+      setSelectedReviews(new Set());
+      toast.success('Avaliações removidas!');
+    },
+    onError: () => toast.error('Erro ao remover avaliações'),
+  });
+
+  const toggleSelectReview = (id: string) => {
+    setSelectedReviews(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedReviews.size === (reviews?.length || 0)) {
+      setSelectedReviews(new Set());
+    } else {
+      setSelectedReviews(new Set(reviews?.map(r => r.id) || []));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedReviews.size === 0) return;
+    if (confirm(`Remover ${selectedReviews.size} avaliação(ões)?`)) {
+      bulkDeleteReviews.mutate(Array.from(selectedReviews));
+    }
+  };
 
   // Upload image to storage
   const uploadImage = async (file: File): Promise<string | null> => {
@@ -598,35 +646,65 @@ export default function AdminReviews() {
         </Dialog>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2">
-        <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('all')}
-        >
-          Todas ({reviews?.length || 0})
-        </Button>
-        <Button
-          variant={filter === 'pending' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('pending')}
-          className="relative"
-        >
-          Pendentes
-          {pendingCount > 0 && (
-            <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
-              {pendingCount}
-            </Badge>
+      {/* Filters and Bulk Actions */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant={filter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('all')}
+          >
+            Todas ({reviews?.length || 0})
+          </Button>
+          <Button
+            variant={filter === 'pending' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('pending')}
+            className="relative"
+          >
+            Pendentes
+            {pendingCount > 0 && (
+              <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                {pendingCount}
+              </Badge>
+            )}
+          </Button>
+          <Button
+            variant={filter === 'approved' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('approved')}
+          >
+            Aprovadas
+          </Button>
+        </div>
+
+        {/* Bulk actions */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleSelectAll}
+            className="gap-2"
+          >
+            {selectedReviews.size === (reviews?.length || 0) && reviews?.length ? (
+              <CheckSquare className="h-4 w-4" />
+            ) : (
+              <Square className="h-4 w-4" />
+            )}
+            {selectedReviews.size > 0 ? `${selectedReviews.size} selecionada(s)` : 'Selecionar todas'}
+          </Button>
+          {selectedReviews.size > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              disabled={bulkDeleteReviews.isPending}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir selecionadas
+            </Button>
           )}
-        </Button>
-        <Button
-          variant={filter === 'approved' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('approved')}
-        >
-          Aprovadas
-        </Button>
+        </div>
       </div>
 
       {/* Reviews list */}
@@ -645,9 +723,22 @@ export default function AdminReviews() {
               key={review.id}
               className={`bg-card border rounded-xl p-5 ${
                 !review.approved ? 'border-warning bg-warning/5' : 'border-border'
-              }`}
+              } ${selectedReviews.has(review.id) ? 'ring-2 ring-primary' : ''}`}
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                {/* Checkbox */}
+                <button
+                  type="button"
+                  onClick={() => toggleSelectReview(review.id)}
+                  className="shrink-0 mt-1"
+                >
+                  {selectedReviews.has(review.id) ? (
+                    <CheckSquare className="h-5 w-5 text-primary" />
+                  ) : (
+                    <Square className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </button>
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className="font-semibold">{review.reviewer_name}</span>
