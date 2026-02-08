@@ -136,22 +136,24 @@ export default function ProductPage() {
 
             {/* Product info */}
             <div className="flex flex-col">
-              {/* Rating */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="flex">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-5 w-5 ${
-                        i < Math.round(averageRating) ? 'text-primary fill-primary' : 'text-muted'
-                      }`}
-                    />
-                  ))}
+              {/* Rating - Hide for seminovos (unique items don't have reviews) */}
+              {!product.name.toLowerCase().includes('seminov') && (
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-5 w-5 ${
+                          i < Math.round(averageRating) ? 'text-primary fill-primary' : 'text-muted'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    ({reviews?.length || 0} avaliações)
+                  </span>
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  ({reviews?.length || 0} avaliações)
-                </span>
-              </div>
+              )}
 
               {/* Title */}
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
