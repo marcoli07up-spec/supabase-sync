@@ -8,7 +8,8 @@ import {
   Menu,
   X,
   ChevronLeft,
-  Truck
+  Truck,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -19,6 +20,7 @@ const navItems = [
   { to: '/admin/produtos', icon: Package, label: 'Produtos' },
   { to: '/admin/categorias', icon: Tags, label: 'Categorias' },
   { to: '/admin/rastreios', icon: Truck, label: 'Rastreios' },
+  { to: '/admin/avaliacoes', icon: Star, label: 'Avaliações' },
   { to: '/admin/carrinhos-abandonados', icon: ShoppingCart, label: 'Carrinhos Abandonados' },
 ];
 

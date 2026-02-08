@@ -345,25 +345,34 @@ export type Database = {
       }
       reviews: {
         Row: {
+          approved: boolean | null
           comment: string
           created_at: string
+          display_date: string | null
           id: string
+          images: string[] | null
           product_id: string
           rating: number
           reviewer_name: string
         }
         Insert: {
+          approved?: boolean | null
           comment: string
           created_at?: string
+          display_date?: string | null
           id?: string
+          images?: string[] | null
           product_id: string
           rating: number
           reviewer_name: string
         }
         Update: {
+          approved?: boolean | null
           comment?: string
           created_at?: string
+          display_date?: string | null
           id?: string
+          images?: string[] | null
           product_id?: string
           rating?: number
           reviewer_name?: string
