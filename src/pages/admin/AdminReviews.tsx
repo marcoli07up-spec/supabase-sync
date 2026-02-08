@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Star, 
@@ -6,7 +6,13 @@ import {
   Trash2, 
   Plus, 
   Edit,
-  Calendar
+  Calendar,
+  Instagram,
+  Search,
+  Image,
+  Video,
+  X,
+  Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,12 +27,18 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -42,6 +54,8 @@ interface ReviewWithProduct {
   approved: boolean;
   display_date: string;
   created_at: string;
+  instagram_handle: string | null;
+  video_url: string | null;
   products: {
     name: string;
   } | null;
@@ -52,13 +66,23 @@ export default function AdminReviews() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<ReviewWithProduct | null>(null);
+  const [productSearchOpen, setProductSearchOpen] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
 
   // Form state
   const [selectedProduct, setSelectedProduct] = useState('');
+  const [selectedProductName, setSelectedProductName] = useState('');
   const [reviewerName, setReviewerName] = useState('');
+  const [instagramHandle, setInstagramHandle] = useState('');
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [displayDate, setDisplayDate] = useState(new Date().toISOString().split('T')[0]);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch all reviews (including unapproved for admin)
   const { data: reviews, isLoading } = useQuery({
@@ -81,7 +105,7 @@ export default function AdminReviews() {
     },
   });
 
-  // Fetch products for dropdown
+  // Fetch products for search
   const { data: products } = useQuery({
     queryKey: ['admin', 'products-list'],
     queryFn: async () => {
@@ -94,6 +118,15 @@ export default function AdminReviews() {
       return data;
     },
   });
+
+  // Filter products based on search
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    if (!productSearch.trim()) return products;
+    return products.filter(p => 
+      p.name.toLowerCase().includes(productSearch.toLowerCase())
+    );
+  }, [products, productSearch]);
 
   // Approve review
   const approveReview = useMutation({
@@ -127,15 +160,114 @@ export default function AdminReviews() {
     onError: () => toast.error('Erro ao remover avaliação'),
   });
 
+  // Upload image to storage
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `reviews/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('review-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      return null;
+    }
+
+    const { data } = supabase.storage
+      .from('review-images')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    const newImages: string[] = [];
+
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Apenas imagens são permitidas');
+        continue;
+      }
+      const url = await uploadImage(file);
+      if (url) {
+        newImages.push(url);
+      }
+    }
+
+    setUploadedImages(prev => [...prev, ...newImages]);
+    setIsUploading(false);
+    
+    if (imageInputRef.current) {
+      imageInputRef.current.value = '';
+    }
+  };
+
+  // Handle video upload
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('video/')) {
+      toast.error('Apenas vídeos são permitidos');
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Vídeo muito grande (máx 50MB)');
+      return;
+    }
+
+    setIsUploading(true);
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `videos/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('review-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast.error('Erro ao enviar vídeo');
+      setIsUploading(false);
+      return;
+    }
+
+    const { data } = supabase.storage
+      .from('review-images')
+      .getPublicUrl(filePath);
+
+    setVideoUrl(data.publicUrl);
+    setIsUploading(false);
+
+    if (videoInputRef.current) {
+      videoInputRef.current.value = '';
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   // Create/Update review
   const saveReview = useMutation({
     mutationFn: async () => {
       const reviewData = {
         product_id: selectedProduct,
         reviewer_name: reviewerName.trim(),
+        instagram_handle: instagramHandle.trim() || null,
         rating,
         comment: comment.trim(),
-        approved: true, // Admin-created reviews are auto-approved
+        images: uploadedImages.length > 0 ? uploadedImages : null,
+        video_url: videoUrl || null,
+        approved: true,
         display_date: new Date(displayDate).toISOString(),
       };
 
@@ -163,20 +295,29 @@ export default function AdminReviews() {
 
   const resetForm = () => {
     setSelectedProduct('');
+    setSelectedProductName('');
     setReviewerName('');
+    setInstagramHandle('');
     setRating(5);
     setComment('');
     setDisplayDate(new Date().toISOString().split('T')[0]);
+    setUploadedImages([]);
+    setVideoUrl('');
     setEditingReview(null);
+    setProductSearch('');
   };
 
   const openEditDialog = (review: ReviewWithProduct) => {
     setEditingReview(review);
     setSelectedProduct(review.product_id);
+    setSelectedProductName(review.products?.name || '');
     setReviewerName(review.reviewer_name);
+    setInstagramHandle(review.instagram_handle || '');
     setRating(review.rating);
     setComment(review.comment);
     setDisplayDate(new Date(review.display_date).toISOString().split('T')[0]);
+    setUploadedImages(review.images || []);
+    setVideoUrl(review.video_url || '');
     setDialogOpen(true);
   };
 
@@ -211,7 +352,7 @@ export default function AdminReviews() {
               Nova Avaliação
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingReview ? 'Editar Avaliação' : 'Criar Avaliação'}
@@ -219,21 +360,52 @@ export default function AdminReviews() {
             </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Product select */}
+              {/* Product search */}
               <div>
                 <Label>Produto *</Label>
-                <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione um produto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products?.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
-                        {product.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={productSearchOpen} onOpenChange={setProductSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={productSearchOpen}
+                      className="w-full justify-between mt-1 h-auto min-h-10 py-2"
+                    >
+                      <span className="truncate text-left flex-1">
+                        {selectedProductName || 'Pesquisar produto...'}
+                      </span>
+                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput 
+                        placeholder="Buscar produto..." 
+                        value={productSearch}
+                        onValueChange={setProductSearch}
+                      />
+                      <CommandList>
+                        <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
+                        <CommandGroup className="max-h-64 overflow-auto">
+                          {filteredProducts.map((product) => (
+                            <CommandItem
+                              key={product.id}
+                              value={product.name}
+                              onSelect={() => {
+                                setSelectedProduct(product.id);
+                                setSelectedProductName(product.name);
+                                setProductSearchOpen(false);
+                                setProductSearch('');
+                              }}
+                            >
+                              {product.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Reviewer name */}
@@ -245,6 +417,23 @@ export default function AdminReviews() {
                   placeholder="Nome que aparecerá na avaliação"
                   className="mt-1"
                 />
+              </div>
+
+              {/* Instagram handle (optional) */}
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Instagram className="h-4 w-4" />
+                  Instagram (opcional)
+                </Label>
+                <Input
+                  value={instagramHandle}
+                  onChange={(e) => setInstagramHandle(e.target.value.replace('@', ''))}
+                  placeholder="usuario_instagram"
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sem o @ (será adicionado automaticamente)
+                </p>
               </div>
 
               {/* Rating */}
@@ -282,6 +471,104 @@ export default function AdminReviews() {
                 />
               </div>
 
+              {/* Image upload */}
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  Fotos
+                </Label>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <div className="mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {isUploading ? 'Enviando...' : 'Adicionar fotos'}
+                  </Button>
+                </div>
+                {uploadedImages.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {uploadedImages.map((img, i) => (
+                      <div key={i} className="relative group">
+                        <img
+                          src={img}
+                          alt=""
+                          className="w-16 h-16 rounded-lg object-cover border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(i)}
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Video upload */}
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Video className="h-4 w-4" />
+                  Vídeo
+                </Label>
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoUpload}
+                  className="hidden"
+                />
+                <div className="mt-2">
+                  {videoUrl ? (
+                    <div className="flex items-center gap-2">
+                      <video
+                        src={videoUrl}
+                        className="w-32 h-20 rounded-lg object-cover border"
+                        muted
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setVideoUrl('')}
+                        className="text-destructive"
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Remover
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => videoInputRef.current?.click()}
+                      disabled={isUploading}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {isUploading ? 'Enviando...' : 'Adicionar vídeo'}
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Máximo 50MB
+                </p>
+              </div>
+
               {/* Display date */}
               <div>
                 <Label className="flex items-center gap-2">
@@ -302,7 +589,7 @@ export default function AdminReviews() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={saveReview.isPending}
+                disabled={saveReview.isPending || isUploading}
               >
                 {saveReview.isPending ? 'Salvando...' : 'Salvar Avaliação'}
               </Button>
@@ -364,6 +651,17 @@ export default function AdminReviews() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className="font-semibold">{review.reviewer_name}</span>
+                    {review.instagram_handle && (
+                      <a
+                        href={`https://instagram.com/${review.instagram_handle}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
+                      >
+                        <Instagram className="h-3 w-3" />
+                        @{review.instagram_handle}
+                      </a>
+                    )}
                     <div className="flex">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star
@@ -389,10 +687,10 @@ export default function AdminReviews() {
                   
                   <p className="text-muted-foreground">{review.comment}</p>
                   
-                  {/* Images */}
-                  {review.images && review.images.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {review.images.map((img, i) => (
+                  {/* Images & Video */}
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {review.images && review.images.length > 0 && (
+                      review.images.map((img, i) => (
                         <a
                           key={i}
                           href={img}
@@ -402,9 +700,19 @@ export default function AdminReviews() {
                         >
                           <img src={img} alt="" className="w-full h-full object-cover" />
                         </a>
-                      ))}
-                    </div>
-                  )}
+                      ))
+                    )}
+                    {review.video_url && (
+                      <a
+                        href={review.video_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-16 h-16 rounded-lg overflow-hidden border relative bg-muted flex items-center justify-center"
+                      >
+                        <Video className="h-6 w-6 text-muted-foreground" />
+                      </a>
+                    )}
+                  </div>
                   
                   <p className="text-xs text-muted-foreground mt-3">
                     Criada: {format(new Date(review.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
