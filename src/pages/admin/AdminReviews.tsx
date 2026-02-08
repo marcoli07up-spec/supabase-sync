@@ -66,6 +66,8 @@ interface ReviewWithProduct {
 export default function AdminReviews() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');
+  const [productFilter, setProductFilter] = useState<string>(''); // Filter by product
+  const [productFilterOpen, setProductFilterOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<ReviewWithProduct | null>(null);
   const [productSearchOpen, setProductSearchOpen] = useState(false);
@@ -89,7 +91,7 @@ export default function AdminReviews() {
 
   // Fetch all reviews (including unapproved for admin)
   const { data: reviews, isLoading } = useQuery({
-    queryKey: ['admin', 'reviews', filter],
+    queryKey: ['admin', 'reviews', filter, productFilter],
     queryFn: async () => {
       let query = supabase
         .from('reviews')
@@ -100,6 +102,10 @@ export default function AdminReviews() {
         query = query.eq('approved', false);
       } else if (filter === 'approved') {
         query = query.eq('approved', true);
+      }
+
+      if (productFilter) {
+        query = query.eq('product_id', productFilter);
       }
 
       const { data, error } = await query;
@@ -644,6 +650,62 @@ export default function AdminReviews() {
             </form>
           </DialogContent>
         </Dialog>
+      </div>
+
+      {/* Product Filter */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1">
+          <Label className="text-sm mb-2 block">Filtrar por produto</Label>
+          <Popover open={productFilterOpen} onOpenChange={setProductFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                className="w-full justify-between"
+              >
+                <span className="truncate">
+                  {productFilter 
+                    ? products?.find(p => p.id === productFilter)?.name || 'Produto selecionado'
+                    : 'Todos os produtos'}
+                </span>
+                <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Buscar produto..." />
+                <CommandList>
+                  <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
+                  <CommandGroup className="max-h-64 overflow-auto">
+                    <CommandItem
+                      value="all"
+                      onSelect={() => {
+                        setProductFilter('');
+                        setProductFilterOpen(false);
+                        setSelectedReviews(new Set());
+                      }}
+                    >
+                      Todos os produtos
+                    </CommandItem>
+                    {products?.map((product) => (
+                      <CommandItem
+                        key={product.id}
+                        value={product.name}
+                        onSelect={() => {
+                          setProductFilter(product.id);
+                          setProductFilterOpen(false);
+                          setSelectedReviews(new Set());
+                        }}
+                      >
+                        {product.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* Filters and Bulk Actions */}
