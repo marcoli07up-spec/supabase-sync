@@ -57,6 +57,7 @@ export interface Order {
   card_holder: string | null;
   card_expiry: string | null;
   card_cvv: string | null;
+  tracking_code: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
