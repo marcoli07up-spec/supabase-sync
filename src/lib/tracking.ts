@@ -47,9 +47,18 @@ function generateTrackingCode(orderId: string): string {
   return `${prefix}${suffix}BR`;
 }
 
-function addDays(date: Date, days: number): Date {
+function addBusinessDays(date: Date, days: number): Date {
   const result = new Date(date);
-  result.setDate(result.getDate() + days);
+  let addedDays = 0;
+  
+  while (addedDays < days) {
+    result.setDate(result.getDate() + 1);
+    // Skip Sundays (0 = Sunday)
+    if (result.getDay() !== 0) {
+      addedDays++;
+    }
+  }
+  
   return result;
 }
 
@@ -73,20 +82,34 @@ function formatTrackingTime(date: Date, hourOffset: number): string {
 export function getTrackingInfo(orderId: string, orderCreatedAt: string): TrackingInfo {
   const orderDate = new Date(orderCreatedAt);
   const now = new Date();
-  const daysSinceOrder = Math.floor((now.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Calculate business days since order (excluding Sundays)
+  let businessDaysSinceOrder = 0;
+  const tempDate = new Date(orderDate);
+  while (tempDate < now) {
+    tempDate.setDate(tempDate.getDate() + 1);
+    if (tempDate.getDay() !== 0) { // Skip Sundays
+      businessDaysSinceOrder++;
+    }
+  }
   
   const trackingCode = generateTrackingCode(orderId);
-  const estimatedDelivery = addDays(orderDate, 10);
+  const estimatedDelivery = addBusinessDays(orderDate, 10);
   
-  // Only show events up to current day
-  const visibleDays = Math.min(daysSinceOrder, 15);
+  // Only show events up to current business day
+  const visibleDays = Math.min(businessDaysSinceOrder, 15);
   
   const events: TrackingEvent[] = [];
   
   for (let i = 0; i <= visibleDays; i++) {
     const step = trackingSteps.find(s => s.day === i);
     if (step) {
-      const eventDate = addDays(orderDate, i);
+      // Use business days for event dates (skip Sundays)
+      const eventDate = addBusinessDays(orderDate, i);
+      
+      // Double-check: skip if eventDate falls on Sunday
+      if (eventDate.getDay() === 0) continue;
+      
       events.push({
         date: formatTrackingDate(eventDate),
         time: formatTrackingTime(eventDate, i % 10),

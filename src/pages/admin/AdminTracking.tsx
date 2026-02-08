@@ -310,7 +310,8 @@ function TrackingRow({
       </TableCell>
       <TableCell>
         <div className="flex gap-2">
-          {order.pix_code && (
+          {/* Only show tracking actions for orders with status 'shipped' */}
+          {order.pix_code && order.status === 'shipped' && (
             <>
               <Button 
                 size="sm" 
@@ -340,6 +341,9 @@ function TrackingRow({
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </>
+          )}
+          {!order.pix_code && order.status === 'approved' && (
+            <span className="text-xs text-muted-foreground">Aguardando envio</span>
           )}
         </div>
       </TableCell>
