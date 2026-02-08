@@ -239,7 +239,12 @@ export default function AdminProducts() {
           {products.map((product) => (
             <Card key={product.id} className={!product.active ? 'opacity-50' : ''}>
               <CardContent className="p-4">
-                <div className="aspect-square mb-4 rounded-lg overflow-hidden bg-muted">
+                <a 
+                  href={`/produto/${product.id}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block aspect-square mb-4 rounded-lg overflow-hidden bg-muted hover:opacity-90 transition-opacity"
+                >
                   {product.image_url ? (
                     <img 
                       src={product.image_url} 
@@ -251,8 +256,15 @@ export default function AdminProducts() {
                       Sem imagem
                     </div>
                   )}
-                </div>
-                <h3 className="font-semibold line-clamp-2">{product.name}</h3>
+                </a>
+                <a 
+                  href={`/produto/${product.id}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="font-semibold line-clamp-2 hover:text-primary transition-colors block"
+                >
+                  {product.name}
+                </a>
                 <p className="text-lg font-bold mt-1">{formatCurrency(product.price)}</p>
                 <p className="text-sm text-muted-foreground">Estoque: {product.stock || 0}</p>
                 
