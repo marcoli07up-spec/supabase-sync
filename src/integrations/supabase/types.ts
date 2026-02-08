@@ -236,6 +236,7 @@ export type Database = {
           pix_code: string | null
           status: string | null
           total: number
+          tracking_code: string | null
           updated_at: string | null
         }
         Insert: {
@@ -258,6 +259,7 @@ export type Database = {
           pix_code?: string | null
           status?: string | null
           total: number
+          tracking_code?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -280,6 +282,7 @@ export type Database = {
           pix_code?: string | null
           status?: string | null
           total?: number
+          tracking_code?: string | null
           updated_at?: string | null
         }
         Relationships: []
