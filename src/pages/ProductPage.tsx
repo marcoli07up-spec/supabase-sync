@@ -118,12 +118,14 @@ export default function ProductPage() {
                 </Badge>
               </div>
 
-              {/* Stock badge */}
+              {/* Stock badge - Show "Última unidade disponível!" for seminovos */}
               {(product.stock ?? 0) <= 3 && (product.stock ?? 0) > 0 && (
                 <div className="absolute bottom-4 left-4 right-4">
                   <div className="bg-destructive/90 text-destructive-foreground text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    Apenas {product.stock} unidade{product.stock !== 1 ? 's' : ''} disponível!
+                    {product.name.toLowerCase().includes('seminov') 
+                      ? 'Última unidade disponível!' 
+                      : `Apenas ${product.stock} unidade${product.stock !== 1 ? 's' : ''} disponível!`}
                   </div>
                 </div>
               )}
