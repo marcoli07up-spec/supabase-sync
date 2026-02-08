@@ -1,0 +1,160 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
+
+export interface PixSettings {
+  pix_key: string;
+  merchant_name: string;
+  merchant_city: string;
+}
+
+const DEFAULT_PIX_SETTINGS: PixSettings = {
+  pix_key: '',
+  merchant_name: 'iCamStore',
+  merchant_city: 'SAO PAULO',
+};
+
+export function usePixSettings() {
+  return useQuery({
+    queryKey: ['pix-settings'],
+    queryFn: async (): Promise<PixSettings> => {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'pix_config')
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching PIX settings:', error);
+        return DEFAULT_PIX_SETTINGS;
+      }
+
+      if (data?.value && typeof data.value === 'object' && !Array.isArray(data.value)) {
+        return {
+          ...DEFAULT_PIX_SETTINGS,
+          ...(data.value as Partial<PixSettings>),
+        };
+      }
+
+      return DEFAULT_PIX_SETTINGS;
+    },
+  });
+}
+
+export function useUpdatePixSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (settings: PixSettings) => {
+      // Check if setting exists
+      const { data: existing } = await supabase
+        .from('site_settings')
+        .select('id')
+        .eq('key', 'pix_config')
+        .maybeSingle();
+
+      const jsonValue: Json = settings as unknown as Json;
+
+      if (existing) {
+        const { error } = await supabase
+          .from('site_settings')
+          .update({ value: jsonValue })
+          .eq('key', 'pix_config');
+        
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('site_settings')
+          .insert([{ key: 'pix_config', value: jsonValue }]);
+        
+        if (error) throw error;
+      }
+
+      return settings;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pix-settings'] });
+    },
+  });
+}
+
+// CRC16-CCITT calculation
+export const calculateCRC16 = (str: string): string => {
+  let crc = 0xFFFF;
+  for (let i = 0; i < str.length; i++) {
+    crc ^= str.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      if (crc & 0x8000) {
+        crc = (crc << 1) ^ 0x1021;
+      } else {
+        crc <<= 1;
+      }
+    }
+  }
+  return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+};
+
+// Generate PIX EMV code
+export function generatePixEMV(params: {
+  pixKey: string;
+  merchantName: string;
+  merchantCity: string;
+  amount?: number;
+  txId?: string;
+}): string {
+  const { pixKey, merchantName, merchantCity, amount, txId } = params;
+
+  if (!pixKey.trim()) return '';
+
+  let payload = '';
+
+  // Payload Format Indicator
+  payload += '000201';
+
+  // Merchant Account Information (PIX)
+  const gui = '0014br.gov.bcb.pix';
+  const key = `01${String(pixKey.length).padStart(2, '0')}${pixKey}`;
+  const merchantAccount = gui + key;
+  payload += `26${String(merchantAccount.length).padStart(2, '0')}${merchantAccount}`;
+
+  // Merchant Category Code
+  payload += '52040000';
+
+  // Transaction Currency (BRL = 986)
+  payload += '5303986';
+
+  // Transaction Amount (if provided)
+  if (amount && amount > 0) {
+    const amountStr = amount.toFixed(2);
+    payload += `54${String(amountStr.length).padStart(2, '0')}${amountStr}`;
+  }
+
+  // Country Code
+  payload += '5802BR';
+
+  // Merchant Name (max 25 chars)
+  const name = merchantName.substring(0, 25).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  payload += `59${String(name.length).padStart(2, '0')}${name}`;
+
+  // Merchant City (max 15 chars)
+  const city = merchantCity.substring(0, 15).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  payload += `60${String(city.length).padStart(2, '0')}${city}`;
+
+  // Additional Data Field Template (txId)
+  if (txId?.trim()) {
+    const cleanTxId = txId.substring(0, 25).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const additionalData = `05${String(cleanTxId.length).padStart(2, '0')}${cleanTxId}`;
+    payload += `62${String(additionalData.length).padStart(2, '0')}${additionalData}`;
+  } else {
+    payload += '6207' + '0503***';
+  }
+
+  // CRC16 placeholder
+  payload += '6304';
+
+  // Calculate CRC16
+  const crc = calculateCRC16(payload);
+  payload += crc;
+
+  return payload;
+}
