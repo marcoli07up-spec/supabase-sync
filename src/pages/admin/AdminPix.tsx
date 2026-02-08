@@ -1,20 +1,37 @@
-import { useState } from 'react';
-import { Copy, QrCode, Check, Settings } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Copy, QrCode, Check, Settings, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { QRCodeSVG } from 'qrcode.react';
+
+// Generate unique order ID
+const generateOrderId = () => {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `PED${timestamp}${random}`;
+};
 
 export default function AdminPix() {
   const [pixKey, setPixKey] = useState('');
-  const [pixKeyType, setPixKeyType] = useState<'cpf' | 'cnpj' | 'email' | 'phone' | 'random'>('cpf');
   const [merchantName, setMerchantName] = useState('iCamStore');
   const [merchantCity, setMerchantCity] = useState('SAO PAULO');
   const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
+  const [orderId, setOrderId] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Auto-generate order ID on mount
+  useEffect(() => {
+    setOrderId(generateOrderId());
+  }, []);
+
+  const regenerateOrderId = () => {
+    setOrderId(generateOrderId());
+    toast.success('Novo ID gerado!');
+  };
 
   // Generate PIX EMV code
   const generatePixCode = () => {
@@ -60,9 +77,9 @@ export default function AdminPix() {
     const city = merchantCity.substring(0, 15).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     payload += `60${String(city.length).padStart(2, '0')}${city}`;
 
-    // Additional Data Field Template (description/txid)
-    if (description.trim()) {
-      const txId = description.substring(0, 25).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    // Additional Data Field Template (order ID)
+    if (orderId.trim()) {
+      const txId = orderId.substring(0, 25).toUpperCase().replace(/[^A-Z0-9]/g, '');
       const additionalData = `05${String(txId.length).padStart(2, '0')}${txId}`;
       payload += `62${String(additionalData.length).padStart(2, '0')}${additionalData}`;
     } else {
@@ -191,17 +208,31 @@ export default function AdminPix() {
               </p>
             </div>
 
-            {/* Description */}
+            {/* Order ID */}
             <div>
-              <Label htmlFor="description">Descrição / ID do Pedido</Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Ex: PEDIDO123"
-                className="mt-1"
-                maxLength={25}
-              />
+              <Label htmlFor="order-id">ID do Pedido</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  id="order-id"
+                  value={orderId}
+                  onChange={(e) => setOrderId(e.target.value)}
+                  placeholder="PEDIDO123"
+                  className="flex-1"
+                  maxLength={25}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon"
+                  onClick={regenerateOrderId}
+                  title="Gerar novo ID"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                ID gerado automaticamente para rastreio
+              </p>
             </div>
 
             <Button onClick={generatePixCode} className="w-full" size="lg">
@@ -222,6 +253,16 @@ export default function AdminPix() {
           <CardContent>
             {generatedCode ? (
               <div className="space-y-4">
+                {/* QR Code */}
+                <div className="flex justify-center p-4 bg-white rounded-lg">
+                  <QRCodeSVG 
+                    value={generatedCode} 
+                    size={200}
+                    level="M"
+                    includeMargin={true}
+                  />
+                </div>
+
                 <div className="bg-muted p-4 rounded-lg">
                   <p className="text-xs text-muted-foreground mb-2">PIX Copia e Cola:</p>
                   <code className="block text-sm break-all font-mono bg-background p-3 rounded border">
@@ -254,8 +295,8 @@ export default function AdminPix() {
                   {parseFloat(amount) > 0 && (
                     <p><strong>Valor:</strong> R$ {parseFloat(amount).toFixed(2)}</p>
                   )}
-                  {description && (
-                    <p><strong>Descrição:</strong> {description}</p>
+                  {orderId && (
+                    <p><strong>ID do Pedido:</strong> {orderId}</p>
                   )}
                 </div>
               </div>
@@ -277,7 +318,7 @@ export default function AdminPix() {
             <li>Informe sua chave PIX cadastrada no banco</li>
             <li>Preencha o valor (ou deixe em branco para valor livre)</li>
             <li>Clique em "Gerar Código PIX"</li>
-            <li>Copie o código e envie para o cliente via WhatsApp</li>
+            <li>Copie o código ou escaneie o QR Code</li>
             <li>O cliente cola no app do banco para pagar</li>
           </ol>
         </CardContent>
