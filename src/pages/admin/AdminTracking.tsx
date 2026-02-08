@@ -18,6 +18,7 @@ export default function AdminTracking() {
   const queryClient = useQueryClient();
   const [newCpf, setNewCpf] = useState('');
   const [customerName, setCustomerName] = useState('');
+  const [targetOrderId, setTargetOrderId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTracking, setSelectedTracking] = useState<{
     orderId: string;
@@ -30,56 +31,77 @@ export default function AdminTracking() {
   // Pre-fill from URL params (when coming from approve order)
   useEffect(() => {
     const cpfParam = searchParams.get('cpf');
-    if (cpfParam) {
-      setNewCpf(cpfParam);
-    }
+    const orderIdParam = searchParams.get('order_id');
+
+    if (cpfParam) setNewCpf(cpfParam);
+    if (orderIdParam) setTargetOrderId(orderIdParam);
   }, [searchParams]);
 
-  // Get all orders with tracking (approved, shipped, delivered)
+  // Rastreios cadastrados = pedidos com CPF (são rastreáveis na tela do cliente)
   const { data: orders, isLoading, refetch } = useQuery({
     queryKey: ['admin', 'tracking'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
         .select('id, customer_cpf, customer_name, tracking_code, created_at, status')
-        .in('status', ['approved', 'shipped', 'delivered'])
+        .not('customer_cpf', 'is', null)
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return data;
     },
   });
 
-  const markAsShipped = useMutation({
-    mutationFn: async ({ cpf }: { cpf: string }) => {
-      // Find order by CPF
-      const { data: existingOrder, error: findError } = await supabase
-        .from('orders')
-        .select('id')
-        .eq('customer_cpf', cpf.replace(/\D/g, ''))
-        .single();
+  const createTracking = useMutation({
+    mutationFn: async ({ cpf, orderId, name }: { cpf: string; orderId?: string | null; name?: string }) => {
+      const cpfDigits = cpf.replace(/\D/g, '');
+      if (!cpfDigits) throw new Error('CPF inválido');
 
-      if (findError || !existingOrder) {
-        toast.error('Pedido não encontrado com este CPF');
-        throw new Error('Pedido não encontrado');
-      } else {
-        // Update existing order status to shipped
-        const { error: updateError } = await supabase
+      let resolvedOrderId = orderId ?? null;
+
+      // Se não veio um order_id pela URL, tenta pegar o pedido mais recente desse CPF
+      if (!resolvedOrderId) {
+        const { data: existingOrder, error: findError } = await supabase
           .from('orders')
-          .update({ status: 'shipped' })
-          .eq('id', existingOrder.id);
+          .select('id')
+          .eq('customer_cpf', cpfDigits)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-        if (updateError) throw updateError;
+        if (findError || !existingOrder?.id) {
+          throw new Error('Pedido não encontrado para este CPF');
+        }
+
+        resolvedOrderId = existingOrder.id;
       }
+
+      const patch: Record<string, unknown> = {
+        status: 'shipped',
+        customer_cpf: cpfDigits,
+      };
+
+      if (name?.trim()) {
+        patch.customer_name = name.trim();
+      }
+
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update(patch)
+        .eq('id', resolvedOrderId);
+
+      if (updateError) throw updateError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'tracking'] });
-      toast.success('Pedido marcado como enviado! Código de rastreio gerado automaticamente.');
+      toast.success('Rastreio criado: pedido marcado como enviado!');
       setNewCpf('');
       setCustomerName('');
+      setTargetOrderId(null);
     },
-    onError: () => {
-      toast.error('Erro ao marcar como enviado');
+    onError: (err) => {
+      console.error(err);
+      toast.error('Erro ao criar rastreio (marcar como enviado).');
     },
   });
 
@@ -89,7 +111,8 @@ export default function AdminTracking() {
       toast.error('Preencha o CPF do cliente');
       return;
     }
-    markAsShipped.mutate({ cpf: newCpf });
+
+    createTracking.mutate({ cpf: newCpf, orderId: targetOrderId, name: customerName });
   };
 
   const copyTrackingLink = (cpf: string) => {
@@ -99,7 +122,7 @@ export default function AdminTracking() {
     toast.success('Link copiado! Envie para o cliente.');
   };
 
-  const filteredOrders = orders?.filter(order => 
+  const filteredOrders = orders?.filter(order =>
     order.customer_cpf?.includes(searchTerm.replace(/\D/g, '')) ||
     order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -119,11 +142,16 @@ export default function AdminTracking() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Marcar Pedido como Enviado
+            Criar Rastreio
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            O código de rastreio Jadlog é gerado automaticamente quando o pedido é criado.
+            Criar rastreio = marcar o pedido como <strong>Enviado</strong>. Se você veio de “Pedidos”, o pedido já vem selecionado.
           </p>
+          {targetOrderId && (
+            <p className="text-xs text-muted-foreground">
+              Pedido selecionado: <span className="font-mono">#{targetOrderId.slice(0, 8).toUpperCase()}</span>
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid sm:grid-cols-3 gap-4">
@@ -148,9 +176,9 @@ export default function AdminTracking() {
               />
             </div>
             <div className="flex items-end">
-              <Button type="submit" disabled={markAsShipped.isPending} className="w-full">
+              <Button type="submit" disabled={createTracking.isPending} className="w-full">
                 <Truck className="h-4 w-4 mr-2" />
-                Marcar como Enviado
+                Criar rastreio
               </Button>
             </div>
           </form>
