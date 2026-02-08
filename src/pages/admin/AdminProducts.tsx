@@ -266,7 +266,12 @@ export default function AdminProducts() {
                   {product.name}
                 </a>
                 <p className="text-lg font-bold mt-1">{formatCurrency(product.price)}</p>
-                <p className="text-sm text-muted-foreground">Estoque: {product.stock || 0}</p>
+                <p className="text-sm text-muted-foreground">
+                  Estoque: {product.stock || 0}
+                  {(product.stock || 0) === 0 && (
+                    <span className="ml-2 text-destructive font-medium">• Esgotado</span>
+                  )}
+                </p>
                 
                 <div className="flex gap-2 mt-4">
                   <Button 
@@ -386,9 +391,19 @@ export default function AdminProducts() {
                   value={formData.stock}
                   onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Defina como 0 para marcar como "Esgotado"
+                </p>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={formData.stock === 0}
+                    onCheckedChange={(checked) => setFormData({ ...formData, stock: checked ? 0 : 1 })}
+                  />
+                  <Label className="text-destructive">Esgotado</Label>
+                </div>
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={formData.featured}
