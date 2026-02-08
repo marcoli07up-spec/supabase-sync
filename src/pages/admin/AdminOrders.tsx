@@ -59,16 +59,13 @@ export default function AdminOrders() {
               onView={() => setSelectedOrder(order)}
               onStatusChange={(status) => updateStatus.mutate({ orderId: order.id, status })}
               onApproveAndRedirect={() => {
-                const cpf = (order.customer_cpf ?? '').replace(/\D/g, '');
-
-                // Garante o fluxo indo para a tela de rastreios mesmo que o update demore/falhe
-                navigate(`/admin/rastreios?cpf=${cpf}&order_id=${order.id}`);
-
+                // Atualiza para "shipped" (cria o rastreio automaticamente) e redireciona
                 updateStatus.mutate(
-                  { orderId: order.id, status: 'approved' },
+                  { orderId: order.id, status: 'shipped' },
                   {
                     onSuccess: () => {
-                      toast.success('Pedido aprovado com sucesso!');
+                      toast.success('Pedido aprovado e rastreio criado!');
+                      navigate('/admin/rastreios');
                     },
                     onError: (err) => {
                       console.error(err);
