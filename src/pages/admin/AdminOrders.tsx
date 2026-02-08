@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, Copy, Eye, CheckCircle } from 'lucide-react';
+import { MessageCircle, Copy, Eye, CheckCircle, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import { Order } from '@/types';
 import { toast } from 'sonner';
+import { usePixSettings, generatePixEMV } from '@/hooks/usePixSettings';
+import { QRCodeSVG } from 'qrcode.react';
 
 const statusOptions = [
   { value: 'pending', label: 'Pendente' },
@@ -38,7 +40,30 @@ export default function AdminOrders() {
   const navigate = useNavigate();
   const { data: orders, isLoading } = useAllOrders();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [pixOrder, setPixOrder] = useState<Order | null>(null);
   const updateStatus = useUpdateOrderStatus();
+  const { data: pixSettings } = usePixSettings();
+
+  const generatePixCode = (order: Order): string => {
+    if (!pixSettings?.pix_key) return '';
+    return generatePixEMV({
+      pixKey: pixSettings.pix_key,
+      merchantName: pixSettings.merchant_name,
+      merchantCity: pixSettings.merchant_city,
+      amount: order.total,
+      txId: order.id.slice(0, 8).toUpperCase(),
+    });
+  };
+
+  const copyGeneratedPix = (order: Order) => {
+    const code = generatePixCode(order);
+    if (!code) {
+      toast.error('Configure a chave PIX em Admin > PIX');
+      return;
+    }
+    navigator.clipboard.writeText(code);
+    toast.success('Código PIX copiado!');
+  };
 
   return (
     <div className="space-y-6">
@@ -57,9 +82,10 @@ export default function AdminOrders() {
               key={order.id} 
               order={order} 
               onView={() => setSelectedOrder(order)}
+              onCopyPix={() => copyGeneratedPix(order)}
+              onShowQrCode={() => setPixOrder(order)}
               onStatusChange={(status) => updateStatus.mutate({ orderId: order.id, status })}
               onApproveAndRedirect={() => {
-                // Atualiza para "shipped" (cria o rastreio automaticamente) e redireciona
                 updateStatus.mutate(
                   { orderId: order.id, status: 'shipped' },
                   {
@@ -90,6 +116,56 @@ export default function AdminOrders() {
         order={selectedOrder} 
         onClose={() => setSelectedOrder(null)} 
       />
+
+      {/* PIX QR Code Dialog */}
+      <Dialog open={!!pixOrder} onOpenChange={() => setPixOrder(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              PIX - {formatCurrency(pixOrder?.total || 0)}
+            </DialogTitle>
+          </DialogHeader>
+
+          {pixOrder && (
+            <div className="space-y-4">
+              {pixSettings?.pix_key ? (
+                <>
+                  <div className="flex justify-center p-4 bg-white rounded-lg">
+                    <QRCodeSVG 
+                      value={generatePixCode(pixOrder)} 
+                      size={200}
+                      level="M"
+                      includeMargin={true}
+                    />
+                  </div>
+                  
+                  <div className="text-center text-sm text-muted-foreground">
+                    <p>Cliente: {pixOrder.customer_name}</p>
+                    <p className="font-mono">#{pixOrder.id.slice(0, 8).toUpperCase()}</p>
+                  </div>
+
+                  <Button 
+                    className="w-full" 
+                    onClick={() => copyGeneratedPix(pixOrder)}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar Código PIX
+                  </Button>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    Configure sua chave PIX em Admin → Ferramenta PIX
+                  </p>
+                  <Button variant="outline" onClick={() => setPixOrder(null)}>
+                    Fechar
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -97,21 +173,18 @@ export default function AdminOrders() {
 function OrderCard({ 
   order, 
   onView, 
+  onCopyPix,
+  onShowQrCode,
   onStatusChange,
   onApproveAndRedirect 
 }: { 
   order: Order; 
   onView: () => void;
+  onCopyPix: () => void;
+  onShowQrCode: () => void;
   onStatusChange: (status: string) => void;
   onApproveAndRedirect: () => void;
 }) {
-  const copyPixCode = () => {
-    if (order.pix_code) {
-      navigator.clipboard.writeText(order.pix_code);
-      toast.success('Código PIX copiado!');
-    }
-  };
-
   const openWhatsApp = () => {
     const phone = order.customer_phone.replace(/\D/g, '');
     const message = encodeURIComponent(
@@ -176,12 +249,15 @@ function OrderCard({
             Ver Detalhes
           </Button>
 
-          {order.payment_method === 'pix' && order.pix_code && (
-            <Button size="sm" variant="outline" onClick={copyPixCode}>
-              <Copy className="h-4 w-4 mr-2" />
-              Copiar PIX
-            </Button>
-          )}
+          <Button size="sm" variant="outline" onClick={onCopyPix}>
+            <Copy className="h-4 w-4 mr-2" />
+            Copiar PIX
+          </Button>
+
+          <Button size="sm" variant="outline" onClick={onShowQrCode}>
+            <QrCode className="h-4 w-4 mr-2" />
+            QR Code
+          </Button>
 
           <Button size="sm" variant="outline" onClick={openWhatsApp}>
             <MessageCircle className="h-4 w-4 mr-2" />
