@@ -351,9 +351,11 @@ export type Database = {
           display_date: string | null
           id: string
           images: string[] | null
+          instagram_handle: string | null
           product_id: string
           rating: number
           reviewer_name: string
+          video_url: string | null
         }
         Insert: {
           approved?: boolean | null
@@ -362,9 +364,11 @@ export type Database = {
           display_date?: string | null
           id?: string
           images?: string[] | null
+          instagram_handle?: string | null
           product_id: string
           rating: number
           reviewer_name: string
+          video_url?: string | null
         }
         Update: {
           approved?: boolean | null
@@ -373,9 +377,11 @@ export type Database = {
           display_date?: string | null
           id?: string
           images?: string[] | null
+          instagram_handle?: string | null
           product_id?: string
           rating?: number
           reviewer_name?: string
+          video_url?: string | null
         }
         Relationships: [
           {

@@ -81,6 +81,8 @@ export interface Review {
   approved: boolean;
   display_date: string;
   created_at: string;
+  instagram_handle: string | null;
+  video_url: string | null;
 }
 
 export type PaymentMethod = 'pix' | 'credit_card';
