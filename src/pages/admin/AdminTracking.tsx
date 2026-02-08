@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Package, Save, Copy, ExternalLink, Eye, RefreshCw } from 'lucide-react';
+import { Search, Package, Truck, Copy, ExternalLink, Eye, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +17,6 @@ export default function AdminTracking() {
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [newCpf, setNewCpf] = useState('');
-  const [newTrackingCode, setNewTrackingCode] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTracking, setSelectedTracking] = useState<{
@@ -31,15 +30,8 @@ export default function AdminTracking() {
   // Pre-fill from URL params (when coming from approve order)
   useEffect(() => {
     const cpfParam = searchParams.get('cpf');
-    const orderIdParam = searchParams.get('order_id');
     if (cpfParam) {
       setNewCpf(cpfParam);
-      // Auto-generate tracking code based on order ID
-      if (orderIdParam) {
-        const prefix = 'JL';
-        const suffix = orderIdParam.slice(0, 8).toUpperCase().replace(/-/g, '');
-        setNewTrackingCode(`${prefix}${suffix}BR`);
-      }
     }
   }, [searchParams]);
 
@@ -49,7 +41,7 @@ export default function AdminTracking() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
-        .select('id, customer_cpf, customer_name, pix_code, created_at, status')
+        .select('id, customer_cpf, customer_name, tracking_code, created_at, status')
         .not('customer_cpf', 'is', null)
         .order('created_at', { ascending: false });
       
@@ -58,9 +50,9 @@ export default function AdminTracking() {
     },
   });
 
-  const updateTrackingCode = useMutation({
-    mutationFn: async ({ cpf, trackingCode }: { cpf: string; trackingCode: string }) => {
-      // Find order by CPF and update pix_code as tracking code
+  const markAsShipped = useMutation({
+    mutationFn: async ({ cpf }: { cpf: string }) => {
+      // Find order by CPF
       const { data: existingOrder, error: findError } = await supabase
         .from('orders')
         .select('id')
@@ -68,24 +60,13 @@ export default function AdminTracking() {
         .single();
 
       if (findError || !existingOrder) {
-        // Create a new order entry for tracking
-        const { error: insertError } = await supabase
-          .from('orders')
-          .insert({
-            customer_cpf: cpf.replace(/\D/g, ''),
-            customer_name: customerName || 'Cliente',
-            customer_phone: '0',
-            total: 0,
-            status: 'shipped',
-            pix_code: trackingCode,
-          });
-
-        if (insertError) throw insertError;
+        toast.error('Pedido não encontrado com este CPF');
+        throw new Error('Pedido não encontrado');
       } else {
-        // Update existing order with tracking code and set status to shipped
+        // Update existing order status to shipped
         const { error: updateError } = await supabase
           .from('orders')
-          .update({ pix_code: trackingCode, status: 'shipped' })
+          .update({ status: 'shipped' })
           .eq('id', existingOrder.id);
 
         if (updateError) throw updateError;
@@ -93,23 +74,22 @@ export default function AdminTracking() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'tracking'] });
-      toast.success('Código de rastreio cadastrado!');
+      toast.success('Pedido marcado como enviado! Código de rastreio gerado automaticamente.');
       setNewCpf('');
-      setNewTrackingCode('');
       setCustomerName('');
     },
     onError: () => {
-      toast.error('Erro ao cadastrar rastreio');
+      toast.error('Erro ao marcar como enviado');
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCpf || !newTrackingCode) {
-      toast.error('Preencha o CPF e o código de rastreio');
+    if (!newCpf) {
+      toast.error('Preencha o CPF do cliente');
       return;
     }
-    updateTrackingCode.mutate({ cpf: newCpf, trackingCode: newTrackingCode });
+    markAsShipped.mutate({ cpf: newCpf });
   };
 
   const copyTrackingLink = (cpf: string) => {
@@ -139,11 +119,14 @@ export default function AdminTracking() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Cadastrar Código de Rastreio
+            Marcar Pedido como Enviado
           </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            O código de rastreio Jadlog é gerado automaticamente quando o pedido é criado.
+          </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="grid sm:grid-cols-4 gap-4">
+          <form onSubmit={handleSubmit} className="grid sm:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="cpf">CPF do Cliente</Label>
               <Input
@@ -164,20 +147,10 @@ export default function AdminTracking() {
                 className="mt-1"
               />
             </div>
-            <div>
-              <Label htmlFor="tracking">Código de Rastreio</Label>
-              <Input
-                id="tracking"
-                value={newTrackingCode}
-                onChange={(e) => setNewTrackingCode(e.target.value)}
-                placeholder="Ex: JL12345678BR"
-                className="mt-1"
-              />
-            </div>
             <div className="flex items-end">
-              <Button type="submit" disabled={updateTrackingCode.isPending} className="w-full">
-                <Save className="h-4 w-4 mr-2" />
-                Salvar
+              <Button type="submit" disabled={markAsShipped.isPending} className="w-full">
+                <Truck className="h-4 w-4 mr-2" />
+                Marcar como Enviado
               </Button>
             </div>
           </form>
@@ -216,19 +189,19 @@ export default function AdminTracking() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => (
-                  <TrackingRow 
-                    key={order.id} 
-                    order={order} 
-                    onCopyLink={copyTrackingLink}
-                    onViewTracking={() => setSelectedTracking({
-                      orderId: order.id,
-                      cpf: order.customer_cpf || '',
-                      name: order.customer_name || '',
-                      createdAt: order.created_at,
-                      trackingCode: order.pix_code || '',
-                    })}
-                  />
+                  {filteredOrders.map((order) => (
+                    <TrackingRow 
+                      key={order.id} 
+                      order={order} 
+                      onCopyLink={copyTrackingLink}
+                      onViewTracking={() => setSelectedTracking({
+                        orderId: order.id,
+                        cpf: order.customer_cpf || '',
+                        name: order.customer_name || '',
+                        createdAt: order.created_at,
+                        trackingCode: order.tracking_code || '',
+                      })}
+                    />
                 ))}
               </TableBody>
             </Table>
@@ -256,7 +229,7 @@ function TrackingRow({
     id: string;
     customer_cpf: string | null;
     customer_name: string | null;
-    pix_code: string | null;
+    tracking_code: string | null;
     created_at: string;
     status: string | null;
   };
@@ -297,12 +270,12 @@ function TrackingRow({
         </Badge>
       </TableCell>
       <TableCell>
-        {order.pix_code ? (
+        {order.tracking_code ? (
           <Badge variant="secondary" className="font-mono">
-            {order.pix_code}
+            {order.tracking_code}
           </Badge>
         ) : (
-          <span className="text-muted-foreground text-sm">Não cadastrado</span>
+          <span className="text-muted-foreground text-sm">—</span>
         )}
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">
@@ -311,7 +284,7 @@ function TrackingRow({
       <TableCell>
         <div className="flex gap-2">
           {/* Only show tracking actions for orders with status 'shipped' */}
-          {order.pix_code && order.status === 'shipped' && (
+          {order.status === 'shipped' && (
             <>
               <Button 
                 size="sm" 
@@ -342,7 +315,7 @@ function TrackingRow({
               </Button>
             </>
           )}
-          {!order.pix_code && order.status === 'approved' && (
+          {order.status === 'approved' && (
             <span className="text-xs text-muted-foreground">Aguardando envio</span>
           )}
         </div>
