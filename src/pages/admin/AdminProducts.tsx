@@ -163,10 +163,8 @@ export default function AdminProducts() {
     toast.success('Imagem definida como principal!');
   };
 
-  const uploadImage = async (file: File, isMain = false) => {
+  const uploadSingleImage = async (file: File): Promise<string | null> => {
     try {
-      setIsUploading(true);
-      
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `products/${fileName}`;
@@ -181,41 +179,63 @@ export default function AdminProducts() {
         .from('product-images')
         .getPublicUrl(filePath);
       
-      if (isMain) {
-        setFormData({
-          ...formData,
-          images: [publicUrl, ...formData.images],
-          image_url: publicUrl,
-        });
-      } else {
-        setFormData({
-          ...formData,
-          images: [...formData.images, publicUrl],
-          image_url: formData.image_url || publicUrl,
-        });
-      }
-      
-      toast.success('Imagem enviada com sucesso!');
+      return publicUrl;
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Erro ao enviar imagem');
-    } finally {
-      setIsUploading(false);
+      return null;
     }
   };
 
-  const handleMainImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      uploadImage(file, true);
+    if (!file) return;
+    
+    setIsUploading(true);
+    const publicUrl = await uploadSingleImage(file);
+    setIsUploading(false);
+    
+    if (publicUrl) {
+      setFormData(prev => ({
+        ...prev,
+        images: [publicUrl, ...prev.images],
+        image_url: publicUrl,
+      }));
+      toast.success('Imagem enviada com sucesso!');
+    } else {
+      toast.error('Erro ao enviar imagem');
     }
+    
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleSecondaryImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSecondaryImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      Array.from(files).forEach(file => uploadImage(file, false));
+    if (!files || files.length === 0) return;
+    
+    setIsUploading(true);
+    
+    const uploadPromises = Array.from(files).map(file => uploadSingleImage(file));
+    const results = await Promise.all(uploadPromises);
+    const successfulUrls = results.filter((url): url is string => url !== null);
+    
+    setIsUploading(false);
+    
+    if (successfulUrls.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...successfulUrls],
+        image_url: prev.image_url || successfulUrls[0],
+      }));
+      toast.success(`${successfulUrls.length} imagem(ns) enviada(s) com sucesso!`);
     }
+    
+    if (successfulUrls.length < files.length) {
+      toast.error(`${files.length - successfulUrls.length} imagem(ns) falharam ao enviar`);
+    }
+    
+    // Reset input
+    if (secondaryFileInputRef.current) secondaryFileInputRef.current.value = '';
   };
 
   return (
