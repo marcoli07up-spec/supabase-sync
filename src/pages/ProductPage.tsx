@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, ShoppingCart, Truck, Shield, RefreshCw, Star, Check, Clock, Award, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,8 +21,17 @@ export default function ProductPage() {
   const { data: reviews } = useReviews();
   const { data: productReviews } = useProductReviews(id || '');
   const { addItem } = useCart();
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const discount = product ? getDiscountPercentage(product.original_price || 0, product.price) : 0;
+  
+  // Get all images (main + secondary)
+  const allImages = product ? [
+    product.image_url,
+    ...(product.images || []).filter(img => img !== product.image_url)
+  ].filter(Boolean) as string[] : [];
+  
+  const currentImage = selectedImage || product?.image_url || '/placeholder.svg';
   const pixPrice = product ? product.price * 0.95 : 0;
 
   // Track View Content when product loads
@@ -99,48 +108,74 @@ export default function ProductPage() {
       <section className="py-8">
         <div className="container-custom">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-            {/* Product image */}
-            <div className="relative">
-              <div className={`aspect-square rounded-2xl overflow-hidden bg-muted border border-border ${(product.stock ?? 0) <= 0 ? 'grayscale' : ''}`}>
-                <img
-                  src={product.image_url || '/placeholder.svg'}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
+            {/* Product images */}
+            <div className="space-y-4">
+              {/* Main image */}
+              <div className="relative">
+                <div className={`aspect-square rounded-2xl overflow-hidden bg-muted border border-border ${(product.stock ?? 0) <= 0 ? 'grayscale' : ''}`}>
+                  <img
+                    src={currentImage}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  {/* Out of stock overlay */}
+                  {(product.stock ?? 0) <= 0 && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <span className="bg-destructive text-destructive-foreground text-2xl font-bold px-6 py-3 rounded-lg uppercase tracking-wider shadow-lg">
+                        Esgotado
+                      </span>
+                    </div>
+                  )}
+                </div>
                 
-                {/* Out of stock overlay */}
-                {(product.stock ?? 0) <= 0 && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <span className="bg-destructive text-destructive-foreground text-2xl font-bold px-6 py-3 rounded-lg uppercase tracking-wider shadow-lg">
-                      Esgotado
-                    </span>
+                {/* Badges */}
+                {(product.stock ?? 0) > 0 && (
+                  <div className="absolute top-4 left-4 flex flex-col gap-2">
+                    {discount > 0 && (
+                      <Badge variant="destructive" className="text-sm font-bold px-3 py-1">
+                        -{discount}% OFF
+                      </Badge>
+                    )}
+                    <Badge variant="secondary" className="bg-primary text-primary-foreground text-sm font-medium px-3 py-1">
+                      Seminovo Revisado
+                    </Badge>
+                  </div>
+                )}
+
+                {/* Stock badge - Show "Última unidade disponível!" for seminovos */}
+                {(product.stock ?? 0) <= 3 && (product.stock ?? 0) > 0 && (
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="bg-destructive/90 text-destructive-foreground text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      {product.name.toLowerCase().includes('seminov') 
+                        ? 'Última unidade disponível!' 
+                        : `Apenas ${product.stock} unidade${product.stock !== 1 ? 's' : ''} disponível!`}
+                    </div>
                   </div>
                 )}
               </div>
               
-              {/* Badges */}
-              {(product.stock ?? 0) > 0 && (
-                <div className="absolute top-4 left-4 flex flex-col gap-2">
-                  {discount > 0 && (
-                    <Badge variant="destructive" className="text-sm font-bold px-3 py-1">
-                      -{discount}% OFF
-                    </Badge>
-                  )}
-                  <Badge variant="secondary" className="bg-primary text-primary-foreground text-sm font-medium px-3 py-1">
-                    Seminovo Revisado
-                  </Badge>
-                </div>
-              )}
-
-              {/* Stock badge - Show "Última unidade disponível!" for seminovos */}
-              {(product.stock ?? 0) <= 3 && (product.stock ?? 0) > 0 && (
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="bg-destructive/90 text-destructive-foreground text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    {product.name.toLowerCase().includes('seminov') 
-                      ? 'Última unidade disponível!' 
-                      : `Apenas ${product.stock} unidade${product.stock !== 1 ? 's' : ''} disponível!`}
-                  </div>
+              {/* Thumbnail gallery */}
+              {allImages.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {allImages.map((img, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(img)}
+                      className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                        currentImage === img 
+                          ? 'border-primary ring-2 ring-primary/20' 
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`${product.name} - Imagem ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
