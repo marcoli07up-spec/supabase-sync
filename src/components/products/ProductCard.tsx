@@ -62,7 +62,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </Link>
 
       {/* Content */}
-      <div className="p-4 flex flex-col flex-1">
+      <div className="p-3 sm:p-4 flex flex-col flex-1 min-w-0">
         {/* Stock status */}
         <div className="mb-2">
           {(product.stock ?? 0) > 0 ? (
@@ -74,7 +74,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Title */}
         <Link to={`/produto/${product.id}`} className="flex-1">
-          <h3 className="font-medium text-sm line-clamp-2 hover:text-primary transition-colors mb-2">
+          <h3 className="font-medium text-xs sm:text-sm line-clamp-2 hover:text-primary transition-colors mb-2">
             {product.name}
           </h3>
         </Link>
@@ -82,21 +82,21 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Prices */}
         <div className="mb-3">
           {product.original_price && product.original_price > product.price && (
-            <p className="price-original">{formatCurrency(product.original_price)}</p>
+            <p className="price-original text-xs">{formatCurrency(product.original_price)}</p>
           )}
-          <p className="price-current">{formatCurrency(product.price)}</p>
-          <p className="price-installment">ou {formatInstallments(product.price)}</p>
-          <p className="text-xs text-primary font-medium mt-1">FRETE GRÁTIS</p>
+          <p className="price-current text-base sm:text-xl">{formatCurrency(product.price)}</p>
+          <p className="price-installment text-[10px] sm:text-sm">ou {formatInstallments(product.price)}</p>
+          <p className="text-[10px] sm:text-xs text-primary font-medium mt-1">FRETE GRÁTIS</p>
         </div>
 
         {/* Add to cart */}
         <Button
           onClick={() => addItem(product)}
           disabled={(product.stock ?? 0) <= 0}
-          className="w-full"
+          className="w-full text-xs sm:text-sm"
           size="sm"
         >
-          <ShoppingCart className="h-4 w-4 mr-2" />
+          <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
           Comprar agora
         </Button>
       </div>
