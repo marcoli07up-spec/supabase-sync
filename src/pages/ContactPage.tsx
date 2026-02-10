@@ -5,8 +5,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Layout } from '@/components/layout';
 import { toast } from 'sonner';
+import { useWhatsAppSettings } from '@/hooks/useWhatsAppSettings';
 
 export default function ContactPage() {
+  const { data: whatsapp } = useWhatsAppSettings();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast.success('Mensagem enviada com sucesso! Entraremos em contato em breve.');
@@ -61,10 +64,15 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <Button className="w-full" size="lg">
-                <MessageCircle className="h-5 w-5 mr-2" />
-                Chamar no WhatsApp
-              </Button>
+              {whatsapp?.enabled && (
+                <Button className="w-full" size="lg" onClick={() => {
+                  const phone = whatsapp.phone || '5511999999999';
+                  window.open(`https://wa.me/${phone}`, '_blank');
+                }}>
+                  <MessageCircle className="h-5 w-5 mr-2" />
+                  Chamar no WhatsApp
+                </Button>
+              )}
             </div>
 
             {/* Contact form */}
