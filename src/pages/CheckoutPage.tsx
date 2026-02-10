@@ -360,7 +360,7 @@ export default function CheckoutPage() {
           `Gostaria de finalizar minha compra via PIX!`
         );
 
-        const phone = '5511999999999'; // Replace with actual store phone
+        const phone = '5511972238165';
         window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
         
         clearCart();
