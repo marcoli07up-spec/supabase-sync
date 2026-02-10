@@ -4,17 +4,19 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLocation } from 'react-router-dom';
 import { formatCurrency } from '@/lib/format';
+import { useWhatsAppSettings } from '@/hooks/useWhatsAppSettings';
 
 export function FloatingButtons() {
   const { getItemCount, setIsOpen, isAnimating, getTotal } = useCart();
   const itemCount = getItemCount();
   const location = useLocation();
+  const { data: whatsapp } = useWhatsAppSettings();
 
   // Hide cart button on checkout page
   const isCheckoutPage = location.pathname === '/checkout';
 
   const openWhatsApp = () => {
-    const phone = '5511999999999'; // Replace with actual store phone
+    const phone = whatsapp?.phone || '5511999999999';
     const message = encodeURIComponent(
       'Olá! Gostaria de mais informações sobre os produtos da iCamStore.'
     );
@@ -28,14 +30,19 @@ export function FloatingButtons() {
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 flex justify-between items-end pointer-events-none">
       {/* WhatsApp Button - Left */}
-      <Button
-        onClick={openWhatsApp}
-        size="lg"
-        className="pointer-events-auto h-14 w-14 rounded-full bg-[hsl(142,70%,45%)] hover:bg-[hsl(142,70%,40%)] shadow-lg hover:shadow-xl transition-all"
-        aria-label="Contato via WhatsApp"
-      >
-        <MessageCircle className="h-6 w-6" />
-      </Button>
+      {whatsapp?.enabled && (
+        <Button
+          onClick={openWhatsApp}
+          size="lg"
+          className="pointer-events-auto h-14 w-14 rounded-full bg-[hsl(142,70%,45%)] hover:bg-[hsl(142,70%,40%)] shadow-lg hover:shadow-xl transition-all"
+          aria-label="Contato via WhatsApp"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </Button>
+      )}
+
+      {/* Spacer when WhatsApp is hidden */}
+      {!whatsapp?.enabled && <div />}
 
       {/* Cart Button - Right (only show when has items and not on checkout) */}
       {!isCheckoutPage && itemCount > 0 && (

@@ -33,6 +33,7 @@ import {
 import AdminTracking from "./pages/admin/AdminTracking";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminPix from "./pages/admin/AdminPix";
+import AdminWhatsApp from "./pages/admin/AdminWhatsApp";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ const App = () => (
               <Route path="avaliacoes" element={<AdminReviews />} />
               <Route path="pix" element={<AdminPix />} />
               <Route path="carrinhos-abandonados" element={<AdminAbandonedCarts />} />
+              <Route path="whatsapp" element={<AdminWhatsApp />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
