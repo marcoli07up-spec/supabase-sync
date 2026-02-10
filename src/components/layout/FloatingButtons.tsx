@@ -24,14 +24,16 @@ export function FloatingButtons() {
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 flex justify-between items-end pointer-events-none">
       {/* Instagram DM Button - Left */}
-      <Button
-        onClick={openInstagramDM}
-        size="lg"
-        className="pointer-events-auto h-16 w-16 rounded-full bg-white hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all p-3"
-        aria-label="Enviar mensagem no Instagram"
-      >
-        <img src={instagramSendIcon} alt="Instagram Direct" className="h-full w-full object-contain" />
-      </Button>
+      {!isCheckoutPage && (
+        <Button
+          onClick={openInstagramDM}
+          size="lg"
+          className="pointer-events-auto h-16 w-16 rounded-full bg-white hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all p-3"
+          aria-label="Enviar mensagem no Instagram"
+        >
+          <img src={instagramSendIcon} alt="Instagram Direct" className="h-full w-full object-contain" />
+        </Button>
+      )}
 
       {/* Cart Button - Right */}
       {!isCheckoutPage && itemCount > 0 && (
