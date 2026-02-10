@@ -234,6 +234,9 @@ export type Database = {
           notes: string | null
           payment_method: string | null
           pix_code: string | null
+          pix_qr_code: string | null
+          pix_qr_code_image: string | null
+          podpay_transaction_id: string | null
           status: string | null
           total: number
           tracking_code: string | null
@@ -257,6 +260,9 @@ export type Database = {
           notes?: string | null
           payment_method?: string | null
           pix_code?: string | null
+          pix_qr_code?: string | null
+          pix_qr_code_image?: string | null
+          podpay_transaction_id?: string | null
           status?: string | null
           total: number
           tracking_code?: string | null
@@ -280,6 +286,9 @@ export type Database = {
           notes?: string | null
           payment_method?: string | null
           pix_code?: string | null
+          pix_qr_code?: string | null
+          pix_qr_code_image?: string | null
+          podpay_transaction_id?: string | null
           status?: string | null
           total?: number
           tracking_code?: string | null
