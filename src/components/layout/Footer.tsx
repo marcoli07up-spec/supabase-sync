@@ -14,17 +14,7 @@ export function Footer() {
             <p className="text-sm text-muted-foreground mb-4">
               Paixão por imagem e compromisso com confiança. Somos uma loja especializada em câmeras e equipamentos fotográficos seminovos.
             </p>
-            <div className="flex gap-3">
-              <a href="https://instagram.com/cameras.icam" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <Youtube className="h-5 w-5" />
-              </a>
-            </div>
+            
           </div>
 
           {/* Categories */}
