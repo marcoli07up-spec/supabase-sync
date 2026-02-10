@@ -107,14 +107,14 @@ export default function ProductPage() {
       </div>
 
       {/* Product details */}
-      <section className="py-8">
-        <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+      <section className="py-4 sm:py-8">
+        <div className="container-custom px-3 sm:px-4">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-12">
             {/* Product images */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Main image */}
               <div className="relative">
-                <div className={`aspect-square rounded-2xl overflow-hidden bg-muted border border-border ${(product.stock ?? 0) <= 0 ? 'grayscale' : ''}`}>
+                <div className={`aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-muted border border-border ${(product.stock ?? 0) <= 0 ? 'grayscale' : ''}`}>
                   <img
                     src={currentImage}
                     alt={product.name}
@@ -124,7 +124,7 @@ export default function ProductPage() {
                   {/* Out of stock overlay */}
                   {(product.stock ?? 0) <= 0 && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <span className="bg-destructive text-destructive-foreground text-2xl font-bold px-6 py-3 rounded-lg uppercase tracking-wider shadow-lg">
+                      <span className="bg-destructive text-destructive-foreground text-xl sm:text-2xl font-bold px-4 sm:px-6 py-2 sm:py-3 rounded-lg uppercase tracking-wider shadow-lg">
                         Esgotado
                       </span>
                     </div>
@@ -133,23 +133,23 @@ export default function ProductPage() {
                 
                 {/* Badges */}
                 {(product.stock ?? 0) > 0 && (
-                  <div className="absolute top-4 left-4 flex flex-col gap-2">
+                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-1.5 sm:gap-2">
                     {discount > 0 && (
-                      <Badge variant="destructive" className="text-sm font-bold px-3 py-1">
+                      <Badge variant="destructive" className="text-xs sm:text-sm font-bold px-2 sm:px-3 py-0.5 sm:py-1">
                         -{discount}% OFF
                       </Badge>
                     )}
-                    <Badge variant="secondary" className="bg-primary text-primary-foreground text-sm font-medium px-3 py-1">
+                    <Badge variant="secondary" className="bg-primary text-primary-foreground text-xs sm:text-sm font-medium px-2 sm:px-3 py-0.5 sm:py-1">
                       Seminovo Revisado
                     </Badge>
                   </div>
                 )}
 
-                {/* Stock badge - Show "Última unidade disponível!" for seminovos */}
+                {/* Stock badge */}
                 {(product.stock ?? 0) <= 3 && (product.stock ?? 0) > 0 && (
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <div className="bg-destructive/90 text-destructive-foreground text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
+                  <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4">
+                    <div className="bg-destructive/90 text-destructive-foreground text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 sm:gap-2">
+                      <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
                       {product.name.toLowerCase().includes('seminov') 
                         ? 'Última unidade disponível!' 
                         : `Apenas ${product.stock} unidade${product.stock !== 1 ? 's' : ''} disponível!`}
@@ -160,12 +160,12 @@ export default function ProductPage() {
               
               {/* Thumbnail gallery */}
               {allImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-2">
+                <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
                   {allImages.map((img, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(img)}
-                      className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                      className={`shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all ${
                         currentImage === img 
                           ? 'border-primary ring-2 ring-primary/20' 
                           : 'border-border hover:border-primary/50'
@@ -183,7 +183,7 @@ export default function ProductPage() {
             </div>
 
             {/* Product info */}
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               {/* Rating - Hide for seminovos (unique items don't have reviews) */}
               {!product.name.toLowerCase().includes('seminov') && productReviews && productReviews.length > 0 && (
                 <div className="flex items-center gap-2 mb-3">
@@ -191,80 +191,80 @@ export default function ProductPage() {
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
                         key={i}
-                        className={`h-5 w-5 ${
+                        className={`h-4 w-4 sm:h-5 sm:w-5 ${
                           i < Math.round(averageRating) ? 'text-primary fill-primary' : 'text-muted'
                         }`}
                       />
                     ))}
                   </div>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     ({productReviews.length} avaliações)
                   </span>
                 </div>
               )}
 
               {/* Title */}
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 leading-tight">
                 {product.name}
               </h1>
 
               {/* Stock status */}
-              <div className="mb-4">
+              <div className="mb-3 sm:mb-4">
                 {(product.stock ?? 0) > 0 ? (
-                  <div className="inline-flex items-center gap-2 bg-success/10 text-success px-3 py-1.5 rounded-full text-sm font-medium">
-                    <Check className="h-4 w-4" />
+                  <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-success/10 text-success px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium">
+                    <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     Em estoque - Pronta entrega
                   </div>
                 ) : (
-                  <div className="inline-flex items-center gap-2 bg-destructive/10 text-destructive px-3 py-1.5 rounded-full text-sm font-medium">
+                  <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-destructive/10 text-destructive px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium">
                     Produto indisponível
                   </div>
                 )}
               </div>
 
               {/* Prices */}
-              <div className="bg-secondary/50 rounded-xl p-6 mb-6">
+              <div className="bg-secondary/50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
                 {product.original_price && product.original_price > product.price && (
-                  <p className="text-lg text-muted-foreground line-through">
+                  <p className="text-sm sm:text-lg text-muted-foreground line-through">
                     De: {formatCurrency(product.original_price)}
                   </p>
                 )}
                 
                 {/* PIX Price - Main highlight */}
-                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <Zap className="h-5 w-5 text-primary shrink-0" />
-                    <span className="font-bold text-primary text-xl sm:text-2xl">
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
+                    <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                    <span className="font-bold text-primary text-lg sm:text-xl md:text-2xl">
                       {formatCurrency(pixPrice)} no PIX
                     </span>
                     {discount > 0 && (
-                      <Badge variant="destructive" className="text-xs">
+                      <Badge variant="destructive" className="text-[10px] sm:text-xs">
                         {discount}% OFF
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Economize {formatCurrency(cardPrice - pixPrice)} pagando à vista
                   </p>
                 </div>
 
                 {/* Card Price */}
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <CreditCard className="h-4 w-4" />
-                  <span className="text-sm">
-                    <strong className="text-foreground text-base">{formatCurrency(cardPrice)}</strong> no cartão
+                  <CreditCard className="h-4 w-4 shrink-0" />
+                  <span className="text-xs sm:text-sm">
+                    <strong className="text-foreground text-sm sm:text-base">{formatCurrency(cardPrice)}</strong> no cartão
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground ml-6">
+                <p className="text-xs sm:text-sm text-muted-foreground ml-6">
                   em até <strong className="text-foreground">12x de {formatCurrency(cardPrice / 12)}</strong> sem juros
                 </p>
               </div>
 
-              {/* CTA Buttons - Single unit only for seminovos */}
-              <div className="space-y-3 mb-6">
+              {/* CTA Buttons */}
+              <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
                 <Button
                   size="lg"
-                  className="w-full h-14 text-lg font-bold"
+                  className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold"
                   onClick={handleBuyNow}
                   disabled={(product.stock ?? 0) <= 0}
                 >
@@ -272,64 +272,64 @@ export default function ProductPage() {
                   Comprar agora
                 </Button>
                 
-                <p className="text-xs text-center text-muted-foreground">
+                <p className="text-[10px] sm:text-xs text-center text-muted-foreground">
                   * Produto seminovo - unidade única disponível
                 </p>
               </div>
 
               {/* Benefits */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="flex items-center gap-3 p-3 bg-secondary rounded-lg">
-                  <Truck className="h-5 w-5 text-primary shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">Frete Grátis</p>
-                    <p className="text-xs text-muted-foreground">Todo Brasil</p>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-secondary rounded-lg">
+                  <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-medium truncate">Frete Grátis</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Todo Brasil</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-secondary rounded-lg">
-                  <Shield className="h-5 w-5 text-primary shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">1 Ano Garantia</p>
-                    <p className="text-xs text-muted-foreground">Cobertura total</p>
+                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-secondary rounded-lg">
+                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-medium truncate">1 Ano Garantia</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Cobertura total</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-secondary rounded-lg">
-                  <RefreshCw className="h-5 w-5 text-primary shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">90 Dias</p>
-                    <p className="text-xs text-muted-foreground">Para troca</p>
+                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-secondary rounded-lg">
+                  <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-medium truncate">90 Dias</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Para troca</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-secondary rounded-lg">
-                  <Award className="h-5 w-5 text-primary shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">Revisado</p>
-                    <p className="text-xs text-muted-foreground">100% testado</p>
+                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-secondary rounded-lg">
+                  <Award className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-medium truncate">Revisado</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">100% testado</p>
                   </div>
                 </div>
               </div>
 
               {/* Shipping Calculator */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <ShippingCalculator />
               </div>
 
               {/* Description */}
               {product.description && (
-                <div className="border-t pt-6">
-                  <h3 className="font-semibold mb-3 text-lg">Descrição do Produto</h3>
+                <div className="border-t pt-4 sm:pt-6 min-w-0">
+                  <h3 className="font-semibold mb-3 text-base sm:text-lg">Descrição do Produto</h3>
                   <div 
-                    className="text-foreground leading-relaxed prose prose-sm max-w-none overflow-x-auto
-                      prose-p:text-foreground prose-p:my-2 
+                    className="text-foreground leading-relaxed prose prose-sm max-w-none overflow-x-auto min-w-0
+                      prose-p:text-foreground prose-p:my-2 prose-p:text-sm
                       prose-strong:text-foreground prose-strong:font-semibold
-                      prose-ul:text-foreground prose-ul:my-2 prose-ul:list-disc prose-ul:pl-5
-                      prose-ol:text-foreground prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-5
-                      prose-li:text-foreground prose-li:my-1
-                      prose-table:border prose-table:border-border prose-table:my-4 prose-table:w-full prose-table:text-xs prose-table:sm:text-sm
-                      prose-td:border prose-td:border-border prose-td:p-1.5 prose-td:sm:p-2 prose-td:text-foreground prose-td:break-words
-                      prose-th:border prose-th:border-border prose-th:p-1.5 prose-th:sm:p-2 prose-th:bg-muted prose-th:text-foreground prose-th:font-semibold
-                      prose-headings:text-foreground prose-headings:font-semibold
-                      [&_table]:block [&_table]:overflow-x-auto [&_table]:whitespace-nowrap [&_table]:sm:whitespace-normal"
+                      prose-ul:text-foreground prose-ul:my-2 prose-ul:list-disc prose-ul:pl-4 sm:prose-ul:pl-5
+                      prose-ol:text-foreground prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-4 sm:prose-ol:pl-5
+                      prose-li:text-foreground prose-li:my-1 prose-li:text-sm
+                      prose-table:border prose-table:border-border prose-table:my-4 prose-table:w-full prose-table:text-[10px] prose-table:sm:text-sm
+                      prose-td:border prose-td:border-border prose-td:p-1 prose-td:sm:p-2 prose-td:text-foreground prose-td:break-words
+                      prose-th:border prose-th:border-border prose-th:p-1 prose-th:sm:p-2 prose-th:bg-muted prose-th:text-foreground prose-th:font-semibold
+                      prose-headings:text-foreground prose-headings:font-semibold prose-headings:text-sm sm:prose-headings:text-base
+                      [&_table]:block [&_table]:overflow-x-auto [&_table]:whitespace-nowrap [&_table]:sm:whitespace-normal [&_table]:max-w-full"
                     dangerouslySetInnerHTML={{ __html: product.description }}
                   />
                 </div>
