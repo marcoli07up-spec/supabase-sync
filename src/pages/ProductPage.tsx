@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronRight, ShoppingCart, Truck, Shield, RefreshCw, Star, Check, Clock, Award, Zap } from 'lucide-react';
+import { ChevronRight, ShoppingCart, Truck, Shield, RefreshCw, Star, Check, Clock, Award, Zap, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout';
 import { ProductGrid, ReviewsCarousel } from '@/components/products';
@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { trackViewContent } from '@/lib/facebook-pixel';
 import { ReviewForm } from '@/components/products/ReviewForm';
 import { ProductReviews } from '@/components/products/ProductReviews';
+import { ShippingCalculator } from '@/components/products/ShippingCalculator';
 
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +34,7 @@ export default function ProductPage() {
   
   const currentImage = selectedImage || product?.image_url || '/placeholder.svg';
   const pixPrice = product ? product.price * 0.95 : 0;
+  const cardPrice = product ? product.price * 1.05 : 0;
 
   // Track View Content when product loads
   useEffect(() => {
@@ -228,30 +230,34 @@ export default function ProductPage() {
                   </p>
                 )}
                 
-                <div className="flex items-baseline gap-3 mb-2">
-                  <span className="text-4xl font-bold text-primary">{formatCurrency(product.price)}</span>
-                  {discount > 0 && (
-                    <Badge variant="destructive" className="text-xs">
-                      {discount}% OFF
-                    </Badge>
-                  )}
-                </div>
-                
-                <p className="text-muted-foreground mb-3">
-                  ou {formatInstallments(product.price)}
-                </p>
-                
-                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                {/* PIX Price - Main highlight */}
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
                   <div className="flex items-center gap-2 mb-1">
                     <Zap className="h-5 w-5 text-primary" />
-                    <span className="font-bold text-primary text-lg">
+                    <span className="font-bold text-primary text-2xl">
                       {formatCurrency(pixPrice)} no PIX
                     </span>
+                    {discount > 0 && (
+                      <Badge variant="destructive" className="text-xs">
+                        {discount}% OFF
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Economize {formatCurrency(product.price - pixPrice)} pagando à vista
+                    Economize {formatCurrency(cardPrice - pixPrice)} pagando à vista
                   </p>
                 </div>
+
+                {/* Card Price */}
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <CreditCard className="h-4 w-4" />
+                  <span className="text-sm">
+                    <strong className="text-foreground text-base">{formatCurrency(cardPrice)}</strong> no cartão
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">
+                  em até <strong className="text-foreground">12x de {formatCurrency(cardPrice / 12)}</strong> sem juros
+                </p>
               </div>
 
               {/* CTA Buttons - Single unit only for seminovos */}
@@ -301,6 +307,11 @@ export default function ProductPage() {
                     <p className="text-xs text-muted-foreground">100% testado</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Shipping Calculator */}
+              <div className="mb-6">
+                <ShippingCalculator />
               </div>
 
               {/* Description */}
