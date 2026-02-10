@@ -30,8 +30,7 @@ export default function OrderStatusPage() {
   const [items, setItems] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [isGeneratingPix, setIsGeneratingPix] = useState(false);
-  const [showPixCode, setShowPixCode] = useState(false);
+  
 
   const orderWithPix = order as Order & { 
     pix_qr_code?: string; 
@@ -149,14 +148,7 @@ export default function OrderStatusPage() {
     return () => clearInterval(interval);
   }, [orderId, order?.status]);
 
-  const handleGeneratePix = () => {
-    setIsGeneratingPix(true);
-    // Simulate loading for 2.5 seconds then show the code
-    setTimeout(() => {
-      setIsGeneratingPix(false);
-      setShowPixCode(true);
-    }, 2500);
-  };
+  // No longer needed - PIX code shows automatically
 
   const copyPixCode = async () => {
     if (orderWithPix?.pix_qr_code) {
@@ -327,34 +319,8 @@ export default function OrderStatusPage() {
                 </div>
               )}
 
-              {/* PIX code available - show generate button or the code */}
-              {hasPixCode && !showPixCode && !isGeneratingPix && (
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Clique no botão abaixo para gerar o código PIX Copia e Cola
-                  </p>
-                  <Button 
-                    onClick={handleGeneratePix}
-                    size="lg"
-                    className="w-full text-base font-bold py-6"
-                  >
-                    <QrCode className="h-5 w-5 mr-2" />
-                    Gerar PIX Copia e Cola
-                  </Button>
-                </div>
-              )}
-
-              {/* Generating PIX animation */}
-              {isGeneratingPix && (
-                <div className="text-center py-6">
-                  <Loader2 className="h-10 w-10 animate-spin mx-auto mb-3 text-primary" />
-                  <p className="font-medium mb-1">Gerando seu código PIX...</p>
-                  <p className="text-sm text-muted-foreground">Aguarde um momento</p>
-                </div>
-              )}
-
-              {/* Show PIX code after generation */}
-              {showPixCode && hasPixCode && (
+              {/* PIX code available - show immediately */}
+              {hasPixCode && (
                 <div className="space-y-4">
                   {/* QR Code Image */}
                   {orderWithPix.pix_qr_code_image && (
