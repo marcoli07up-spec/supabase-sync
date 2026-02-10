@@ -80,6 +80,7 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [isProcessingCard, setIsProcessingCard] = useState(false);
+  const [isProcessingPix, setIsProcessingPix] = useState(false);
 
   // Check if order is above R$2500 for WhatsApp redirect (PodPay handles up to R$2499.99)
   const isHighValueOrder = getTotal() >= 2500;
@@ -370,6 +371,8 @@ export default function CheckoutPage() {
       }
 
       // PodPay flow for PIX ≤ R$2499.99
+      setIsProcessingPix(true);
+      
       const orderResult = await createOrder.mutateAsync({
         formData: data,
         cartItems: items,
@@ -407,7 +410,7 @@ export default function CheckoutPage() {
 
       // Clear cart and redirect to order status page
       clearCart();
-      toast.success('Pedido realizado com sucesso!');
+      setIsProcessingPix(false);
       navigate(`/pedido?id=${orderResult?.id}`);
     } catch (error) {
       toast.error('Erro ao processar pedido. Tente novamente.');
@@ -432,6 +435,36 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
                 <CreditCard className="h-4 w-4" />
                 <span>Validando cartão de crédito</span>
+              </div>
+              <p className="text-2xl font-bold text-primary">{formatCurrency(total)}</p>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Lock className="h-4 w-4" />
+              <span>Transação segura e criptografada</span>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // PIX processing screen
+  if (isProcessingPix) {
+    return (
+      <Layout>
+        <div className="container-custom py-12">
+          <div className="max-w-md mx-auto text-center">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Loader2 className="h-10 w-10 text-primary animate-spin" />
+            </div>
+            <h1 className="text-2xl font-bold mb-4">Gerando seu PIX...</h1>
+            <p className="text-muted-foreground mb-6">
+              Aguarde enquanto preparamos o código PIX para pagamento.
+            </p>
+            <div className="bg-secondary rounded-xl p-6 mb-6">
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
+                <QrCode className="h-4 w-4" />
+                <span>Processando pagamento PIX</span>
               </div>
               <p className="text-2xl font-bold text-primary">{formatCurrency(total)}</p>
             </div>
