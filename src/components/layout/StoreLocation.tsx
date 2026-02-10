@@ -1,4 +1,5 @@
 import { Instagram, MapPin } from 'lucide-react';
+import storeFrontImg from '@/assets/store-front.png';
 
 export function StoreLocation() {
   return (
@@ -8,7 +9,7 @@ export function StoreLocation() {
           {/* Store Photo */}
           <div className="relative aspect-video rounded-2xl overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1551190822-a9333d879b1f?w=800&h=450&fit=crop"
+              src={storeFrontImg}
               alt="Loja física iCamStore"
               className="w-full h-full object-cover"
             />
