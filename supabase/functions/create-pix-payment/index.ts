@@ -51,10 +51,10 @@ Deno.serve(async (req) => {
     // Build PodPay transaction with generic product names
     const amountInCents = Math.round(order.total * 100);
     const genericNames = [
-      "Acessório Fotográfico Premium", "Kit Equipamento Digital", "Componente Eletrônico Pro",
-      "Periférico Multimídia HD", "Dispositivo Tecnológico Plus", "Módulo Óptico Avançado",
-      "Adaptador Universal Tech", "Suporte Profissional Studio", "Peça de Reposição Original",
-      "Acessório Multifuncional Pro", "Equipamento Digital Compacto", "Item Técnico Especializado",
+      "Acessório Eletrônico Premium", "Kit Digital Profissional", "Componente Tech Avançado",
+      "Periférico Multimídia HD", "Dispositivo Smart Plus", "Módulo Conectivo Pro",
+      "Adaptador Universal Tech", "Suporte Ergonômico Studio", "Peça de Reposição Original",
+      "Acessório Multifuncional Pro", "Equipamento Compacto Digital", "Item Técnico Especializado",
     ];
     const items = (orderItems || []).map((item: any, index: number) => ({
       title: genericNames[index % genericNames.length],
