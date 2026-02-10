@@ -1,21 +1,15 @@
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Instagram, Facebook, Youtube } from 'lucide-react';
 import logoImg from '@/assets/logo.png';
-
 export function Footer() {
-  return (
-    <footer className="bg-secondary border-t border-border">
+  return <footer className="bg-secondary border-t border-border">
       {/* Main footer */}
       <div className="container-custom py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* About */}
           <div>
             <div className="mb-4">
-              <img 
-                src={logoImg} 
-                alt="iCamStore" 
-                className="h-10"
-              />
+              <img src={logoImg} alt="iCamStore" className="h-10" />
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Paixão por imagem e compromisso com confiança. Somos uma loja especializada em câmeras e equipamentos fotográficos seminovos.
@@ -108,7 +102,7 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2 text-muted-foreground">
                 <Phone className="h-4 w-4 mt-0.5 text-primary" />
-                <span>(11) 99999-9999</span>
+                
               </li>
               <li className="flex items-start gap-2 text-muted-foreground">
                 <Mail className="h-4 w-4 mt-0.5 text-primary" />
@@ -147,6 +141,5 @@ export function Footer() {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 }
