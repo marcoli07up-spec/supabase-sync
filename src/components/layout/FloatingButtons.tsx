@@ -30,7 +30,7 @@ export function FloatingButtons() {
         aria-label="Enviar mensagem no Instagram"
       >
         <svg viewBox="0 0 24 24" className="h-11 w-11 fill-white" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C6.48 2 2 6.04 2 11c0 2.76 1.36 5.22 3.5 6.84V22l3.58-1.96c.94.27 1.94.42 2.92.42 5.52 0 10-4.04 10-9S17.52 2 12 2zm1.07 12.13l-2.54-2.72L5.4 14.13l5.63-5.97 2.54 2.72 5.11-2.72-5.61 5.97z"/>
+          <path d="M22 3L9.218 10.083M22 3l-9.782 18L9.218 10.083M22 3L9.218 10.083M22 3L2 11.5l7.218-1.417" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
         </svg>
       </Button>
 
