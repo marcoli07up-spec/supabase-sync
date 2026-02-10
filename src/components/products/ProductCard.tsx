@@ -41,6 +41,13 @@ export function ProductCard({ product }: ProductCardProps) {
           </span>
         )}
 
+        {/* Reinauguration free shipping badge */}
+        {(product.stock ?? 0) > 0 && (
+          <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded">
+            🚚 FRETE GRÁTIS
+          </span>
+        )}
+
         {/* Quick actions overlay - only show if in stock */}
         {(product.stock ?? 0) > 0 && (
           <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
