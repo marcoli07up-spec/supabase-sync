@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, Clock, MessageCircle, QrCode, Truck, Package, ShoppingBag } from 'lucide-react';
+import { CheckCircle, Clock, MessageCircle, QrCode, Truck, Package, ShoppingBag, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout';
 import { formatCurrency } from '@/lib/format';
 import { supabase } from '@/integrations/supabase/client';
 import { Order, OrderItem } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 const statusConfig: Record<string, { icon: React.ElementType; label: string; color: string; description: string }> = {
   pending: { icon: Clock, label: 'Pendente', color: 'text-yellow-500', description: 'Seu pedido está sendo processado.' },
@@ -18,6 +19,9 @@ const statusConfig: Record<string, { icon: React.ElementType; label: string; col
   cancelled: { icon: Clock, label: 'Cancelado', color: 'text-red-500', description: 'Este pedido foi cancelado.' },
 };
 
+// Threshold: PodPay for ≤ R$2499.99, WhatsApp for > R$2499.99
+const PODPAY_THRESHOLD = 2500;
+
 export default function OrderStatusPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -26,6 +30,16 @@ export default function OrderStatusPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  // Extended order type to include podpay fields
+  const orderWithPix = order as Order & { 
+    pix_qr_code?: string; 
+    pix_qr_code_image?: string; 
+    podpay_transaction_id?: string;
+  };
+
+  const isPodPayOrder = orderWithPix && orderWithPix.total < PODPAY_THRESHOLD && orderWithPix.podpay_transaction_id;
 
   // Fetch order and items
   useEffect(() => {
@@ -82,6 +96,15 @@ export default function OrderStatusPage() {
       supabase.removeChannel(channel);
     };
   }, [orderId]);
+
+  const copyPixCode = () => {
+    if (orderWithPix?.pix_qr_code) {
+      navigator.clipboard.writeText(orderWithPix.pix_qr_code);
+      setCopied(true);
+      toast.success('Código PIX copiado!');
+      setTimeout(() => setCopied(false), 3000);
+    }
+  };
 
   if (!orderId) {
     return (
@@ -203,8 +226,55 @@ export default function OrderStatusPage() {
             </div>
           </div>
 
-          {/* Payment Info */}
-          {status === 'awaiting_payment' && (
+          {/* PodPay PIX Payment (orders ≤ R$2499.99) */}
+          {status === 'awaiting_payment' && isPodPayOrder && (
+            <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-6 mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <QrCode className="h-5 w-5 text-orange-500" />
+                <h2 className="font-bold text-lg">Pague com PIX</h2>
+              </div>
+              
+              {/* QR Code Image */}
+              {orderWithPix.pix_qr_code_image && (
+                <div className="flex justify-center mb-4">
+                  <img 
+                    src={orderWithPix.pix_qr_code_image} 
+                    alt="QR Code PIX" 
+                    className="w-56 h-56 rounded-lg border border-border"
+                  />
+                </div>
+              )}
+
+              {/* Copy-paste code */}
+              {orderWithPix.pix_qr_code && (
+                <div className="mb-4">
+                  <p className="text-sm text-muted-foreground mb-2 text-center">
+                    Ou copie o código PIX abaixo:
+                  </p>
+                  <div className="flex gap-2">
+                    <div className="flex-1 bg-background border border-border rounded-lg p-3 text-xs font-mono break-all max-h-20 overflow-y-auto">
+                      {orderWithPix.pix_qr_code}
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={copyPixCode}
+                      className="shrink-0"
+                    >
+                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-sm text-muted-foreground text-center">
+                ⏳ Esta página será atualizada automaticamente quando o pagamento for confirmado.
+              </p>
+            </div>
+          )}
+
+          {/* WhatsApp PIX Payment (orders > R$2499.99 or no PodPay) */}
+          {status === 'awaiting_payment' && !isPodPayOrder && (
             <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <QrCode className="h-5 w-5 text-orange-500" />

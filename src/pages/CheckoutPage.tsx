@@ -81,8 +81,8 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [isProcessingCard, setIsProcessingCard] = useState(false);
 
-  // Check if order is above R$500 for WhatsApp redirect
-  const isHighValueOrder = getTotal() >= 500;
+  // Check if order is above R$2500 for WhatsApp redirect (PodPay handles up to R$2499.99)
+  const isHighValueOrder = getTotal() >= 2500;
 
   const {
     register,
@@ -369,7 +369,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Regular flow for PIX below R$500
+      // PodPay flow for PIX ≤ R$2499.99
       const orderResult = await createOrder.mutateAsync({
         formData: data,
         cartItems: items,
@@ -381,6 +381,29 @@ export default function CheckoutPage() {
 
       // Delete abandoned cart since order was completed
       await deleteAbandonedCart();
+
+      // Create PodPay PIX payment
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-pix-payment`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            },
+            body: JSON.stringify({ orderId: orderResult?.id }),
+          }
+        );
+
+        if (!response.ok) {
+          const errData = await response.json();
+          console.error('PodPay error:', errData);
+          toast.error('Erro ao gerar PIX. Tente pelo WhatsApp.');
+        }
+      } catch (pixError) {
+        console.error('Failed to create PodPay PIX:', pixError);
+      }
 
       // Clear cart and redirect to order status page
       clearCart();

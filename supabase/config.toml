@@ -1,1 +1,7 @@
 project_id = "wbcdhyjvwgmxmxpoebcw"
+
+[functions.create-pix-payment]
+verify_jwt = false
+
+[functions.podpay-webhook]
+verify_jwt = false
