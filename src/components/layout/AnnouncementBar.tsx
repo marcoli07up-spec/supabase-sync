@@ -2,9 +2,9 @@ import { forwardRef } from 'react';
 
 export const AnnouncementBar = forwardRef<HTMLDivElement>((_, ref) => {
   const announcements = [
-    '📦 Frete Grátis para todo o Brasil',
-    '🛒 Trocas e Devoluções em até 90 dias',
-    '❤️ Satisfação Garantida ou dinheiro de volta',
+    '🎉 REINAUGURAÇÃO — Frete Grátis em TODOS os produtos!',
+    '🚚 Aproveite: Frete Grátis para todo o Brasil na reinauguração!',
+    '🎊 Promoção de Reinauguração — Envio Grátis para qualquer lugar!',
   ];
 
   return (
