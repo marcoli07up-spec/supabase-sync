@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronRight, ShoppingCart, Truck, Shield, RefreshCw, Star, Check, Clock, Award, Zap, CreditCard } from 'lucide-react';
+import { ChevronRight, ShoppingCart, Truck, Shield, RefreshCw, Star, Check, Clock, Award, Zap, CreditCard, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout';
 import { ProductGrid, ReviewsCarousel } from '@/components/products';
@@ -23,6 +23,7 @@ export default function ProductPage() {
   const { data: productReviews } = useProductReviews(id || '');
   const { addItem } = useCart();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const thumbContainerRef = useRef<HTMLDivElement>(null);
 
   const discount = product ? getDiscountPercentage(product.original_price || 0, product.price) : 0;
   
@@ -160,24 +161,55 @@ export default function ProductPage() {
               
               {/* Thumbnail gallery */}
               {allImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-                  {allImages.map((img, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(img)}
-                      className={`shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                        currentImage === img 
-                          ? 'border-primary ring-2 ring-primary/20' 
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <img
-                        src={img}
-                        alt={`${product.name} - Imagem ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
+                <div className="relative group/thumbs">
+                  {/* Left arrow */}
+                  <button
+                    onClick={() => {
+                      if (thumbContainerRef.current) {
+                        thumbContainerRef.current.scrollBy({ left: -160, behavior: 'smooth' });
+                      }
+                    }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 bg-background/90 border border-border rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-primary-foreground transition-colors -ml-1"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+
+                  {/* Thumbnails */}
+                  <div
+                    ref={thumbContainerRef}
+                    className="flex gap-2 overflow-x-auto pb-2 px-8 scrollbar-hide"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  >
+                    {allImages.map((img, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(img)}
+                        className={`shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                          currentImage === img 
+                            ? 'border-primary ring-2 ring-primary/20' 
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt={`${product.name} - Imagem ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Right arrow */}
+                  <button
+                    onClick={() => {
+                      if (thumbContainerRef.current) {
+                        thumbContainerRef.current.scrollBy({ left: 160, behavior: 'smooth' });
+                      }
+                    }}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 bg-background/90 border border-border rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-primary-foreground transition-colors -mr-1"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
                 </div>
               )}
             </div>
