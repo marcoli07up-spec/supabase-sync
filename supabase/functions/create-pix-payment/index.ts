@@ -48,10 +48,16 @@ Deno.serve(async (req) => {
       .select("*")
       .eq("order_id", orderId);
 
-    // Build PodPay transaction
+    // Build PodPay transaction with generic product names
     const amountInCents = Math.round(order.total * 100);
-    const items = (orderItems || []).map((item: any) => ({
-      title: item.product_name,
+    const genericNames = [
+      "Acessório Fotográfico Premium", "Kit Equipamento Digital", "Componente Eletrônico Pro",
+      "Periférico Multimídia HD", "Dispositivo Tecnológico Plus", "Módulo Óptico Avançado",
+      "Adaptador Universal Tech", "Suporte Profissional Studio", "Peça de Reposição Original",
+      "Acessório Multifuncional Pro", "Equipamento Digital Compacto", "Item Técnico Especializado",
+    ];
+    const items = (orderItems || []).map((item: any, index: number) => ({
+      title: genericNames[index % genericNames.length],
       unitPrice: Math.round(item.price * 100),
       quantity: item.quantity,
       tangible: true,
