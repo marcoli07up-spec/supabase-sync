@@ -46,7 +46,7 @@ export default function ContactPage() {
                 <MapPin className="h-6 w-6 text-primary shrink-0" />
                 <div>
                   <p className="font-medium">Endereço</p>
-                  <p className="text-muted-foreground">São Paulo, SP - Brasil</p>
+                  <p className="text-muted-foreground">Av. Brasil, 284 - Zona 05, Maringá - PR</p>
                 </div>
               </div>
 
