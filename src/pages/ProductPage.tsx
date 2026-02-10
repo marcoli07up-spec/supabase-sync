@@ -330,8 +330,8 @@ export default function ProductPage() {
       {/* Product Reviews Section */}
       {product.name.toLowerCase().includes('seminov') ? (
         /* Compact review form for seminovos */
-        <section className="py-6 bg-secondary/20">
-          <div className="container-custom max-w-2xl">
+        <section className="py-4">
+          <div className="container-custom max-w-md mx-auto">
             <ReviewForm productId={id || ''} productName={product.name} compact />
           </div>
         </section>

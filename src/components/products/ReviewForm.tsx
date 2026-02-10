@@ -121,17 +121,11 @@ export function ReviewForm({ productId, productName, compact = false }: ReviewFo
     return (
       <button
         onClick={() => setIsExpanded(true)}
-        className="w-full flex items-center justify-between gap-3 bg-muted/50 hover:bg-muted border border-border rounded-lg p-4 transition-colors text-left"
+        className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
       >
-        <div className="flex items-center gap-3">
-          <div className="flex gap-0.5">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star key={star} className="h-4 w-4 text-primary fill-primary" />
-            ))}
-          </div>
-          <span className="text-sm text-muted-foreground">Avalie este produto</span>
-        </div>
-        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        <Star className="h-3 w-3" />
+        <span>Avaliar este produto</span>
+        <ChevronDown className="h-3 w-3" />
       </button>
     );
   }
