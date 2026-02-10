@@ -129,11 +129,38 @@ export default function OrderStatusPage() {
 
   const openWhatsApp = () => {
     const phone = '5511972238165';
+    const itemsList = items.map((item, i) => 
+      `  ${i + 1}. ${item.product_name} (x${item.quantity}) — ${formatCurrency(item.price * item.quantity)}`
+    ).join('\n');
+    const paymentMethod = order.payment_method === 'pix' ? 'PIX' : order.payment_method === 'card' ? 'Cartão de Crédito' : order.payment_method || 'Não informado';
     const message = encodeURIComponent(
-      `Olá! Gostaria de verificar meu pedido.\n\n` +
-      `Pedido: #${order.id.slice(0, 8).toUpperCase()}\n` +
+      `Olá! Gostaria de finalizar o pagamento do meu pedido via PIX. Seguem os detalhes completos:\n\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `🛒 *DADOS DO PEDIDO*\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `📋 Nº do Pedido: #${order.id.slice(0, 8).toUpperCase()}\n` +
+      `📅 Data: ${new Date(order.created_at || '').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}\n` +
+      `💳 Forma de Pagamento: ${paymentMethod}\n` +
+      `📌 Status: ${statusConfig[status]?.label || 'Pendente'}\n\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `📦 *ITENS DO PEDIDO*\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `${itemsList}\n\n` +
+      `💰 *TOTAL: ${formatCurrency(order.total)}*\n\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `👤 *DADOS DO CLIENTE*\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
       `Nome: ${order.customer_name}\n` +
-      `Valor: ${formatCurrency(order.total)}`
+      `Telefone: ${order.customer_phone}\n` +
+      `${order.customer_email ? `E-mail: ${order.customer_email}\n` : ''}` +
+      `${order.customer_cpf ? `CPF: ${order.customer_cpf}\n` : ''}\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `🚚 *ENDEREÇO DE ENTREGA*\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `${order.customer_address}\n` +
+      `${order.customer_city} - ${order.customer_state}\n` +
+      `CEP: ${order.customer_cep}\n\n` +
+      `Por favor, envie o código PIX para que eu possa efetuar o pagamento. Obrigado! 🙏`
     );
     window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };
