@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, Clock, MessageCircle, QrCode, Truck, Package, ShoppingBag, Copy, Check } from 'lucide-react';
+import { CheckCircle, Clock, MessageCircle, QrCode, Truck, Package, ShoppingBag, Copy, Check, Loader2, MapPin, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout';
 import { formatCurrency } from '@/lib/format';
@@ -12,14 +12,13 @@ import { toast } from 'sonner';
 const statusConfig: Record<string, { icon: React.ElementType; label: string; color: string; description: string }> = {
   pending: { icon: Clock, label: 'Pendente', color: 'text-yellow-500', description: 'Seu pedido está sendo processado.' },
   awaiting_payment: { icon: QrCode, label: 'Aguardando Pagamento', color: 'text-orange-500', description: 'Aguardando confirmação do pagamento PIX.' },
-  paid: { icon: CheckCircle, label: 'Pago', color: 'text-green-500', description: 'Pagamento confirmado! Preparando seu pedido.' },
+  paid: { icon: CheckCircle, label: 'Pago', color: 'text-green-500', description: 'Pagamento confirmado! Preparando seu pedido para envio.' },
   processing: { icon: Package, label: 'Em Preparação', color: 'text-blue-500', description: 'Estamos preparando seu pedido para envio.' },
   shipped: { icon: Truck, label: 'Enviado', color: 'text-purple-500', description: 'Seu pedido está a caminho!' },
   delivered: { icon: CheckCircle, label: 'Entregue', color: 'text-green-700', description: 'Pedido entregue com sucesso!' },
   cancelled: { icon: Clock, label: 'Cancelado', color: 'text-red-500', description: 'Este pedido foi cancelado.' },
 };
 
-// Threshold: PodPay for ≤ R$2499.99, WhatsApp for > R$2499.99
 const PODPAY_THRESHOLD = 2500;
 
 export default function OrderStatusPage() {
@@ -31,8 +30,9 @@ export default function OrderStatusPage() {
   const [items, setItems] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [isGeneratingPix, setIsGeneratingPix] = useState(false);
+  const [showPixCode, setShowPixCode] = useState(false);
 
-  // Extended order type to include podpay fields
   const orderWithPix = order as Order & { 
     pix_qr_code?: string; 
     pix_qr_code_image?: string; 
@@ -87,7 +87,13 @@ export default function OrderStatusPage() {
           filter: `id=eq.${orderId}`,
         },
         (payload) => {
-          setOrder(payload.new as Order);
+          const updated = payload.new as Order;
+          setOrder(updated);
+          
+          // If payment just confirmed, show success toast
+          if (updated.status === 'paid' && order?.status === 'awaiting_payment') {
+            toast.success('🎉 Pagamento confirmado! Seu pedido será enviado em breve.');
+          }
         }
       )
       .subscribe();
@@ -95,14 +101,82 @@ export default function OrderStatusPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [orderId]);
+  }, [orderId, order?.status]);
 
-  const copyPixCode = () => {
+  // Auto-poll for PIX data when order is awaiting payment but PIX code not yet available
+  useEffect(() => {
+    if (!orderId || !order) return;
+    if (order.status !== 'awaiting_payment') return;
+    
+    const oWithPix = order as Order & { pix_qr_code?: string; podpay_transaction_id?: string };
+    if (!oWithPix.podpay_transaction_id || oWithPix.pix_qr_code) return;
+
+    // Poll every 3 seconds for PIX code
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('orders')
+        .select('pix_qr_code, pix_qr_code_image, status')
+        .eq('id', orderId)
+        .single();
+
+      if (data?.pix_qr_code) {
+        setOrder(prev => prev ? { ...prev, ...data } as Order : null);
+        clearInterval(interval);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [orderId, order]);
+
+  // Auto-poll payment status every 10 seconds
+  useEffect(() => {
+    if (!orderId || !order) return;
+    if (order.status !== 'awaiting_payment') return;
+
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('orders')
+        .select('status, tracking_code')
+        .eq('id', orderId)
+        .single();
+
+      if (data && data.status !== 'awaiting_payment') {
+        setOrder(prev => prev ? { ...prev, ...data } as Order : null);
+        clearInterval(interval);
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [orderId, order?.status]);
+
+  const handleGeneratePix = () => {
+    setIsGeneratingPix(true);
+    // Simulate loading for 2.5 seconds then show the code
+    setTimeout(() => {
+      setIsGeneratingPix(false);
+      setShowPixCode(true);
+    }, 2500);
+  };
+
+  const copyPixCode = async () => {
     if (orderWithPix?.pix_qr_code) {
-      navigator.clipboard.writeText(orderWithPix.pix_qr_code);
-      setCopied(true);
-      toast.success('Código PIX copiado!');
-      setTimeout(() => setCopied(false), 3000);
+      try {
+        await navigator.clipboard.writeText(orderWithPix.pix_qr_code);
+        setCopied(true);
+        toast.success('Código PIX copiado! Cole no app do seu banco.');
+        setTimeout(() => setCopied(false), 3000);
+      } catch {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = orderWithPix.pix_qr_code;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setCopied(true);
+        toast.success('Código PIX copiado!');
+        setTimeout(() => setCopied(false), 3000);
+      }
     }
   };
 
@@ -150,13 +224,22 @@ export default function OrderStatusPage() {
   const statusInfo = statusConfig[status] || statusConfig.pending;
   const StatusIcon = statusInfo.icon;
 
-  const openWhatsApp = () => {
+  const openWhatsApp = (customMessage?: string) => {
     const phone = '5511972238165';
+    const message = customMessage ? encodeURIComponent(customMessage) : encodeURIComponent(
+      `Olá! Tenho uma dúvida sobre meu pedido #${order.id.slice(0, 8).toUpperCase()}.\n\n` +
+      `Nome: ${order.customer_name}\n` +
+      `Telefone: ${order.customer_phone}`
+    );
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+  };
+
+  const openWhatsAppPix = () => {
     const itemsList = items.map((item, i) => 
       `  ${i + 1}. ${item.product_name} (x${item.quantity}) — ${formatCurrency(item.price * item.quantity)}`
     ).join('\n');
     const paymentMethod = order.payment_method === 'pix' ? 'PIX' : order.payment_method === 'card' ? 'Cartão de Crédito' : order.payment_method || 'Não informado';
-    const message = encodeURIComponent(
+    const message = 
       `Olá! Gostaria de finalizar o pagamento do meu pedido via PIX. Seguem os detalhes completos:\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n` +
       `🛒 *DADOS DO PEDIDO*\n` +
@@ -183,14 +266,15 @@ export default function OrderStatusPage() {
       `${order.customer_address}\n` +
       `${order.customer_city} - ${order.customer_state}\n` +
       `CEP: ${order.customer_cep}\n\n` +
-      `Por favor, envie o código PIX para que eu possa efetuar o pagamento. Obrigado! 🙏`
-    );
-    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+      `Por favor, envie o código PIX para que eu possa efetuar o pagamento. Obrigado! 🙏`;
+    openWhatsApp(message);
   };
+
+  const hasPixCode = orderWithPix?.pix_qr_code;
 
   return (
     <Layout>
-      <div className="container-custom py-8">
+      <div className="container-custom py-8 px-3 sm:px-4">
         <div className="max-w-2xl mx-auto">
           {/* Status Header */}
           <div className="text-center mb-8">
@@ -229,45 +313,94 @@ export default function OrderStatusPage() {
           {/* PodPay PIX Payment (orders ≤ R$2499.99) */}
           {status === 'awaiting_payment' && isPodPayOrder && (
             <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-6 mb-6">
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-4">
                 <QrCode className="h-5 w-5 text-orange-500" />
                 <h2 className="font-bold text-lg">Pague com PIX</h2>
               </div>
-              
-              {/* QR Code Image */}
-              {orderWithPix.pix_qr_code_image && (
-                <div className="flex justify-center mb-4">
-                  <img 
-                    src={orderWithPix.pix_qr_code_image} 
-                    alt="QR Code PIX" 
-                    className="w-56 h-56 rounded-lg border border-border"
-                  />
+
+              {/* If PIX code not yet available - show loading */}
+              {!hasPixCode && (
+                <div className="text-center py-6">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-orange-500" />
+                  <p className="text-sm text-muted-foreground">Gerando código PIX...</p>
+                  <p className="text-xs text-muted-foreground mt-1">Isso pode levar alguns segundos</p>
                 </div>
               )}
 
-              {/* Copy-paste code */}
-              {orderWithPix.pix_qr_code && (
-                <div className="mb-4">
-                  <p className="text-sm text-muted-foreground mb-2 text-center">
-                    Ou copie o código PIX abaixo:
+              {/* PIX code available - show generate button or the code */}
+              {hasPixCode && !showPixCode && !isGeneratingPix && (
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Clique no botão abaixo para gerar o código PIX Copia e Cola
                   </p>
-                  <div className="flex gap-2">
-                    <div className="flex-1 bg-background border border-border rounded-lg p-3 text-xs font-mono break-all max-h-20 overflow-y-auto">
+                  <Button 
+                    onClick={handleGeneratePix}
+                    size="lg"
+                    className="w-full text-base font-bold py-6"
+                  >
+                    <QrCode className="h-5 w-5 mr-2" />
+                    Gerar PIX Copia e Cola
+                  </Button>
+                </div>
+              )}
+
+              {/* Generating PIX animation */}
+              {isGeneratingPix && (
+                <div className="text-center py-6">
+                  <Loader2 className="h-10 w-10 animate-spin mx-auto mb-3 text-primary" />
+                  <p className="font-medium mb-1">Gerando seu código PIX...</p>
+                  <p className="text-sm text-muted-foreground">Aguarde um momento</p>
+                </div>
+              )}
+
+              {/* Show PIX code after generation */}
+              {showPixCode && hasPixCode && (
+                <div className="space-y-4">
+                  {/* QR Code Image */}
+                  {orderWithPix.pix_qr_code_image && (
+                    <div className="flex justify-center">
+                      <img 
+                        src={orderWithPix.pix_qr_code_image} 
+                        alt="QR Code PIX" 
+                        className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg border border-border"
+                      />
+                    </div>
+                  )}
+
+                  {/* Copy-paste PIX code */}
+                  <div>
+                    <p className="text-sm font-medium mb-2 text-center">
+                      PIX Copia e Cola:
+                    </p>
+                    <div className="bg-background border border-border rounded-lg p-3 text-xs font-mono break-all max-h-20 overflow-y-auto mb-3">
                       {orderWithPix.pix_qr_code}
                     </div>
                     <Button 
-                      variant="outline" 
-                      size="sm" 
                       onClick={copyPixCode}
-                      className="shrink-0"
+                      size="lg"
+                      className={`w-full text-base font-bold py-5 transition-all ${
+                        copied 
+                          ? 'bg-green-600 hover:bg-green-700 text-white' 
+                          : ''
+                      }`}
                     >
-                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      {copied ? (
+                        <>
+                          <Check className="h-5 w-5 mr-2" />
+                          Código Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-5 w-5 mr-2" />
+                          Copiar Código PIX
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
               )}
 
-              <p className="text-sm text-muted-foreground text-center">
+              <p className="text-sm text-muted-foreground text-center mt-4">
                 ⏳ Esta página será atualizada automaticamente quando o pagamento for confirmado.
               </p>
             </div>
@@ -286,33 +419,98 @@ export default function OrderStatusPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 ⏳ Esta página será atualizada automaticamente quando o pagamento for confirmado.
               </p>
-              <Button onClick={openWhatsApp} className="w-full">
+              <Button onClick={openWhatsAppPix} className="w-full">
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Solicitar PIX no WhatsApp
               </Button>
             </div>
           )}
 
-          {status === 'paid' && (
+          {/* Payment confirmed - show tracking & delivery info */}
+          {(status === 'paid' || status === 'processing') && (
             <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle className="h-5 w-5 text-green-500" />
                 <h2 className="font-bold text-lg">Pagamento Confirmado!</h2>
               </div>
-              <p className="text-muted-foreground">
-                Seu pagamento foi recebido. Estamos preparando seu pedido para envio.
+              <p className="text-muted-foreground mb-4">
+                Seu pagamento foi recebido com sucesso. Estamos preparando seu pedido para envio.
               </p>
+
+              {order.tracking_code && (
+                <div className="bg-background border border-border rounded-lg p-4 mb-4">
+                  <p className="text-sm text-muted-foreground mb-1">Código de Rastreio:</p>
+                  <p className="font-mono font-bold text-lg">{order.tracking_code}</p>
+                </div>
+              )}
+
+              <div className="bg-background border border-border rounded-lg p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Search className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-medium text-sm">Acompanhe sua entrega</p>
+                    <p className="text-xs text-muted-foreground">
+                      Acesse nosso site em <button onClick={() => navigate('/rastreamento')} className="text-primary underline font-medium">Rastreamento</button> e digite seu CPF para acompanhar o status do envio em tempo real.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-medium text-sm">Prazo de entrega</p>
+                    <p className="text-xs text-muted-foreground">
+                      Após o envio, a entrega leva de 3 a 10 dias úteis dependendo da sua região.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => openWhatsApp()} 
+                variant="outline" 
+                className="w-full mt-4"
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Dúvidas? Fale no WhatsApp
+              </Button>
             </div>
           )}
 
-          {status === 'shipped' && order.tracking_code && (
+          {/* Shipped */}
+          {status === 'shipped' && (
             <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <Truck className="h-5 w-5 text-purple-500" />
                 <h2 className="font-bold text-lg">Pedido Enviado!</h2>
               </div>
-              <p className="text-muted-foreground mb-2">Código de rastreio:</p>
-              <p className="font-mono font-bold text-lg">{order.tracking_code}</p>
+
+              {order.tracking_code && (
+                <div className="bg-background border border-border rounded-lg p-4 mb-4">
+                  <p className="text-sm text-muted-foreground mb-1">Código de Rastreio:</p>
+                  <p className="font-mono font-bold text-lg">{order.tracking_code}</p>
+                </div>
+              )}
+
+              <div className="bg-background border border-border rounded-lg p-4 space-y-3 mb-4">
+                <div className="flex items-start gap-3">
+                  <Search className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-medium text-sm">Acompanhe sua entrega</p>
+                    <p className="text-xs text-muted-foreground">
+                      Acesse <button onClick={() => navigate('/rastreamento')} className="text-primary underline font-medium">Rastreamento</button> e digite seu CPF para ver o status atualizado do envio.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => openWhatsApp()} 
+                variant="outline" 
+                className="w-full"
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Dúvidas? Fale no WhatsApp
+              </Button>
             </div>
           )}
 
@@ -329,7 +527,7 @@ export default function OrderStatusPage() {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button variant="outline" className="flex-1" onClick={openWhatsApp}>
+            <Button variant="outline" className="flex-1" onClick={() => openWhatsApp()}>
               <MessageCircle className="h-4 w-4 mr-2" />
               Falar no WhatsApp
             </Button>
