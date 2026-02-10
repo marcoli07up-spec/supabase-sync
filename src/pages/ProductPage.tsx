@@ -89,8 +89,8 @@ export default function ProductPage() {
     );
   }
 
-  const averageRating = reviews?.length 
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
+  const averageRating = productReviews?.length 
+    ? productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length 
     : 5;
 
   return (
@@ -197,9 +197,9 @@ export default function ProductPage() {
                       />
                     ))}
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    ({reviews?.length || 0} avaliações)
-                  </span>
+                    <span className="text-sm text-muted-foreground">
+                      ({productReviews?.length || 0} avaliações)
+                    </span>
                 </div>
               )}
 
