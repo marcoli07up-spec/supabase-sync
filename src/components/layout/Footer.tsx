@@ -100,10 +100,7 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4 text-foreground">Contato</h4>
             <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-2 text-muted-foreground">
-                <Phone className="h-4 w-4 mt-0.5 text-primary" />
-                
-              </li>
+              
               <li className="flex items-start gap-2 text-muted-foreground">
                 <Mail className="h-4 w-4 mt-0.5 text-primary" />
                 <span>contato@icamstore.com.br</span>
