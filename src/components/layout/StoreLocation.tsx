@@ -17,7 +17,7 @@ export function StoreLocation() {
             <div className="absolute bottom-4 left-4 right-4">
               <div className="flex items-center gap-2 text-white">
                 <MapPin className="h-5 w-5 text-primary" />
-                <span className="font-medium">Loja Física - São Paulo, SP</span>
+                <span className="font-medium">Loja Física - Maringá, PR</span>
               </div>
             </div>
           </div>
@@ -33,10 +33,10 @@ export function StoreLocation() {
                 <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium">iCamStore</p>
-                  <p className="text-sm text-muted-foreground">
-                    Rua Augusta, 1234 - Consolação<br />
-                    São Paulo - SP, 01304-000
-                  </p>
+                   <p className="text-sm text-muted-foreground">
+37:                     Av. Brasil, 284 - Zona 05<br />
+38:                     Maringá - PR, 87050-465
+39:                   </p>
                 </div>
               </div>
             </div>
@@ -48,7 +48,7 @@ export function StoreLocation() {
                 Siga-nos no Instagram
               </h3>
               <a
-                href="https://instagram.com/icamstore"
+                href="https://instagram.com/cameras.icam"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center gap-4 p-4 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-xl border border-border hover:border-primary/50 transition-all"
@@ -57,7 +57,7 @@ export function StoreLocation() {
                   <Instagram className="h-8 w-8 text-primary-foreground" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-lg group-hover:text-primary transition-colors">@icamstore</p>
+                  <p className="font-bold text-lg group-hover:text-primary transition-colors">@cameras.icam</p>
                   <p className="text-sm text-muted-foreground">Novidades, dicas e bastidores</p>
                 </div>
                 <span className="px-4 py-2 bg-primary text-primary-foreground rounded-full font-medium text-sm group-hover:scale-105 transition-transform">
