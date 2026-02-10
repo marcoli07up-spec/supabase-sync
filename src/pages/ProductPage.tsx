@@ -185,7 +185,7 @@ export default function ProductPage() {
             {/* Product info */}
             <div className="flex flex-col">
               {/* Rating - Hide for seminovos (unique items don't have reviews) */}
-              {!product.name.toLowerCase().includes('seminov') && (
+              {!product.name.toLowerCase().includes('seminov') && productReviews && productReviews.length > 0 && (
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex">
                     {Array.from({ length: 5 }).map((_, i) => (
@@ -197,9 +197,9 @@ export default function ProductPage() {
                       />
                     ))}
                   </div>
-                    <span className="text-sm text-muted-foreground">
-                      ({productReviews?.length || 0} avaliações)
-                    </span>
+                  <span className="text-sm text-muted-foreground">
+                    ({productReviews.length} avaliações)
+                  </span>
                 </div>
               )}
 
