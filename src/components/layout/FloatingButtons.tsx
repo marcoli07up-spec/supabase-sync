@@ -27,7 +27,7 @@ export function FloatingButtons() {
       <Button
         onClick={openInstagramDM}
         size="lg"
-        className="pointer-events-auto h-16 w-16 rounded-full bg-white hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all p-2"
+        className="pointer-events-auto h-16 w-16 rounded-full bg-white hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all p-3"
         aria-label="Enviar mensagem no Instagram"
       >
         <img src={instagramSendIcon} alt="Instagram Direct" className="h-full w-full object-contain" />
