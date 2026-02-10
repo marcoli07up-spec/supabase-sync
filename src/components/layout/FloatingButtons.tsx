@@ -13,6 +13,7 @@ export function FloatingButtons() {
 
   const isCheckoutPage = location.pathname === '/checkout';
   const isOrderPage = location.pathname === '/pedido';
+  const isProductPage = location.pathname.startsWith('/produto');
   const hideFloatingButtons = isCheckoutPage || isOrderPage;
 
   const openInstagramDM = () => {
@@ -24,7 +25,7 @@ export function FloatingButtons() {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 flex justify-between items-end pointer-events-none">
+    <div className={cn("fixed left-4 right-4 z-50 flex justify-between items-end pointer-events-none", isProductPage ? "bottom-[76px]" : "bottom-4")}>
       {/* Instagram DM Button - Left */}
       {!hideFloatingButtons && (
         <Button
