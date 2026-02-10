@@ -26,10 +26,10 @@ export function FloatingButtons() {
       <Button
         onClick={openInstagramDM}
         size="lg"
-        className="pointer-events-auto h-16 w-16 rounded-full bg-gradient-to-br from-[hsl(280,70%,50%)] via-[hsl(330,80%,55%)] to-[hsl(30,90%,55%)] hover:opacity-90 shadow-lg hover:shadow-xl transition-all"
+        className="pointer-events-auto h-[72px] w-[72px] rounded-full bg-gradient-to-br from-[hsl(280,70%,50%)] via-[hsl(330,80%,55%)] to-[hsl(30,90%,55%)] hover:opacity-90 shadow-lg hover:shadow-xl transition-all p-0"
         aria-label="Enviar mensagem no Instagram"
       >
-        <svg viewBox="0 0 24 24" className="h-12 w-12" xmlns="http://www.w3.org/2000/svg" fill="none">
+        <svg viewBox="0 0 24 24" className="h-14 w-14" xmlns="http://www.w3.org/2000/svg" fill="none">
           <path d="M22 3L9.218 10.083M22 3l-9.782 18L9.218 10.083M22 3L2 11.5l7.218-1.417" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </Button>
