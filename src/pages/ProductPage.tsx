@@ -96,26 +96,26 @@ export default function ProductPage() {
 
   return (
     <Layout>
-      {/* Breadcrumb */}
-      <div className="bg-secondary py-3">
+      {/* Breadcrumb - compact on mobile */}
+      <div className="bg-secondary py-2 sm:py-3">
         <div className="container-custom">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-primary">Home</Link>
-            <ChevronRight className="h-4 w-4" />
+          <nav className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+            <Link to="/" className="hover:text-primary shrink-0">Home</Link>
+            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
             <span className="text-foreground line-clamp-1">{product.name}</span>
           </nav>
         </div>
       </div>
 
       {/* Product details */}
-      <section className="py-4 sm:py-8">
-        <div className="container-custom px-3 sm:px-4">
-          <div className="grid lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-12">
-            {/* Product images */}
-            <div className="space-y-3 sm:space-y-4">
+      <section className="py-3 sm:py-8">
+        <div className="container-custom px-2 sm:px-4">
+          <div className="grid lg:grid-cols-2 gap-3 sm:gap-8 lg:gap-12">
+            {/* Product images - edge-to-edge on mobile */}
+            <div className="space-y-2 sm:space-y-4">
               {/* Main image */}
-              <div className="relative">
-                <div className={`aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-muted border border-border ${(product.stock ?? 0) <= 0 ? 'grayscale' : ''}`}>
+              <div className="relative -mx-2 sm:mx-0">
+                <div className={`aspect-square sm:rounded-2xl overflow-hidden bg-muted border-y sm:border border-border ${(product.stock ?? 0) <= 0 ? 'grayscale' : ''}`}>
                   <img
                     src={currentImage}
                     alt={product.name}
@@ -134,13 +134,13 @@ export default function ProductPage() {
                 
                 {/* Badges */}
                 {(product.stock ?? 0) > 0 && (
-                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-1.5 sm:gap-2">
+                  <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex flex-col gap-1 sm:gap-2">
                     {discount > 0 && (
-                      <Badge variant="destructive" className="text-xs sm:text-sm font-bold px-2 sm:px-3 py-0.5 sm:py-1">
+                      <Badge variant="destructive" className="text-[10px] sm:text-sm font-bold px-1.5 sm:px-3 py-0.5 sm:py-1">
                         -{discount}% OFF
                       </Badge>
                     )}
-                    <Badge variant="secondary" className="bg-primary text-primary-foreground text-xs sm:text-sm font-medium px-2 sm:px-3 py-0.5 sm:py-1">
+                    <Badge variant="secondary" className="bg-primary text-primary-foreground text-[10px] sm:text-sm font-medium px-1.5 sm:px-3 py-0.5 sm:py-1">
                       Seminovo Revisado
                     </Badge>
                   </div>
@@ -148,9 +148,9 @@ export default function ProductPage() {
 
                 {/* Stock badge */}
                 {(product.stock ?? 0) <= 3 && (product.stock ?? 0) > 0 && (
-                  <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4">
-                    <div className="bg-destructive/90 text-destructive-foreground text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 sm:gap-2">
-                      <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4">
+                    <div className="bg-destructive/90 text-destructive-foreground text-[10px] sm:text-sm font-medium px-2 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2">
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
                       {product.name.toLowerCase().includes('seminov') 
                         ? 'Última unidade disponível!' 
                         : `Apenas ${product.stock} unidade${product.stock !== 1 ? 's' : ''} disponível!`}
@@ -161,30 +161,30 @@ export default function ProductPage() {
               
               {/* Thumbnail gallery */}
               {allImages.length > 1 && (
-                <div className="relative group/thumbs">
+                <div className="relative px-2 sm:px-0">
                   {/* Left arrow */}
                   <button
                     onClick={() => {
                       if (thumbContainerRef.current) {
-                        thumbContainerRef.current.scrollBy({ left: -160, behavior: 'smooth' });
+                        thumbContainerRef.current.scrollBy({ left: -140, behavior: 'smooth' });
                       }
                     }}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 bg-background/90 border border-border rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-primary-foreground transition-colors -ml-1"
+                    className="absolute left-0 sm:left-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 sm:w-8 sm:h-8 bg-background/90 border border-border rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-primary-foreground transition-colors"
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
 
                   {/* Thumbnails */}
                   <div
                     ref={thumbContainerRef}
-                    className="flex gap-2 overflow-x-auto pb-2 px-8 scrollbar-hide"
+                    className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 px-7 sm:px-8"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   >
                     {allImages.map((img, index) => (
                       <button
                         key={index}
                         onClick={() => setSelectedImage(img)}
-                        className={`shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                        className={`shrink-0 w-14 h-14 sm:w-20 sm:h-20 rounded-md sm:rounded-lg overflow-hidden border-2 transition-all ${
                           currentImage === img 
                             ? 'border-primary ring-2 ring-primary/20' 
                             : 'border-border hover:border-primary/50'
@@ -203,70 +203,70 @@ export default function ProductPage() {
                   <button
                     onClick={() => {
                       if (thumbContainerRef.current) {
-                        thumbContainerRef.current.scrollBy({ left: 160, behavior: 'smooth' });
+                        thumbContainerRef.current.scrollBy({ left: 140, behavior: 'smooth' });
                       }
                     }}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 bg-background/90 border border-border rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-primary-foreground transition-colors -mr-1"
+                    className="absolute right-0 sm:right-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 sm:w-8 sm:h-8 bg-background/90 border border-border rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-primary-foreground transition-colors"
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                 </div>
               )}
             </div>
 
             {/* Product info */}
-            <div className="flex flex-col min-w-0">
-              {/* Rating - Hide for seminovos (unique items don't have reviews) */}
+            <div className="flex flex-col min-w-0 px-1 sm:px-0">
+              {/* Rating */}
               {!product.name.toLowerCase().includes('seminov') && productReviews && productReviews.length > 0 && (
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                   <div className="flex">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
                         key={i}
-                        className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                        className={`h-3.5 w-3.5 sm:h-5 sm:w-5 ${
                           i < Math.round(averageRating) ? 'text-primary fill-primary' : 'text-muted'
                         }`}
                       />
                     ))}
                   </div>
-                  <span className="text-xs sm:text-sm text-muted-foreground">
+                  <span className="text-[10px] sm:text-sm text-muted-foreground">
                     ({productReviews.length} avaliações)
                   </span>
                 </div>
               )}
 
               {/* Title */}
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 leading-tight">
+              <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4 leading-snug">
                 {product.name}
               </h1>
 
               {/* Stock status */}
-              <div className="mb-3 sm:mb-4">
+              <div className="mb-2 sm:mb-4">
                 {(product.stock ?? 0) > 0 ? (
-                  <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-success/10 text-success px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium">
-                    <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <div className="inline-flex items-center gap-1 sm:gap-2 bg-success/10 text-success px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-full text-[10px] sm:text-sm font-medium">
+                    <Check className="h-3 w-3 sm:h-4 sm:w-4" />
                     Em estoque - Pronta entrega
                   </div>
                 ) : (
-                  <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-destructive/10 text-destructive px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium">
+                  <div className="inline-flex items-center gap-1 sm:gap-2 bg-destructive/10 text-destructive px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-full text-[10px] sm:text-sm font-medium">
                     Produto indisponível
                   </div>
                 )}
               </div>
 
               {/* Prices */}
-              <div className="bg-secondary/50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+              <div className="bg-secondary/50 rounded-lg sm:rounded-xl p-3 sm:p-6 mb-3 sm:mb-6">
                 {product.original_price && product.original_price > product.price && (
-                  <p className="text-sm sm:text-lg text-muted-foreground line-through">
+                  <p className="text-xs sm:text-lg text-muted-foreground line-through">
                     De: {formatCurrency(product.original_price)}
                   </p>
                 )}
                 
-                {/* PIX Price - Main highlight */}
-                <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
+                {/* PIX Price */}
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-2.5 sm:p-4 mb-2 sm:mb-4">
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-0.5 sm:mb-1">
                     <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-                    <span className="font-bold text-primary text-lg sm:text-xl md:text-2xl">
+                    <span className="font-bold text-primary text-base sm:text-xl md:text-2xl">
                       {formatCurrency(pixPrice)} no PIX
                     </span>
                     {discount > 0 && (
@@ -275,68 +275,67 @@ export default function ProductPage() {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
+                  <p className="text-[10px] sm:text-sm text-muted-foreground">
                     Economize {formatCurrency(cardPrice - pixPrice)} pagando à vista
                   </p>
                 </div>
 
                 {/* Card Price */}
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <CreditCard className="h-4 w-4 shrink-0" />
-                  <span className="text-xs sm:text-sm">
-                    <strong className="text-foreground text-sm sm:text-base">{formatCurrency(cardPrice)}</strong> no cartão
+                <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground">
+                  <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                  <span className="text-[10px] sm:text-sm">
+                    <strong className="text-foreground text-xs sm:text-base">{formatCurrency(cardPrice)}</strong> no cartão
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-muted-foreground ml-6">
+                <p className="text-[10px] sm:text-sm text-muted-foreground ml-5 sm:ml-6">
                   em até <strong className="text-foreground">12x de {formatCurrency(cardPrice / 12)}</strong> sem juros
                 </p>
               </div>
 
-              {/* CTA Buttons */}
-              <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+              {/* CTA Buttons - hidden on mobile (sticky bar instead) */}
+              <div className="hidden sm:block space-y-3 mb-6">
                 <Button
                   size="lg"
-                  className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold"
+                  className="w-full h-14 text-lg font-bold"
                   onClick={handleBuyNow}
                   disabled={(product.stock ?? 0) <= 0}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Comprar agora
                 </Button>
-                
-                <p className="text-[10px] sm:text-xs text-center text-muted-foreground">
+                <p className="text-xs text-center text-muted-foreground">
                   * Produto seminovo - unidade única disponível
                 </p>
               </div>
 
               {/* Benefits */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
-                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-secondary rounded-lg">
+              <div className="grid grid-cols-4 sm:grid-cols-2 gap-1.5 sm:gap-3 mb-3 sm:mb-6">
+                <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-3 p-2 sm:p-3 bg-secondary rounded-lg text-center sm:text-left">
                   <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium truncate">Frete Grátis</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Todo Brasil</p>
+                    <p className="text-[10px] sm:text-sm font-medium leading-tight">Frete Grátis</p>
+                    <p className="text-[8px] sm:text-xs text-muted-foreground hidden sm:block">Todo Brasil</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-secondary rounded-lg">
+                <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-3 p-2 sm:p-3 bg-secondary rounded-lg text-center sm:text-left">
                   <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium truncate">1 Ano Garantia</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Cobertura total</p>
+                    <p className="text-[10px] sm:text-sm font-medium leading-tight">Garantia</p>
+                    <p className="text-[8px] sm:text-xs text-muted-foreground hidden sm:block">Cobertura total</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-secondary rounded-lg">
+                <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-3 p-2 sm:p-3 bg-secondary rounded-lg text-center sm:text-left">
                   <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium truncate">90 Dias</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Para troca</p>
+                    <p className="text-[10px] sm:text-sm font-medium leading-tight">90 Dias</p>
+                    <p className="text-[8px] sm:text-xs text-muted-foreground hidden sm:block">Para troca</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-secondary rounded-lg">
+                <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-3 p-2 sm:p-3 bg-secondary rounded-lg text-center sm:text-left">
                   <Award className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium truncate">Revisado</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">100% testado</p>
+                    <p className="text-[10px] sm:text-sm font-medium leading-tight">Revisado</p>
+                    <p className="text-[8px] sm:text-xs text-muted-foreground hidden sm:block">100% testado</p>
                   </div>
                 </div>
               </div>
@@ -413,6 +412,30 @@ export default function ProductPage() {
       {reviews && reviews.length > 0 && (
         <ReviewsCarousel reviews={reviews} />
       )}
+
+      {/* Sticky mobile buy bar */}
+      {(product.stock ?? 0) > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border p-2.5 sm:hidden safe-area-bottom">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground line-through leading-none">
+                {product.original_price && product.original_price > product.price ? formatCurrency(product.original_price) : ''}
+              </p>
+              <p className="text-sm font-bold text-primary leading-tight">{formatCurrency(pixPrice)} <span className="text-[10px] font-normal text-muted-foreground">no PIX</span></p>
+            </div>
+            <Button
+              className="h-10 px-5 text-sm font-bold shrink-0"
+              onClick={handleBuyNow}
+            >
+              <ShoppingCart className="h-4 w-4 mr-1.5" />
+              Comprar
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom spacing for sticky bar on mobile */}
+      <div className="h-16 sm:hidden" />
     </Layout>
   );
 }
