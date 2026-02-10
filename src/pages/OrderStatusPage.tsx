@@ -128,7 +128,7 @@ export default function OrderStatusPage() {
   const StatusIcon = statusInfo.icon;
 
   const openWhatsApp = () => {
-    const phone = '5511999999999';
+    const phone = '5511972238165';
     const message = encodeURIComponent(
       `Olá! Gostaria de verificar meu pedido.\n\n` +
       `Pedido: #${order.id.slice(0, 8).toUpperCase()}\n` +
