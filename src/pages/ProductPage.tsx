@@ -319,17 +319,20 @@ export default function ProductPage() {
                 <div className="border-t pt-4 sm:pt-6 min-w-0">
                   <h3 className="font-semibold mb-3 text-base sm:text-lg">Descrição do Produto</h3>
                   <div 
-                    className="text-foreground leading-relaxed prose prose-sm max-w-none overflow-x-auto min-w-0
-                      prose-p:text-foreground prose-p:my-2 prose-p:text-sm
+                    className="text-foreground leading-relaxed prose prose-sm max-w-none min-w-0
+                      prose-p:text-foreground prose-p:my-1.5 sm:prose-p:my-2 prose-p:text-xs sm:prose-p:text-sm prose-p:leading-relaxed
                       prose-strong:text-foreground prose-strong:font-semibold
-                      prose-ul:text-foreground prose-ul:my-2 prose-ul:list-disc prose-ul:pl-4 sm:prose-ul:pl-5
-                      prose-ol:text-foreground prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-4 sm:prose-ol:pl-5
-                      prose-li:text-foreground prose-li:my-1 prose-li:text-sm
-                      prose-table:border prose-table:border-border prose-table:my-4 prose-table:w-full prose-table:text-[10px] prose-table:sm:text-sm
-                      prose-td:border prose-td:border-border prose-td:p-1 prose-td:sm:p-2 prose-td:text-foreground prose-td:break-words
-                      prose-th:border prose-th:border-border prose-th:p-1 prose-th:sm:p-2 prose-th:bg-muted prose-th:text-foreground prose-th:font-semibold
-                      prose-headings:text-foreground prose-headings:font-semibold prose-headings:text-sm sm:prose-headings:text-base
-                      [&_table]:block [&_table]:overflow-x-auto [&_table]:whitespace-nowrap [&_table]:sm:whitespace-normal [&_table]:max-w-full"
+                      prose-ul:text-foreground prose-ul:my-1.5 sm:prose-ul:my-2 prose-ul:list-disc prose-ul:pl-4 sm:prose-ul:pl-5
+                      prose-ol:text-foreground prose-ol:my-1.5 sm:prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-4 sm:prose-ol:pl-5
+                      prose-li:text-foreground prose-li:my-0.5 sm:prose-li:my-1 prose-li:text-xs sm:prose-li:text-sm
+                      prose-headings:text-foreground prose-headings:font-semibold prose-headings:text-sm sm:prose-headings:text-base prose-headings:mt-3 prose-headings:mb-1.5
+                      prose-img:rounded-lg prose-img:my-3
+                      [&_table]:text-[10px] [&_table]:sm:text-sm [&_table]:w-full [&_table]:border [&_table]:border-border [&_table]:my-3 sm:[&_table]:my-4
+                      [&_table]:block [&_table]:overflow-x-auto [&_table]:whitespace-normal [&_table]:max-w-full
+                      [&_td]:border [&_td]:border-border [&_td]:p-1.5 sm:[&_td]:p-2 [&_td]:text-foreground [&_td]:break-words [&_td]:align-top
+                      [&_th]:border [&_th]:border-border [&_th]:p-1.5 sm:[&_th]:p-2 [&_th]:bg-muted [&_th]:text-foreground [&_th]:font-semibold
+                      [&_br]:hidden sm:[&_br]:block
+                      [&_img]:max-w-full [&_img]:h-auto"
                     dangerouslySetInnerHTML={{ __html: product.description }}
                   />
                 </div>
