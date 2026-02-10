@@ -24,20 +24,42 @@ export default function ProductPage() {
   const { addItem } = useCart();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const thumbContainerRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const mainImageRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   const discount = product ? getDiscountPercentage(product.original_price || 0, product.price) : 0;
   
-  // Get all images (main + secondary)
   const allImages = product ? [
     product.image_url,
     ...(product.images || []).filter(img => img !== product.image_url)
   ].filter(Boolean) as string[] : [];
   
-  const currentImage = selectedImage || product?.image_url || '/placeholder.svg';
+  const currentImage = selectedImage || allImages[currentIndex] || product?.image_url || '/placeholder.svg';
   const pixPrice = product ? product.price * 0.95 : 0;
   const cardPrice = product ? product.price * 1.05 : 0;
 
-  // Track View Content when product loads
+  // Swipe handling for mobile image gallery
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && currentIndex < allImages.length - 1) {
+        setCurrentIndex(prev => prev + 1);
+        setSelectedImage(allImages[currentIndex + 1]);
+      } else if (diff < 0 && currentIndex > 0) {
+        setCurrentIndex(prev => prev - 1);
+        setSelectedImage(allImages[currentIndex - 1]);
+      }
+    }
+  };
+
   useEffect(() => {
     if (product) {
       trackViewContent({
@@ -52,11 +74,9 @@ export default function ProductPage() {
 
   const handleBuyNow = () => {
     if (product) {
-      // Just add to cart and animate - don't navigate immediately
       addItem(product, 1);
     }
   };
-
 
   if (isLoading) {
     return (
@@ -96,36 +116,41 @@ export default function ProductPage() {
 
   return (
     <Layout>
-      {/* Breadcrumb - compact on mobile */}
-      <div className="bg-secondary py-2 sm:py-3">
+      {/* Breadcrumb */}
+      <div className="bg-secondary/50 py-2 sm:py-3">
         <div className="container-custom">
-          <nav className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+          <nav className="flex items-center gap-1.5 text-[11px] sm:text-sm text-muted-foreground">
             <Link to="/" className="hover:text-primary shrink-0">Home</Link>
-            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+            <ChevronRight className="h-3 w-3 shrink-0" />
             <span className="text-foreground line-clamp-1">{product.name}</span>
           </nav>
         </div>
       </div>
 
-      {/* Product details */}
-      <section className="py-3 sm:py-8">
-        <div className="container-custom px-2 sm:px-4">
-          <div className="grid lg:grid-cols-2 gap-3 sm:gap-8 lg:gap-12">
-            {/* Product images - edge-to-edge on mobile */}
+      <section className="py-2 sm:py-8">
+        <div className="container-custom px-0 sm:px-4">
+          <div className="grid lg:grid-cols-2 gap-0 sm:gap-8 lg:gap-12">
+            
+            {/* === IMAGE SECTION === */}
             <div className="space-y-2 sm:space-y-4">
-              {/* Main image */}
-              <div className="relative -mx-2 sm:mx-0">
-                <div className={`aspect-square sm:rounded-2xl overflow-hidden bg-muted border-y sm:border border-border ${(product.stock ?? 0) <= 0 ? 'grayscale' : ''}`}>
+              {/* Main image - full width on mobile with swipe */}
+              <div
+                ref={mainImageRef}
+                className="relative"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <div className={`aspect-square sm:rounded-2xl overflow-hidden bg-muted sm:border border-border ${(product.stock ?? 0) <= 0 ? 'grayscale' : ''}`}>
                   <img
                     src={currentImage}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
                   
-                  {/* Out of stock overlay */}
                   {(product.stock ?? 0) <= 0 && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <span className="bg-destructive text-destructive-foreground text-xl sm:text-2xl font-bold px-4 sm:px-6 py-2 sm:py-3 rounded-lg uppercase tracking-wider shadow-lg">
+                      <span className="bg-destructive text-destructive-foreground text-lg sm:text-2xl font-bold px-4 py-2 rounded-lg uppercase tracking-wider shadow-lg">
                         Esgotado
                       </span>
                     </div>
@@ -134,23 +159,36 @@ export default function ProductPage() {
                 
                 {/* Badges */}
                 {(product.stock ?? 0) > 0 && (
-                  <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex flex-col gap-1 sm:gap-2">
+                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-1.5">
                     {discount > 0 && (
-                      <Badge variant="destructive" className="text-[10px] sm:text-sm font-bold px-1.5 sm:px-3 py-0.5 sm:py-1">
-                        -{discount}% OFF
+                      <Badge variant="destructive" className="text-xs sm:text-sm font-bold px-2 py-0.5">
+                        -{discount}%
                       </Badge>
                     )}
-                    <Badge variant="secondary" className="bg-primary text-primary-foreground text-[10px] sm:text-sm font-medium px-1.5 sm:px-3 py-0.5 sm:py-1">
-                      Seminovo Revisado
+                    <Badge variant="secondary" className="bg-primary text-primary-foreground text-[10px] sm:text-sm font-medium px-2 py-0.5">
+                      Seminovo
                     </Badge>
                   </div>
                 )}
 
-                {/* Stock badge */}
+                {/* Image counter dots on mobile */}
+                {allImages.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 sm:hidden">
+                    {allImages.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => { setCurrentIndex(i); setSelectedImage(allImages[i]); }}
+                        className={`w-2 h-2 rounded-full transition-all ${i === currentIndex ? 'bg-primary w-4' : 'bg-foreground/40'}`}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Stock warning */}
                 {(product.stock ?? 0) <= 3 && (product.stock ?? 0) > 0 && (
-                  <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4">
-                    <div className="bg-destructive/90 text-destructive-foreground text-[10px] sm:text-sm font-medium px-2 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2">
-                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                  <div className="absolute bottom-10 sm:bottom-4 left-3 right-3 sm:left-4 sm:right-4">
+                    <div className="bg-destructive/90 text-destructive-foreground text-xs sm:text-sm font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 shrink-0" />
                       {product.name.toLowerCase().includes('seminov') 
                         ? 'Última unidade disponível!' 
                         : `Apenas ${product.stock} unidade${product.stock !== 1 ? 's' : ''} disponível!`}
@@ -159,140 +197,125 @@ export default function ProductPage() {
                 )}
               </div>
               
-              {/* Thumbnail gallery */}
+              {/* Thumbnail gallery - desktop & tablet only */}
               {allImages.length > 1 && (
-                <div className="relative px-2 sm:px-0">
-                  {/* Left arrow */}
+                <div className="relative hidden sm:block px-0">
                   <button
-                    onClick={() => {
-                      if (thumbContainerRef.current) {
-                        thumbContainerRef.current.scrollBy({ left: -140, behavior: 'smooth' });
-                      }
-                    }}
-                    className="absolute left-0 sm:left-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 sm:w-8 sm:h-8 bg-background/90 border border-border rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-primary-foreground transition-colors"
+                    onClick={() => thumbContainerRef.current?.scrollBy({ left: -140, behavior: 'smooth' })}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-background/90 border border-border rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-primary-foreground transition-colors"
                   >
-                    <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <ChevronLeft className="h-4 w-4" />
                   </button>
-
-                  {/* Thumbnails */}
                   <div
                     ref={thumbContainerRef}
-                    className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 px-7 sm:px-8"
+                    className="flex gap-2 overflow-x-auto pb-1 px-9"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   >
                     {allImages.map((img, index) => (
                       <button
                         key={index}
-                        onClick={() => setSelectedImage(img)}
-                        className={`shrink-0 w-14 h-14 sm:w-20 sm:h-20 rounded-md sm:rounded-lg overflow-hidden border-2 transition-all ${
+                        onClick={() => { setSelectedImage(img); setCurrentIndex(index); }}
+                        className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
                           currentImage === img 
                             ? 'border-primary ring-2 ring-primary/20' 
                             : 'border-border hover:border-primary/50'
                         }`}
                       >
-                        <img
-                          src={img}
-                          alt={`${product.name} - Imagem ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={img} alt={`${product.name} - ${index + 1}`} className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
-
-                  {/* Right arrow */}
                   <button
-                    onClick={() => {
-                      if (thumbContainerRef.current) {
-                        thumbContainerRef.current.scrollBy({ left: 140, behavior: 'smooth' });
-                      }
-                    }}
-                    className="absolute right-0 sm:right-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 sm:w-8 sm:h-8 bg-background/90 border border-border rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-primary-foreground transition-colors"
+                    onClick={() => thumbContainerRef.current?.scrollBy({ left: 140, behavior: 'smooth' })}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-background/90 border border-border rounded-full flex items-center justify-center shadow-md hover:bg-primary hover:text-primary-foreground transition-colors"
                   >
-                    <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Product info */}
-            <div className="flex flex-col min-w-0 px-1 sm:px-0">
+            {/* === PRODUCT INFO === */}
+            <div className="flex flex-col min-w-0 px-4 sm:px-0 pt-3 sm:pt-0">
+              
               {/* Rating */}
               {!product.name.toLowerCase().includes('seminov') && productReviews && productReviews.length > 0 && (
-                <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                <div className="flex items-center gap-1.5 mb-2">
                   <div className="flex">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
                         key={i}
-                        className={`h-3.5 w-3.5 sm:h-5 sm:w-5 ${
+                        className={`h-4 w-4 sm:h-5 sm:w-5 ${
                           i < Math.round(averageRating) ? 'text-primary fill-primary' : 'text-muted'
                         }`}
                       />
                     ))}
                   </div>
-                  <span className="text-[10px] sm:text-sm text-muted-foreground">
-                    ({productReviews.length} avaliações)
+                  <span className="text-xs sm:text-sm text-muted-foreground">
+                    ({productReviews.length})
                   </span>
                 </div>
               )}
 
               {/* Title */}
-              <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4 leading-snug">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4 leading-tight">
                 {product.name}
               </h1>
 
-              {/* Stock status */}
-              <div className="mb-2 sm:mb-4">
+              {/* Stock */}
+              <div className="mb-3 sm:mb-4">
                 {(product.stock ?? 0) > 0 ? (
-                  <div className="inline-flex items-center gap-1 sm:gap-2 bg-success/10 text-success px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-full text-[10px] sm:text-sm font-medium">
-                    <Check className="h-3 w-3 sm:h-4 sm:w-4" />
-                    Em estoque - Pronta entrega
-                  </div>
+                  <span className="inline-flex items-center gap-1.5 bg-success/10 text-success px-2.5 py-1 rounded-full text-xs sm:text-sm font-medium">
+                    <Check className="h-3.5 w-3.5" />
+                    Em estoque
+                  </span>
                 ) : (
-                  <div className="inline-flex items-center gap-1 sm:gap-2 bg-destructive/10 text-destructive px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-full text-[10px] sm:text-sm font-medium">
-                    Produto indisponível
-                  </div>
+                  <span className="inline-flex items-center gap-1.5 bg-destructive/10 text-destructive px-2.5 py-1 rounded-full text-xs sm:text-sm font-medium">
+                    Indisponível
+                  </span>
                 )}
               </div>
 
-              {/* Prices */}
-              <div className="bg-secondary/50 rounded-lg sm:rounded-xl p-3 sm:p-6 mb-3 sm:mb-6">
+              {/* Pricing Card */}
+              <div className="bg-secondary/50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
                 {product.original_price && product.original_price > product.price && (
-                  <p className="text-xs sm:text-lg text-muted-foreground line-through">
+                  <p className="text-sm sm:text-lg text-muted-foreground line-through mb-1">
                     De: {formatCurrency(product.original_price)}
                   </p>
                 )}
                 
-                {/* PIX Price */}
-                <div className="bg-primary/10 border border-primary/20 rounded-lg p-2.5 sm:p-4 mb-2 sm:mb-4">
-                  <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-0.5 sm:mb-1">
-                    <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-                    <span className="font-bold text-primary text-base sm:text-xl md:text-2xl">
-                      {formatCurrency(pixPrice)} no PIX
+                {/* PIX */}
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 sm:p-4 mb-3">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <Zap className="h-5 w-5 text-primary shrink-0" />
+                    <span className="font-bold text-primary text-xl sm:text-2xl">
+                      {formatCurrency(pixPrice)}
                     </span>
+                    <span className="text-xs text-primary font-medium">no PIX</span>
                     {discount > 0 && (
-                      <Badge variant="destructive" className="text-[10px] sm:text-xs">
-                        {discount}% OFF
+                      <Badge variant="destructive" className="text-[10px] ml-auto">
+                        -{discount}%
                       </Badge>
                     )}
                   </div>
-                  <p className="text-[10px] sm:text-sm text-muted-foreground">
-                    Economize {formatCurrency(cardPrice - pixPrice)} pagando à vista
+                  <p className="text-xs text-muted-foreground ml-7">
+                    Economize {formatCurrency(cardPrice - pixPrice)}
                   </p>
                 </div>
 
-                {/* Card Price */}
-                <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground">
-                  <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                  <span className="text-[10px] sm:text-sm">
-                    <strong className="text-foreground text-xs sm:text-base">{formatCurrency(cardPrice)}</strong> no cartão
+                {/* Card */}
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <CreditCard className="h-4 w-4 shrink-0" />
+                  <span className="text-xs sm:text-sm">
+                    <strong className="text-foreground text-sm sm:text-base">{formatCurrency(cardPrice)}</strong> no cartão
                   </span>
                 </div>
-                <p className="text-[10px] sm:text-sm text-muted-foreground ml-5 sm:ml-6">
-                  em até <strong className="text-foreground">12x de {formatCurrency(cardPrice / 12)}</strong> sem juros
+                <p className="text-xs text-muted-foreground ml-6 mt-0.5">
+                  12x de <strong className="text-foreground">{formatCurrency(cardPrice / 12)}</strong> sem juros
                 </p>
               </div>
 
-              {/* CTA Buttons - hidden on mobile (sticky bar instead) */}
+              {/* CTA - desktop only */}
               <div className="hidden sm:block space-y-3 mb-6">
                 <Button
                   size="lg"
@@ -308,36 +331,22 @@ export default function ProductPage() {
                 </p>
               </div>
 
-              {/* Benefits */}
-              <div className="grid grid-cols-4 sm:grid-cols-2 gap-1.5 sm:gap-3 mb-3 sm:mb-6">
-                <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-3 p-2 sm:p-3 bg-secondary rounded-lg text-center sm:text-left">
-                  <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[10px] sm:text-sm font-medium leading-tight">Frete Grátis</p>
-                    <p className="text-[8px] sm:text-xs text-muted-foreground hidden sm:block">Todo Brasil</p>
+              {/* Benefits - 2x2 grid on mobile */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
+                {[
+                  { icon: Truck, label: 'Frete Grátis', sub: 'Todo o Brasil' },
+                  { icon: Shield, label: 'Garantia', sub: 'Cobertura total' },
+                  { icon: RefreshCw, label: '90 Dias', sub: 'Para troca' },
+                  { icon: Award, label: 'Revisado', sub: '100% testado' },
+                ].map(({ icon: Icon, label, sub }) => (
+                  <div key={label} className="flex items-center gap-2.5 p-2.5 sm:p-3 bg-secondary rounded-lg">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-medium leading-tight">{label}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">{sub}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-3 p-2 sm:p-3 bg-secondary rounded-lg text-center sm:text-left">
-                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[10px] sm:text-sm font-medium leading-tight">Garantia</p>
-                    <p className="text-[8px] sm:text-xs text-muted-foreground hidden sm:block">Cobertura total</p>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-3 p-2 sm:p-3 bg-secondary rounded-lg text-center sm:text-left">
-                  <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[10px] sm:text-sm font-medium leading-tight">90 Dias</p>
-                    <p className="text-[8px] sm:text-xs text-muted-foreground hidden sm:block">Para troca</p>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-3 p-2 sm:p-3 bg-secondary rounded-lg text-center sm:text-left">
-                  <Award className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[10px] sm:text-sm font-medium leading-tight">Revisado</p>
-                    <p className="text-[8px] sm:text-xs text-muted-foreground hidden sm:block">100% testado</p>
-                  </div>
-                </div>
+                ))}
               </div>
 
               {/* Shipping Calculator */}
@@ -347,18 +356,18 @@ export default function ProductPage() {
 
               {/* Description */}
               {product.description && (
-                <div className="border-t pt-4 sm:pt-6 min-w-0">
+                <div className="border-t border-border pt-4 sm:pt-6 min-w-0">
                   <h3 className="font-semibold mb-3 text-base sm:text-lg">Descrição do Produto</h3>
                   <div 
                     className="text-foreground leading-relaxed prose prose-sm max-w-none min-w-0
-                      prose-p:text-foreground prose-p:my-1.5 sm:prose-p:my-2 prose-p:text-xs sm:prose-p:text-sm prose-p:leading-relaxed
+                      prose-p:text-foreground prose-p:my-1.5 prose-p:text-[13px] sm:prose-p:text-sm prose-p:leading-relaxed
                       prose-strong:text-foreground prose-strong:font-semibold
-                      prose-ul:text-foreground prose-ul:my-1.5 sm:prose-ul:my-2 prose-ul:list-disc prose-ul:pl-4 sm:prose-ul:pl-5
-                      prose-ol:text-foreground prose-ol:my-1.5 sm:prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-4 sm:prose-ol:pl-5
-                      prose-li:text-foreground prose-li:my-0.5 sm:prose-li:my-1 prose-li:text-xs sm:prose-li:text-sm
+                      prose-ul:text-foreground prose-ul:my-1.5 prose-ul:list-disc prose-ul:pl-4
+                      prose-ol:text-foreground prose-ol:my-1.5 prose-ol:list-decimal prose-ol:pl-4
+                      prose-li:text-foreground prose-li:my-0.5 prose-li:text-[13px] sm:prose-li:text-sm
                       prose-headings:text-foreground prose-headings:font-semibold prose-headings:text-sm sm:prose-headings:text-base prose-headings:mt-3 prose-headings:mb-1.5
                       prose-img:rounded-lg prose-img:my-3
-                      [&_table]:text-[10px] [&_table]:sm:text-sm [&_table]:w-full [&_table]:border [&_table]:border-border [&_table]:my-3 sm:[&_table]:my-4
+                      [&_table]:text-[11px] sm:[&_table]:text-sm [&_table]:w-full [&_table]:border [&_table]:border-border [&_table]:my-3
                       [&_table]:block [&_table]:overflow-x-auto [&_table]:whitespace-normal [&_table]:max-w-full
                       [&_td]:border [&_td]:border-border [&_td]:p-1.5 sm:[&_td]:p-2 [&_td]:text-foreground [&_td]:break-words [&_td]:align-top
                       [&_th]:border [&_th]:border-border [&_th]:p-1.5 sm:[&_th]:p-2 [&_th]:bg-muted [&_th]:text-foreground [&_th]:font-semibold
@@ -373,20 +382,18 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* Product Reviews Section */}
+      {/* Reviews */}
       {product.name.toLowerCase().includes('seminov') ? (
-        /* Compact review form for seminovos */
         <section className="py-4">
           <div className="container-custom max-w-md mx-auto">
             <ReviewForm productId={id || ''} productName={product.name} compact />
           </div>
         </section>
       ) : (
-        /* Full reviews section for regular products */
-        <section className="py-10 bg-secondary/30">
+        <section className="py-6 sm:py-10 bg-secondary/30">
           <div className="container-custom">
-            <h2 className="text-2xl font-bold mb-6">Avaliações deste produto</h2>
-            <div className="grid lg:grid-cols-3 gap-8">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Avaliações deste produto</h2>
+            <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
               <div className="lg:col-span-2">
                 <ProductReviews productId={id || ''} />
               </div>
@@ -400,31 +407,36 @@ export default function ProductPage() {
 
       {/* Related products */}
       {relatedProducts && relatedProducts.length > 0 && (
-        <section className="py-8 bg-secondary">
+        <section className="py-6 sm:py-8 bg-secondary">
           <div className="container-custom">
-            <h2 className="text-xl font-bold mb-6">Produtos Relacionados</h2>
+            <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Produtos Relacionados</h2>
             <ProductGrid products={relatedProducts} />
           </div>
         </section>
       )}
 
-      {/* Social Proof - Customer Reviews Carousel - Always show for all products */}
+      {/* Reviews Carousel */}
       {reviews && reviews.length > 0 && (
         <ReviewsCarousel reviews={reviews} />
       )}
 
       {/* Sticky mobile buy bar */}
       {(product.stock ?? 0) > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border p-2.5 sm:hidden safe-area-bottom">
-          <div className="flex items-center gap-2">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border p-3 sm:hidden">
+          <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground line-through leading-none">
-                {product.original_price && product.original_price > product.price ? formatCurrency(product.original_price) : ''}
+              {product.original_price && product.original_price > product.price && (
+                <p className="text-[10px] text-muted-foreground line-through leading-none mb-0.5">
+                  {formatCurrency(product.original_price)}
+                </p>
+              )}
+              <p className="text-base font-bold text-primary leading-tight">
+                {formatCurrency(pixPrice)}
+                <span className="text-[10px] font-normal text-muted-foreground ml-1">no PIX</span>
               </p>
-              <p className="text-sm font-bold text-primary leading-tight">{formatCurrency(pixPrice)} <span className="text-[10px] font-normal text-muted-foreground">no PIX</span></p>
             </div>
             <Button
-              className="h-10 px-5 text-sm font-bold shrink-0"
+              className="h-11 px-6 text-sm font-bold shrink-0"
               onClick={handleBuyNow}
             >
               <ShoppingCart className="h-4 w-4 mr-1.5" />
@@ -434,8 +446,8 @@ export default function ProductPage() {
         </div>
       )}
 
-      {/* Bottom spacing for sticky bar on mobile */}
-      <div className="h-16 sm:hidden" />
+      {/* Spacer for sticky bar */}
+      <div className="h-[72px] sm:hidden" />
     </Layout>
   );
 }
