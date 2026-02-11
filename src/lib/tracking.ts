@@ -112,8 +112,8 @@ export function getTrackingInfo(orderId: string, orderCreatedAt: string): Tracki
       
       const isFirstStep = step.day === 0;
       events.push({
-        date: formatTrackingDate(isFirstStep ? now : eventDate),
-        time: isFirstStep ? now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : formatTrackingTime(eventDate, i % 10),
+        date: formatTrackingDate(isFirstStep ? orderDate : eventDate),
+        time: isFirstStep ? orderDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : formatTrackingTime(eventDate, i % 10),
         location: step.location,
         status: step.status,
         description: step.description,
