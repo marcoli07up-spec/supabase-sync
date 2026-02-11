@@ -26,17 +26,8 @@ export function FloatingButtons() {
 
   return (
     <div className={cn("fixed left-4 right-4 z-50 flex justify-between items-end pointer-events-none", isProductPage ? "bottom-[76px]" : "bottom-4")}>
-      {/* Instagram DM Button - Left */}
-      {!hideFloatingButtons && (
-        <Button
-          onClick={openInstagramDM}
-          size="lg"
-          className="pointer-events-auto h-16 w-16 rounded-full bg-background hover:bg-muted shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-          aria-label="Enviar mensagem no Instagram"
-        >
-          <span className="text-3xl">👩‍💼</span>
-        </Button>
-      )}
+      {/* Spacer when no Instagram button */}
+      {!hideFloatingButtons && <div />}
 
       {/* Cart Button - Right */}
       {!hideFloatingButtons && itemCount > 0 && (
