@@ -84,9 +84,12 @@ export function getTrackingInfo(orderId: string, orderCreatedAt: string): Tracki
   const now = new Date();
   
   // Calculate business days since order (excluding Sundays)
+  // Normalize to start of day to avoid counting partial days
   let businessDaysSinceOrder = 0;
-  const tempDate = new Date(orderDate);
-  while (tempDate < now) {
+  const orderStart = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
+  const nowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tempDate = new Date(orderStart);
+  while (tempDate < nowStart) {
     tempDate.setDate(tempDate.getDate() + 1);
     if (tempDate.getDay() !== 0) { // Skip Sundays
       businessDaysSinceOrder++;
