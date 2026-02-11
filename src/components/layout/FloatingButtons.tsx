@@ -101,7 +101,7 @@ export function FloatingButtons() {
           <Button
             onClick={handleWhatsAppClick}
             size="lg"
-            className="h-16 w-16 rounded-full bg-[#25D366] hover:bg-[#1da851] shadow-lg hover:shadow-xl transition-all p-0 flex items-center justify-center animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]"
+            className="h-16 w-16 rounded-full bg-[#25D366] hover:bg-[#1da851] shadow-lg hover:shadow-xl transition-all p-0 flex items-center justify-center"
             aria-label="Fale conosco pelo WhatsApp"
           >
             {chatOpen ? (
