@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLocation } from 'react-router-dom';
 import { formatCurrency } from '@/lib/format';
-import atendenteIcon from '@/assets/atendente.png';
+
 
 export function FloatingButtons() {
   const { getItemCount, setIsOpen, isAnimating, getTotal } = useCart();
@@ -31,10 +31,10 @@ export function FloatingButtons() {
         <Button
           onClick={openInstagramDM}
           size="lg"
-          className="pointer-events-auto h-16 w-16 rounded-full bg-background hover:bg-muted shadow-lg hover:shadow-xl transition-all p-0 overflow-hidden"
+          className="pointer-events-auto h-16 w-16 rounded-full bg-background hover:bg-muted shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
           aria-label="Enviar mensagem no Instagram"
         >
-          <img src={atendenteIcon} alt="Fale com uma atendente" className="h-full w-full object-cover rounded-full" />
+          <span className="text-3xl">👩‍💼</span>
         </Button>
       )}
 
