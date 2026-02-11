@@ -23,23 +23,22 @@ export interface TrackingInfo {
 }
 
 const trackingSteps: { day: number; status: string; description: string; location: string }[] = [
-  { day: 0, status: 'Pedido Recebido', description: 'Pedido confirmado e em preparação', location: 'Centro de Distribuição - SP' },
-  { day: 1, status: 'Pedido Separado', description: 'Pedido separado e pronto para coleta', location: 'Centro de Distribuição - SP' },
-  { day: 2, status: 'Coletado', description: 'Objeto coletado pela transportadora', location: 'Centro de Distribuição - SP' },
-  { day: 3, status: 'Em Trânsito', description: 'Objeto em trânsito para centro de distribuição', location: 'Rodovia Presidente Dutra - SP' },
-  { day: 4, status: 'Em Trânsito', description: 'Objeto chegou ao centro de distribuição regional', location: 'CD Jadlog Regional' },
-  { day: 5, status: 'Em Trânsito', description: 'Objeto em transferência entre unidades', location: 'CD Jadlog Intermediário' },
-  { day: 6, status: 'Em Trânsito', description: 'Objeto saiu para a unidade de destino', location: 'Hub Jadlog' },
-  { day: 7, status: 'Em Trânsito', description: 'Objeto chegou à cidade de destino', location: 'Unidade Local Jadlog' },
-  { day: 8, status: 'Em Trânsito', description: 'Objeto em roteirização para entrega', location: 'Unidade Local Jadlog' },
-  { day: 9, status: 'Em Trânsito', description: 'Objeto aguardando disponibilidade de rota', location: 'Unidade Local Jadlog' },
-  { day: 10, status: 'Em Trânsito', description: 'Objeto em separação para entrega', location: 'Unidade Local Jadlog' },
-  { day: 11, status: 'Saiu para Entrega', description: 'Objeto saiu para entrega ao destinatário', location: 'Rota de Entrega' },
-  { day: 12, status: 'Em Rota', description: 'Objeto em rota de entrega', location: 'Rota de Entrega' },
-  { day: 13, status: 'Tentativa de Entrega 1', description: 'Primeira tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
-  { day: 14, status: 'Tentativa de Entrega 2', description: 'Segunda tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
-  { day: 15, status: 'Tentativa de Entrega 3', description: 'Terceira tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
-  { day: 16, status: 'Devolvido ao Remetente', description: 'Objeto devolvido ao remetente após 3 tentativas de entrega', location: 'Centro de Distribuição - SP' },
+  { day: 0, status: 'Pedido Separado', description: 'Pedido separado e pronto para envio', location: 'Centro de Distribuição - SP' },
+  { day: 1, status: 'Coletado', description: 'Objeto coletado pela transportadora', location: 'Centro de Distribuição - SP' },
+  { day: 2, status: 'Em Trânsito', description: 'Objeto em trânsito para centro de distribuição', location: 'Rodovia Presidente Dutra - SP' },
+  { day: 3, status: 'Em Trânsito', description: 'Objeto chegou ao centro de distribuição regional', location: 'CD Jadlog Regional' },
+  { day: 4, status: 'Em Trânsito', description: 'Objeto em transferência entre unidades', location: 'CD Jadlog Intermediário' },
+  { day: 5, status: 'Em Trânsito', description: 'Objeto saiu para a unidade de destino', location: 'Hub Jadlog' },
+  { day: 6, status: 'Em Trânsito', description: 'Objeto chegou à cidade de destino', location: 'Unidade Local Jadlog' },
+  { day: 7, status: 'Em Trânsito', description: 'Objeto em roteirização para entrega', location: 'Unidade Local Jadlog' },
+  { day: 8, status: 'Em Trânsito', description: 'Objeto aguardando disponibilidade de rota', location: 'Unidade Local Jadlog' },
+  { day: 9, status: 'Em Trânsito', description: 'Objeto em separação para entrega', location: 'Unidade Local Jadlog' },
+  { day: 10, status: 'Saiu para Entrega', description: 'Objeto saiu para entrega ao destinatário', location: 'Rota de Entrega' },
+  { day: 11, status: 'Em Rota', description: 'Objeto em rota de entrega', location: 'Rota de Entrega' },
+  { day: 12, status: 'Tentativa de Entrega 1', description: 'Primeira tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
+  { day: 13, status: 'Tentativa de Entrega 2', description: 'Segunda tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
+  { day: 14, status: 'Tentativa de Entrega 3', description: 'Terceira tentativa de entrega - Destinatário ausente', location: 'Endereço do Destinatário' },
+  { day: 15, status: 'Devolvido ao Remetente', description: 'Objeto devolvido ao remetente após 3 tentativas de entrega', location: 'Centro de Distribuição - SP' },
 ];
 
 function generateTrackingCode(orderId: string): string {
@@ -98,7 +97,7 @@ export function getTrackingInfo(orderId: string, orderCreatedAt: string): Tracki
   const estimatedDelivery = addBusinessDays(orderDate, 10);
   
   // Only show events up to current business day
-  const visibleDays = Math.min(businessDaysSinceOrder, 16);
+  const visibleDays = Math.min(businessDaysSinceOrder, 15);
   
   const events: TrackingEvent[] = [];
   
@@ -111,9 +110,10 @@ export function getTrackingInfo(orderId: string, orderCreatedAt: string): Tracki
       // Double-check: skip if eventDate falls on Sunday
       if (eventDate.getDay() === 0) continue;
       
+      const isFirstStep = step.day === 0;
       events.push({
-        date: formatTrackingDate(eventDate),
-        time: formatTrackingTime(eventDate, i % 10),
+        date: formatTrackingDate(isFirstStep ? now : eventDate),
+        time: isFirstStep ? now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : formatTrackingTime(eventDate, i % 10),
         location: step.location,
         status: step.status,
         description: step.description,
@@ -126,13 +126,13 @@ export function getTrackingInfo(orderId: string, orderCreatedAt: string): Tracki
   events.reverse();
   
   const latestEvent = events[0];
-  const isReturned = visibleDays >= 16;
+  const isReturned = visibleDays >= 15;
   const isDelivered = false;
   
   let deliveryAttempts = 0;
-  if (visibleDays >= 13) deliveryAttempts = 1;
-  if (visibleDays >= 14) deliveryAttempts = 2;
-  if (visibleDays >= 15) deliveryAttempts = 3;
+  if (visibleDays >= 12) deliveryAttempts = 1;
+  if (visibleDays >= 13) deliveryAttempts = 2;
+  if (visibleDays >= 14) deliveryAttempts = 3;
   
   return {
     carrier: 'Jadlog',
@@ -147,7 +147,7 @@ export function getTrackingInfo(orderId: string, orderCreatedAt: string): Tracki
 }
 
 export function getNextUpdateMessage(daysSinceOrder: number): string {
-  if (daysSinceOrder < 16) {
+  if (daysSinceOrder < 15) {
     return 'Próxima atualização amanhã';
   }
   return 'Rastreio finalizado';
