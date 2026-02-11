@@ -16,7 +16,7 @@ export function FloatingButtons() {
   const hideFloatingButtons = isCheckoutPage || isOrderPage;
 
   const openWhatsApp = () => {
-    window.open('https://wa.me/5544999999999?text=Olá! Gostaria de mais informações.', '_blank');
+    window.open('https://wa.me/5511972238165?text=Olá! Gostaria de mais informações.', '_blank');
   };
 
   const handleCartClick = () => {
@@ -33,7 +33,7 @@ export function FloatingButtons() {
           className="pointer-events-auto h-14 w-14 rounded-full bg-[#25D366] hover:bg-[#1da851] shadow-lg hover:shadow-xl transition-all p-0 flex items-center justify-center"
           aria-label="Fale conosco pelo WhatsApp"
         >
-          <MessageCircle className="h-7 w-7 text-white fill-white" />
+          <MessageCircle className="h-9 w-9 text-white fill-white" />
         </Button>
       )}
 
