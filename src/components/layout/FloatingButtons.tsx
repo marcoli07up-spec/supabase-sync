@@ -89,9 +89,9 @@ export function FloatingButtons() {
                 />
                 <button
                   onClick={sendToWhatsApp}
-                  className="h-9 w-9 rounded-full bg-[#25D366] hover:bg-[#1da851] flex items-center justify-center transition-colors"
+                  className="h-10 w-10 rounded-full bg-[#25D366] hover:bg-[#1da851] flex items-center justify-center transition-colors shrink-0"
                 >
-                  <Send className="h-4 w-4 text-white" />
+                  <Send className="h-5 w-5 text-white" />
                 </button>
               </div>
             </div>
