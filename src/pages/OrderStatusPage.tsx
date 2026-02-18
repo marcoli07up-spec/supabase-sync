@@ -38,7 +38,7 @@ export default function OrderStatusPage() {
     podpay_transaction_id?: string;
   };
 
-  const isPodPayOrder = orderWithPix && orderWithPix.total < PODPAY_THRESHOLD && orderWithPix.podpay_transaction_id;
+const isPodPayOrder = orderWithPix && orderWithPix.total < PODPAY_THRESHOLD;
 
   // Fetch order and items
   useEffect(() => {
