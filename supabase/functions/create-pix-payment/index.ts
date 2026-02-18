@@ -103,9 +103,9 @@ Deno.serve(async (req) => {
     // CONFIGURE SUA CHAVE PIX AQUI
     // ==============================
 
-    const PIX_KEY = "SUA_CHAVE_PIX_AQUI";
-    const PIX_NAME = "PONTO DAS UTILIDADES";
-    const PIX_CITY = "GOIANIA";
+    const PIX_KEY = "tradop2p@gmail.com";
+    const PIX_NAME = "ICAMSTORE";
+    const PIX_CITY = "SAOPAULO";
 
     // Gerar Pix copia e cola
     const pixCode = gerarPix({
