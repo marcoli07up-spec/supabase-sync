@@ -6,22 +6,78 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ==============================
+// GERADOR PIX ESTÁTICO (EMV)
+// ==============================
+
+function crc16(payload: string) {
+  let crc = 0xffff;
+  for (let i = 0; i < payload.length; i++) {
+    crc ^= payload.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+      crc &= 0xffff;
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, "0");
+}
+
+function formatField(id: string, value: string) {
+  const len = value.length.toString().padStart(2, "0");
+  return `${id}${len}${value}`;
+}
+
+function gerarPix({
+  chave,
+  nome,
+  cidade,
+  valor,
+  txid,
+}: {
+  chave: string;
+  nome: string;
+  cidade: string;
+  valor: number;
+  txid: string;
+}) {
+  const merchantAccountInfo = [
+    formatField("00", "br.gov.bcb.pix"),
+    formatField("01", chave),
+  ].join("");
+
+  const payloadSemCRC = [
+    formatField("00", "01"),
+    formatField("26", merchantAccountInfo),
+    formatField("52", "0000"),
+    formatField("53", "986"),
+    formatField("54", valor.toFixed(2)),
+    formatField("58", "BR"),
+    formatField("59", nome.slice(0, 25)),
+    formatField("60", cidade.slice(0, 15)),
+    formatField("62", formatField("05", txid.slice(0, 25))),
+    "6304",
+  ].join("");
+
+  const crc = crc16(payloadSemCRC);
+  return payloadSemCRC + crc;
+}
+
+// ==============================
+// FUNÇÃO PRINCIPAL
+// ==============================
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const PODPAY_API_KEY = Deno.env.get("PODPAY_API_KEY");
-    if (!PODPAY_API_KEY) {
-      throw new Error("PODPAY_API_KEY is not configured");
-    }
-
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const { orderId } = await req.json();
+
     if (!orderId) {
       return new Response(JSON.stringify({ error: "orderId is required" }), {
         status: 400,
@@ -29,7 +85,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch order and items
+    // Buscar pedido
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select("*")
@@ -43,94 +99,31 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: orderItems } = await supabase
-      .from("order_items")
-      .select("*")
-      .eq("order_id", orderId);
+    // ==============================
+    // CONFIGURE SUA CHAVE PIX AQUI
+    // ==============================
 
-    // Build PodPay transaction with generic product names
-    const amountInCents = Math.round(order.total * 100);
-    const genericNames = [
-      "Acessório Eletrônico Premium", "Kit Digital Profissional", "Componente Tech Avançado",
-      "Periférico Multimídia HD", "Dispositivo Smart Plus", "Módulo Conectivo Pro",
-      "Adaptador Universal Tech", "Suporte Ergonômico Studio", "Peça de Reposição Original",
-      "Acessório Multifuncional Pro", "Equipamento Compacto Digital", "Item Técnico Especializado",
-    ];
-    const items = (orderItems || []).map((item: any, index: number) => ({
-      title: genericNames[index % genericNames.length],
-      unitPrice: Math.round(item.price * 100),
-      quantity: item.quantity,
-      tangible: true,
-    }));
+    const PIX_KEY = "SUA_CHAVE_PIX_AQUI";
+    const PIX_NAME = "PONTO DAS UTILIDADES";
+    const PIX_CITY = "GOIANIA";
 
-    // Build postback URL
-    const functionUrl = `${SUPABASE_URL}/functions/v1/podpay-webhook`;
-
-    const transactionBody: any = {
-      paymentMethod: "pix",
-      postbackUrl: functionUrl,
-      customer: {
-        document: {
-          type: "cpf",
-          number: (order.customer_cpf || "").replace(/\D/g, ""),
-        },
-        name: order.customer_name,
-        email: order.customer_email || "noemail@icamstore.com",
-        phone: (order.customer_phone || "").replace(/\D/g, ""),
-      },
-      amount: amountInCents,
-      items,
-    };
-
-    // Add delivery info if available
-    if (order.customer_address) {
-      transactionBody.delivery = {
-        street: order.customer_address,
-        city: order.customer_city || "",
-        state: order.customer_state || "",
-        zipcode: (order.customer_cep || "").replace(/\D/g, ""),
-      };
-    }
-
-    console.log("Creating PodPay transaction:", JSON.stringify(transactionBody));
-
-    const podpayResponse = await fetch("https://api.podpay.app/v1/transactions", {
-      method: "POST",
-      headers: {
-        "x-api-key": PODPAY_API_KEY,
-        "Content-Type": "application/json",
-        "X-Idempotency-Key": orderId,
-      },
-      body: JSON.stringify(transactionBody),
+    // Gerar Pix copia e cola
+    const pixCode = gerarPix({
+      chave: PIX_KEY,
+      nome: PIX_NAME,
+      cidade: PIX_CITY,
+      valor: order.total,
+      txid: orderId,
     });
 
-    const podpayData = await podpayResponse.json();
-    console.log("PodPay response:", JSON.stringify(podpayData));
-
-    if (!podpayResponse.ok || !podpayData.success) {
-      console.error("PodPay error:", podpayData);
-      return new Response(
-        JSON.stringify({
-          error: "Failed to create PIX payment",
-          details: podpayData.error?.message || "Unknown error",
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const txData = podpayData.data;
-
-    // Update order with PodPay transaction data
+    // Atualizar pedido
     await supabase
       .from("orders")
       .update({
-        podpay_transaction_id: txData.id,
-        pix_qr_code: txData.pixQrCode || null,
-        pix_qr_code_image: txData.pixQrCodeImage || null,
-        pix_code: txData.pixQrCode || null,
+        pix_code: pixCode,
+        pix_qr_code: pixCode,
+        pix_qr_code_image: null,
+        podpay_transaction_id: null,
         status: "awaiting_payment",
       })
       .eq("id", orderId);
@@ -138,9 +131,9 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        pixQrCode: txData.pixQrCode,
-        pixQrCodeImage: txData.pixQrCodeImage,
-        transactionId: txData.id,
+        pixQrCode: pixCode,
+        pixQrCodeImage: null,
+        transactionId: orderId,
       }),
       {
         status: 200,
@@ -150,6 +143,7 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     console.error("Error creating PIX payment:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
