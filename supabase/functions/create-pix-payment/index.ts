@@ -6,10 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// ==============================
-// GERADOR PIX ESTÁTICO (EMV)
-// ==============================
-
+// ===== PIX EMV / CRC16 =====
 function crc16(payload: string) {
   let crc = 0xffff;
   for (let i = 0; i < payload.length; i++) {
@@ -23,23 +20,26 @@ function crc16(payload: string) {
 }
 
 function formatField(id: string, value: string) {
-  const len = value.length.toString().padStart(2, "0");
-  return `${id}${len}${value}`;
+  const v = value ?? "";
+  const len = v.length.toString().padStart(2, "0");
+  return `${id}${len}${v}`;
 }
 
-function gerarPix({
-  chave,
-  nome,
-  cidade,
-  valor,
-  txid,
-}: {
+// Gera Pix "copia e cola" para chave estática
+function gerarPixCopiaECola(params: {
   chave: string;
   nome: string;
   cidade: string;
   valor: number;
-  txid: string;
+  txid?: string;
 }) {
+  const chave = (params.chave || "").trim(); // importantíssimo
+  const nome = (params.nome || "").trim();
+  const cidade = (params.cidade || "").trim();
+
+  // TXID: alguns bancos preferem simples
+  const txid = (params.txid || "***").trim().slice(0, 25) || "***";
+
   const merchantAccountInfo = [
     formatField("00", "br.gov.bcb.pix"),
     formatField("01", chave),
@@ -50,21 +50,16 @@ function gerarPix({
     formatField("26", merchantAccountInfo),
     formatField("52", "0000"),
     formatField("53", "986"),
-    formatField("54", valor.toFixed(2)),
+    formatField("54", Number(params.valor).toFixed(2)),
     formatField("58", "BR"),
     formatField("59", nome.slice(0, 25)),
     formatField("60", cidade.slice(0, 15)),
-    formatField("62", formatField("05", txid.slice(0, 25))),
+    formatField("62", formatField("05", txid)), // TXID
     "6304",
   ].join("");
 
-  const crc = crc16(payloadSemCRC);
-  return payloadSemCRC + crc;
+  return payloadSemCRC + crc16(payloadSemCRC);
 }
-
-// ==============================
-// FUNÇÃO PRINCIPAL
-// ==============================
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -76,7 +71,8 @@ Deno.serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { orderId } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const orderId = body?.orderId;
 
     if (!orderId) {
       return new Response(JSON.stringify({ error: "orderId is required" }), {
@@ -99,24 +95,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ==============================
-    // CONFIGURE SUA CHAVE PIX AQUI
-    // ==============================
-
+    // ======= SUA CHAVE PIX (EMAIL) =======
     const PIX_KEY = "tradop2p@gmail.com";
-    const PIX_NAME = "ICAMSTORE";
-    const PIX_CITY = "SAOPAULO";
+    const PIX_NAME = "PONTO DAS UTILIDADES"; // troque se quiser
+    const PIX_CITY = "GOIANIA"; // troque se quiser
 
-    // Gerar Pix copia e cola
-    const pixCode = gerarPix({
+    const pixCode = gerarPixCopiaECola({
       chave: PIX_KEY,
       nome: PIX_NAME,
       cidade: PIX_CITY,
-      valor: order.total,
-      txid: orderId,
+      valor: Number(order.total || 0),
+      txid: String(orderId), // ou "***"
     });
 
-    // Atualizar pedido
+    // Salvar no pedido
     await supabase
       .from("orders")
       .update({
