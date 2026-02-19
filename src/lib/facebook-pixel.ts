@@ -7,7 +7,7 @@ declare global {
   }
 }
 
-const PIXEL_ID = '1280424109613163';
+const PIXEL_ID = '1360841892745795';
 
 // Initialize Facebook Pixel
 export function initFacebookPixel() {
