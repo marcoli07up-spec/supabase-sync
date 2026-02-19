@@ -6,21 +6,16 @@ export function StoreLocation() {
     <section className="py-8 md:py-12 bg-secondary border-t border-border">
       <div className="container-custom">
         <div className="grid md:grid-cols-2 gap-8 items-center">
-          {/* Store Photo */}
-          <div className="relative aspect-video rounded-2xl overflow-hidden">
-            <img
-              src={storeFrontImg}
-              alt="Loja física iCamStore"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-4 left-4 right-4">
-              <div className="flex items-center gap-2 text-white">
-                <MapPin className="h-5 w-5 text-primary" />
-                <span className="font-medium">Loja Física - Maringá, PR</span>
-              </div>
+          
+          {/* Store Photo (removed) */}
+          <div className="relative aspect-video rounded-2xl overflow-hidden bg-background border border-border flex items-center justify-center">
+            <div className="text-center px-6">
+              <MapPin className="h-10 w-10 text-primary mx-auto mb-3" />
+              <p className="font-semibold">Loja Física - Maringá, PR</p>
+              <p className="text-sm text-muted-foreground">Foto removida</p>
             </div>
           </div>
+
 
           {/* Store Info and Instagram */}
           <div className="space-y-6">
@@ -34,8 +29,8 @@ export function StoreLocation() {
                 <div>
                   <p className="font-medium">iCamStore</p>
                    <p className="text-sm text-muted-foreground">
-37:                     Av. Brasil, 284 - Zona 05<br />
-38:                     Maringá - PR, 87050-465
+                     Av. Brasil, 284 - Zona 05<br />
+                     Maringá - PR, 87050-465
 39:                   </p>
                 </div>
               </div>
