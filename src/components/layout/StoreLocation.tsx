@@ -12,7 +12,7 @@ export function StoreLocation() {
             <div className="text-center px-6">
               <MapPin className="h-10 w-10 text-primary mx-auto mb-3" />
               <p className="font-semibold">Loja Física - Maringá, PR</p>
-              <p className="text-sm text-muted-foreground">Foto removida</p>
+             
             </div>
           </div>
 
