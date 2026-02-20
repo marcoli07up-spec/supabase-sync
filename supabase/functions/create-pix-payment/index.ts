@@ -33,9 +33,11 @@ function gerarPixCopiaECola(params: {
   valor: number;
   txid?: string;
 }) {
-  const chave = (params.chave || "").trim();
+  const chave = (params.chave || "").trim(); // importantíssimo
   const nome = (params.nome || "").trim();
   const cidade = (params.cidade || "").trim();
+
+  // TXID: alguns bancos preferem simples
   const txid = (params.txid || "***").trim().slice(0, 25) || "***";
 
   const merchantAccountInfo = [
@@ -52,7 +54,7 @@ function gerarPixCopiaECola(params: {
     formatField("58", "BR"),
     formatField("59", nome.slice(0, 25)),
     formatField("60", cidade.slice(0, 15)),
-    formatField("62", formatField("05", txid)),
+    formatField("62", formatField("05", txid)), // TXID
     "6304",
   ].join("");
 
@@ -66,7 +68,9 @@ Deno.serve(async (req) => {
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get(
+      "SUPABASE_SERVICE_ROLE_KEY",
+    )!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const body = await req.json().catch(() => ({}));
@@ -93,17 +97,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ======= CHAVE PIX ATUALIZADA =======
+    // ======= SUA CHAVE PIX (CHAVE ALEATÓRIA) =======
     const PIX_KEY = "470e1c06-a98c-4fd9-ad77-e221114722bc";
-    const PIX_NAME = "PONTO DAS UTILIDADES";
-    const PIX_CITY = "SAOPAULO";
+    const PIX_NAME = "PONTO DAS UTILIDADES"; // ajuste se quiser
+    const PIX_CITY = "SAOPAULO"; // ajuste se quiser (sem acentos)
 
     const pixCode = gerarPixCopiaECola({
       chave: PIX_KEY,
       nome: PIX_NAME,
       cidade: PIX_CITY,
       valor: Number(order.total || 0),
-      txid: String(orderId),
+      txid: String(orderId), // ou "***"
     });
 
     // Salvar no pedido
@@ -128,7 +132,7 @@ Deno.serve(async (req) => {
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error: unknown) {
     console.error("Error creating PIX payment:", error);
