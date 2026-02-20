@@ -33,11 +33,9 @@ function gerarPixCopiaECola(params: {
   valor: number;
   txid?: string;
 }) {
-  const chave = (params.chave || "").trim(); // importantíssimo
+  const chave = (params.chave || "").trim();
   const nome = (params.nome || "").trim();
   const cidade = (params.cidade || "").trim();
-
-  // TXID: alguns bancos preferem simples
   const txid = (params.txid || "***").trim().slice(0, 25) || "***";
 
   const merchantAccountInfo = [
@@ -54,7 +52,7 @@ function gerarPixCopiaECola(params: {
     formatField("58", "BR"),
     formatField("59", nome.slice(0, 25)),
     formatField("60", cidade.slice(0, 15)),
-    formatField("62", formatField("05", txid)), // TXID
+    formatField("62", formatField("05", txid)),
     "6304",
   ].join("");
 
@@ -95,17 +93,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ======= SUA CHAVE PIX (EMAIL) =======
+    // ======= CHAVE PIX ATUALIZADA =======
     const PIX_KEY = "470e1c06-a98c-4fd9-ad77-e221114722bc";
-    const PIX_NAME = "PONTO DAS UTILIDADES"; // troque se quiser
-    const PIX_CITY = "SAOPAULO"; // troque se quiser
+    const PIX_NAME = "PONTO DAS UTILIDADES";
+    const PIX_CITY = "SAOPAULO";
 
     const pixCode = gerarPixCopiaECola({
       chave: PIX_KEY,
       nome: PIX_NAME,
       cidade: PIX_CITY,
       valor: Number(order.total || 0),
-      txid: String(orderId), // ou "***"
+      txid: String(orderId),
     });
 
     // Salvar no pedido
