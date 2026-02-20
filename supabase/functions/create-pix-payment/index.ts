@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     // ======= SUA CHAVE PIX (EMAIL) =======
     const PIX_KEY = "tradop2p@gmail.com";
     const PIX_NAME = "PONTO DAS UTILIDADES"; // troque se quiser
-    const PIX_CITY = "GOIANIA"; // troque se quiser
+    const PIX_CITY = "SAOPAULO"; // troque se quiser
 
     const pixCode = gerarPixCopiaECola({
       chave: PIX_KEY,
