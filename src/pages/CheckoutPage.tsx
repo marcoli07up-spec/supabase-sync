@@ -361,7 +361,7 @@ export default function CheckoutPage() {
           `Gostaria de finalizar minha compra via PIX!`
         );
 
-        const phone = '5511972238165';
+        const phone = '554431011011';
         window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
         
         clearCart();
