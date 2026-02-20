@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
     }
 
     // ======= SUA CHAVE PIX (EMAIL) =======
-    const PIX_KEY = "tradop2p@gmail.com";
+    const PIX_KEY = "470e1c06-a98c-4fd9-ad77-e221114722bc";
     const PIX_NAME = "PONTO DAS UTILIDADES"; // troque se quiser
     const PIX_CITY = "SAOPAULO"; // troque se quiser
 
