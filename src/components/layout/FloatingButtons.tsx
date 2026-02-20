@@ -30,7 +30,7 @@ export function FloatingButtons() {
 
   const sendToWhatsApp = () => {
     const text = message.trim() || 'Olá! Gostaria de mais informações.';
-    window.open(`https://wa.me/5511972238165?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/554431011011?text=${encodeURIComponent(text)}`, '_blank');
     setMessage('');
     setChatOpen(false);
   };
