@@ -165,9 +165,7 @@ export default function ProductPage() {
                         -{discount}%
                       </Badge>
                     )}
-                    <Badge variant="secondary" className="bg-primary text-primary-foreground text-[10px] sm:text-sm font-medium px-2 py-0.5">
-                      Seminovo
-                    </Badge>
+                    
                   </div>
                 )}
 
