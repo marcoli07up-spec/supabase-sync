@@ -82,12 +82,11 @@ export default function CheckoutPage() {
   const [isProcessingPix, setIsProcessingPix] = useState(false);
   const [shippingOption, setShippingOption] = useState<'free' | 'express'>('free');
 
-  const isHighValueOrder = getTotal() >= 2500;
   const shippingCost = 19.90;
   const subtotal = getTotal();
   const totalWithShipping = shippingOption === 'express' ? subtotal + shippingCost : subtotal;
   const pixDiscount = 5;
-  const total = paymentMethod === 'pix' ? getTotalWithDiscount(pixDiscount) : totalWithShipping;
+  const total = paymentMethod === 'pix' ? getTotalWithDiscount(pixDiscount, shippingOption === 'express' ? shippingCost : 0) : totalWithShipping;
 
   const {
     register,
@@ -307,7 +306,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      if (data.payment_method === 'pix' && isHighValueOrder) {
+      if (data.payment_method === 'pix' && getTotal() >= 2500) {
         const orderResult = await createOrder.mutateAsync({
           formData: data,
           cartItems: items,
@@ -551,9 +550,9 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between items-end">
               <p className="text-2xl font-black text-primary leading-none">
-                {formatCurrency(getTotalWithDiscount(5))}
+                {formatCurrency(getTotalWithDiscount(5, shippingOption === 'express' ? shippingCost : 0))}
               </p>
-              <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency(subtotal * 0.05)}</p>
+              <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency((subtotal + (shippingOption === 'express' ? shippingCost : 0)) * 0.05)}</p>
             </div>
           </div>
         )}
@@ -562,7 +561,7 @@ export default function CheckoutPage() {
           <span className="font-bold text-sm text-muted-foreground">Total</span>
           <span className="font-bold text-lg">
             {paymentMethod === 'pix' 
-              ? formatCurrency(getTotalWithDiscount(5)) 
+              ? formatCurrency(getTotalWithDiscount(5, shippingOption === 'express' ? shippingCost : 0)) 
               : formatCurrency(totalWithShipping)}
           </span>
         </div>
@@ -809,8 +808,8 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-primary text-lg">{formatCurrency(getTotalWithDiscount(5))}</p>
-                        <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency(subtotal * 0.05)}</p>
+                        <p className="font-bold text-primary text-lg">{formatCurrency(getTotalWithDiscount(5, shippingOption === 'express' ? shippingCost : 0))}</p>
+                        <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency((subtotal + (shippingOption === 'express' ? shippingCost : 0)) * 0.05)}</p>
                       </div>
                     </label>
 
@@ -832,12 +831,10 @@ export default function CheckoutPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-lg">
-                          {shippingOption === 'free' 
-                            ? formatCurrency(subtotal) 
-                            : formatCurrency(totalWithShipping)}
+                          {formatCurrency(totalWithShipping)}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                          12x de {formatCurrency((shippingOption === 'free' ? subtotal : totalWithShipping) / 12)}
+                          12x de {formatCurrency(totalWithShipping / 12)}
                         </p>
                       </div>
                     </label>
