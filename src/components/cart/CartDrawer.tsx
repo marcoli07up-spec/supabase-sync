@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingBag, Zap, Truck } from 'lucide-react';
+import { ArrowRight, ShoppingBag, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -24,8 +24,6 @@ export function CartDrawer() {
   const pixDiscount = 5;
   const totalWithPixDiscount = getTotalWithDiscount(pixDiscount);
   const subtotal = getTotal();
-  const shippingCost = 19.90;
-  const totalWithShipping = subtotal + shippingCost;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -62,35 +60,6 @@ export function CartDrawer() {
               {items.map((item) => (
                 <CartItem key={item.product.id} item={item} />
               ))}
-            </div>
-
-            {/* Shipping Options */}
-            <div className="border-t border-border py-4">
-              <h3 className="font-semibold text-sm mb-3">Opções de Frete</h3>
-              
-              {/* Free Shipping */}
-              <div className="flex items-center justify-between p-3 bg-success/10 border border-success/20 rounded-lg mb-2">
-                <div className="flex items-center gap-3">
-                  <Truck className="h-5 w-5 text-success shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">Frete Grátis</p>
-                    <p className="text-xs text-muted-foreground">Entrega em até 14 dias úteis</p>
-                  </div>
-                </div>
-                <span className="text-sm font-bold text-success">Grátis</span>
-              </div>
-              
-              {/* Express Shipping */}
-              <div className="flex items-center justify-between p-3 border border-border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Truck className="h-5 w-5 text-primary shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">Frete Expresso Jadlog</p>
-                    <p className="text-xs text-muted-foreground">Entrega em 4 a 7 dias úteis</p>
-                  </div>
-                </div>
-                <span className="text-sm font-bold">{formatCurrency(shippingCost)}</span>
-              </div>
             </div>
 
             {/* Totals and checkout */}

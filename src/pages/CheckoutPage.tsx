@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, ArrowRight, CreditCard, QrCode, Lock, Loader2, ShoppingBag, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard, QrCode, Lock, Loader2, ShoppingBag, Zap, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -80,8 +80,14 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [isProcessingCard, setIsProcessingCard] = useState(false);
   const [isProcessingPix, setIsProcessingPix] = useState(false);
+  const [shippingOption, setShippingOption] = useState<'free' | 'express'>('free');
 
   const isHighValueOrder = getTotal() >= 2500;
+  const shippingCost = 19.90;
+  const subtotal = getTotal();
+  const totalWithShipping = shippingOption === 'express' ? subtotal + shippingCost : subtotal;
+  const pixDiscount = 5;
+  const total = paymentMethod === 'pix' ? getTotalWithDiscount(pixDiscount) : totalWithShipping;
 
   const {
     register,
@@ -98,9 +104,6 @@ export default function CheckoutPage() {
       customer_complement: '',
     },
   });
-
-  const pixDiscount = 5;
-  const total = paymentMethod === 'pix' ? getTotalWithDiscount(pixDiscount) : getTotal();
 
   const abandonedCartIdRef = useRef<string | null>(null);
   const hasReachedPaymentRef = useRef(false);
@@ -474,32 +477,94 @@ export default function CheckoutPage() {
         ))}
       </div>
 
+      {/* Shipping Options */}
+      <div className="border-t border-border pt-4 mb-4">
+        <h3 className="font-semibold text-sm mb-3">Opções de Frete</h3>
+        
+        <RadioGroup
+          value={shippingOption}
+          onValueChange={(value) => setShippingOption(value as 'free' | 'express')}
+          className="space-y-3"
+        >
+          <label
+            htmlFor="free"
+            className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
+              shippingOption === 'free' ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <RadioGroupItem value="free" id="free" />
+              <div className="flex items-center gap-2">
+                <Truck className="h-5 w-5 text-success" />
+                <div>
+                  <p className="font-medium text-sm">Frete Grátis</p>
+                  <p className="text-xs text-muted-foreground">Entrega em até 14 dias úteis</p>
+                </div>
+              </div>
+            </div>
+            <span className="text-sm font-bold text-success">Grátis</span>
+          </label>
+
+          <label
+            htmlFor="express"
+            className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
+              shippingOption === 'express' ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <RadioGroupItem value="express" id="express" />
+              <div className="flex items-center gap-2">
+                <Truck className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-medium text-sm">Frete Expresso Jadlog</p>
+                  <p className="text-xs text-muted-foreground">Entrega em 4 a 7 dias úteis</p>
+                </div>
+              </div>
+            </div>
+            <span className="text-sm font-bold">{formatCurrency(shippingCost)}</span>
+          </label>
+        </RadioGroup>
+      </div>
+
       <div className="space-y-4 pt-4 border-t border-border">
         <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Subtotal</span>
+          <span>{formatCurrency(subtotal)}</span>
+        </div>
+        
+        <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Frete</span>
-          <span className="text-success font-bold">GRÁTIS</span>
+          <span className={shippingOption === 'free' ? 'text-success font-bold' : ''}>
+            {shippingOption === 'free' ? 'Grátis' : formatCurrency(shippingCost)}
+          </span>
         </div>
         
         {/* PIX Highlighted Discount */}
-        <div className="bg-primary/10 p-4 rounded-xl border border-primary/20">
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-primary fill-current" />
-              <span className="text-xs font-bold text-primary uppercase tracking-wider">Total no PIX</span>
+        {paymentMethod === 'pix' && (
+          <div className="bg-primary/10 p-4 rounded-xl border border-primary/20">
+            <div className="flex justify-between items-center mb-1">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-primary fill-current" />
+                <span className="text-xs font-bold text-primary uppercase tracking-wider">Total no PIX</span>
+              </div>
+              <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full font-bold">5% OFF</span>
             </div>
-            <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full font-bold">5% OFF</span>
+            <div className="flex justify-between items-end">
+              <p className="text-2xl font-black text-primary leading-none">
+                {formatCurrency(getTotalWithDiscount(5))}
+              </p>
+              <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency(subtotal * 0.05)}</p>
+            </div>
           </div>
-          <div className="flex justify-between items-end">
-            <p className="text-2xl font-black text-primary leading-none">
-              {formatCurrency(getTotalWithDiscount(5))}
-            </p>
-            <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency(getTotal() * 0.05)}</p>
-          </div>
-        </div>
+        )}
 
         <div className="flex justify-between items-center pt-2">
           <span className="font-bold text-sm text-muted-foreground">Total</span>
-          <span className="font-bold text-lg">{formatCurrency(getTotal())}</span>
+          <span className="font-bold text-lg">
+            {paymentMethod === 'pix' 
+              ? formatCurrency(getTotalWithDiscount(5)) 
+              : formatCurrency(totalWithShipping)}
+          </span>
         </div>
       </div>
     </div>
@@ -745,7 +810,7 @@ export default function CheckoutPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-primary text-lg">{formatCurrency(getTotalWithDiscount(5))}</p>
-                        <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency(getTotal() * 0.05)}</p>
+                        <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency(subtotal * 0.05)}</p>
                       </div>
                     </label>
 
@@ -766,8 +831,14 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-lg">{formatCurrency(getTotal())}</p>
-                        <p className="text-[10px] text-muted-foreground">12x de {formatCurrency(getTotal() / 12)}</p>
+                        <p className="font-bold text-lg">
+                          {shippingOption === 'free' 
+                            ? formatCurrency(subtotal) 
+                            : formatCurrency(totalWithShipping)}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          12x de {formatCurrency((shippingOption === 'free' ? subtotal : totalWithShipping) / 12)}
+                        </p>
                       </div>
                     </label>
                   </RadioGroup>
