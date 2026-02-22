@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Eye } from 'lucide-react';
+import { ShoppingCart, Eye, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/types';
 import { formatCurrency, formatInstallments, getDiscountPercentage } from '@/lib/format';
@@ -12,6 +12,7 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
   const discount = getDiscountPercentage(product.original_price || 0, product.price);
+  const pixPrice = product.price * 0.95;
 
   return (
     <div className="card-product group flex flex-col h-full">
@@ -80,20 +81,36 @@ export function ProductCard({ product }: ProductCardProps) {
         </Link>
 
         {/* Prices */}
-        <div className="mb-3">
+        <div className="mb-3 space-y-0.5">
           {product.original_price && product.original_price > product.price && (
-            <p className="price-original text-xs">{formatCurrency(product.original_price)}</p>
+            <p className="price-original text-[10px] sm:text-xs">{formatCurrency(product.original_price)}</p>
           )}
-          <p className="price-current text-base sm:text-xl">{formatCurrency(product.price)}</p>
-          <p className="price-installment text-[10px] sm:text-sm">ou {formatInstallments(product.price)}</p>
-          <p className="text-[10px] sm:text-xs text-primary font-medium mt-1">FRETE GRÁTIS</p>
+          
+          {/* PIX Price Highlight */}
+          <div className="flex items-center gap-1.5">
+            <p className="text-primary font-black text-lg sm:text-2xl leading-none">
+              {formatCurrency(pixPrice)}
+            </p>
+            <div className="flex items-center gap-0.5 bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">
+              <Zap className="h-2.5 w-2.5 fill-current" />
+              PIX
+            </div>
+          </div>
+
+          <p className="text-muted-foreground text-[10px] sm:text-xs">
+            ou {formatCurrency(product.price)} no cartão
+          </p>
+          <p className="price-installment text-[9px] sm:text-[11px]">
+            em até 12x de {formatCurrency(product.price / 12)}
+          </p>
+          <p className="text-[10px] sm:text-xs text-success font-bold mt-1">FRETE GRÁTIS</p>
         </div>
 
         {/* Add to cart */}
         <Button
           onClick={() => addItem(product)}
           disabled={(product.stock ?? 0) <= 0}
-          className="w-full text-xs sm:text-sm"
+          className="w-full text-xs sm:text-sm font-bold"
           size="sm"
         >
           <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
