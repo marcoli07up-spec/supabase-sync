@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, ArrowRight, CreditCard, QrCode, Lock, Loader2, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard, QrCode, Lock, Loader2, ShoppingBag, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,7 +50,6 @@ const paymentSchema = z.object({
 
 const fullSchema = personalInfoSchema.merge(addressSchema).merge(paymentSchema);
 
-// CEP lookup function
 async function fetchAddressFromCEP(cep: string) {
   const cleanCep = cep.replace(/\D/g, '');
   if (cleanCep.length !== 8) return null;
@@ -82,7 +81,6 @@ export default function CheckoutPage() {
   const [isProcessingCard, setIsProcessingCard] = useState(false);
   const [isProcessingPix, setIsProcessingPix] = useState(false);
 
-  // Check if order is above R$2500 for WhatsApp redirect (PodPay handles up to R$2499.99)
   const isHighValueOrder = getTotal() >= 2500;
 
   const {
@@ -104,11 +102,9 @@ export default function CheckoutPage() {
   const pixDiscount = 5;
   const total = paymentMethod === 'pix' ? getTotalWithDiscount(pixDiscount) : getTotal();
 
-  // Track if abandoned cart was already saved
   const abandonedCartIdRef = useRef<string | null>(null);
   const hasReachedPaymentRef = useRef(false);
 
-  // Function to save abandoned cart
   const saveAbandonedCart = useCallback(async () => {
     if (items.length === 0 || hasReachedPaymentRef.current) return;
 
@@ -140,13 +136,11 @@ export default function CheckoutPage() {
 
     try {
       if (abandonedCartIdRef.current) {
-        // Update existing
         await supabase
           .from('abandoned_carts')
           .update(cartData)
           .eq('id', abandonedCartIdRef.current);
       } else {
-        // Create new
         const { data } = await supabase
           .from('abandoned_carts')
           .insert(cartData)
@@ -162,7 +156,6 @@ export default function CheckoutPage() {
     }
   }, [items, currentStep, watch, getTotal]);
 
-  // Delete abandoned cart when order is completed
   const deleteAbandonedCart = async () => {
     if (abandonedCartIdRef.current) {
       await supabase
@@ -173,12 +166,10 @@ export default function CheckoutPage() {
     }
   };
 
-  // Scroll to top on step change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [currentStep]);
 
-  // Track InitiateCheckout when component mounts
   useEffect(() => {
     if (items.length > 0) {
       trackInitiateCheckout({
@@ -189,16 +180,14 @@ export default function CheckoutPage() {
         currency: 'BRL',
       });
     }
-  }, []); // Only run once on mount
+  }, []);
 
-  // Save abandoned cart when reaching step 2 (address page)
   useEffect(() => {
     if (currentStep === 2) {
       saveAbandonedCart();
     }
   }, [currentStep, saveAbandonedCart]);
 
-  // Mark as reached payment step (step 3) and track AddPaymentInfo
   useEffect(() => {
     if (currentStep === 3) {
       hasReachedPaymentRef.current = true;
@@ -211,11 +200,9 @@ export default function CheckoutPage() {
     }
   }, [currentStep]);
 
-  // Handle input masking
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhone(e.target.value);
     setValue('customer_phone', formatted);
-    // Save abandoned cart when phone is filled
     if (formatted.length >= 14) {
       saveAbandonedCart();
     }
@@ -237,7 +224,6 @@ export default function CheckoutPage() {
     const formatted = formatCEP(e.target.value);
     setValue('customer_cep', formatted);
     
-    // Auto-fill address when CEP is complete
     if (formatted.length === 9) {
       const addressData = await fetchAddressFromCEP(formatted);
       if (addressData) {
@@ -302,50 +288,33 @@ export default function CheckoutPage() {
         currency: 'BRL',
       };
 
-      // For credit card, show processing animation for 5 seconds
       if (data.payment_method === 'credit_card') {
         setIsProcessingCard(true);
-        
-        // Wait 5 seconds while showing processing animation
         await new Promise(resolve => setTimeout(resolve, 5000));
-        
         const orderResult = await createOrder.mutateAsync({
           formData: data,
           cartItems: items,
           total,
         });
-        
-        // Track Purchase
         trackPurchase(purchaseData);
-        
-        // Delete abandoned cart since order was completed
         await deleteAbandonedCart();
-        
         setIsProcessingCard(false);
         clearCart();
         navigate(`/pedido?id=${orderResult?.id}`);
         return;
       }
 
-      // For PIX with high value order, redirect to WhatsApp AND status page
       if (data.payment_method === 'pix' && isHighValueOrder) {
         const orderResult = await createOrder.mutateAsync({
           formData: data,
           cartItems: items,
           total,
         });
-
-        // Track Purchase
         trackPurchase(purchaseData);
-
-        // Delete abandoned cart since order was completed
         await deleteAbandonedCart();
-
-        // Build WhatsApp message with order summary
         const orderSummary = items.map(item => 
           `• ${item.product.name} (x${item.quantity}) - ${formatCurrency(item.product.price * item.quantity)}`
         ).join('\n');
-
         const message = encodeURIComponent(
           `🛒 *PEDIDO - iCamStore*\n\n` +
           `*Cliente:* ${data.customer_name}\n` +
@@ -360,32 +329,22 @@ export default function CheckoutPage() {
           `*Total:* ${formatCurrency(total)} (PIX com 5% de desconto)\n\n` +
           `Gostaria de finalizar minha compra via PIX!`
         );
-
         const phone = '554431011011';
         window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-        
         clearCart();
         toast.success('Pedido realizado! Aguarde o WhatsApp.');
         navigate(`/pedido?id=${orderResult?.id}`);
         return;
       }
 
-      // PodPay flow for PIX ≤ R$2499.99
       setIsProcessingPix(true);
-      
       const orderResult = await createOrder.mutateAsync({
         formData: data,
         cartItems: items,
         total,
       });
-
-      // Track Purchase
       trackPurchase(purchaseData);
-
-      // Delete abandoned cart since order was completed
       await deleteAbandonedCart();
-
-      // Create PodPay PIX payment
       try {
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-pix-payment`,
@@ -398,7 +357,6 @@ export default function CheckoutPage() {
             body: JSON.stringify({ orderId: orderResult?.id }),
           }
         );
-
         if (!response.ok) {
           const errData = await response.json();
           console.error('PodPay error:', errData);
@@ -407,8 +365,6 @@ export default function CheckoutPage() {
       } catch (pixError) {
         console.error('Failed to create PodPay PIX:', pixError);
       }
-
-      // Clear cart and redirect to order status page
       clearCart();
       setIsProcessingPix(false);
       navigate(`/pedido?id=${orderResult?.id}`);
@@ -418,7 +374,6 @@ export default function CheckoutPage() {
     }
   };
 
-  // Card processing screen (5 seconds)
   if (isProcessingCard) {
     return (
       <Layout>
@@ -448,7 +403,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // PIX processing screen
   if (isProcessingPix) {
     return (
       <Layout>
@@ -477,8 +431,6 @@ export default function CheckoutPage() {
       </Layout>
     );
   }
-
-
 
   if (items.length === 0) {
     return (
@@ -515,14 +467,11 @@ export default function CheckoutPage() {
       <div className="container-custom py-4 sm:py-6 md:py-8 px-3 sm:px-4">
         <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-center">Finalizar Compra</h1>
 
-        {/* Steps indicator */}
         <CheckoutSteps currentStep={currentStep} />
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-          {/* Checkout form */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit(onSubmit)}>
-              {/* Step 1: Personal info + Upsell + Order Summary */}
               {currentStep === 1 && (
                 <div className="space-y-4 md:space-y-6">
                   <div className="bg-card p-4 md:p-6 rounded-xl border border-border">
@@ -593,13 +542,11 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Upsell */}
                   <CheckoutUpsell 
                     cartProductIds={cartProductIds} 
                     onAddProduct={handleAddUpsellProduct} 
                   />
 
-                  {/* Order summary in step 1 */}
                   <div className="bg-card p-4 md:p-6 rounded-xl border border-border">
                     <h2 className="font-semibold mb-4 text-lg">Resumo do Pedido</h2>
                     <div className="space-y-3">
@@ -627,7 +574,6 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {/* Step 2: Address */}
               {currentStep === 2 && (
                 <div className="space-y-4 md:space-y-6">
                   <div className="bg-card p-4 md:p-6 rounded-xl border border-border">
@@ -730,7 +676,6 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {/* Step 3: Payment - Mobile optimized with reduced padding */}
               {currentStep === 3 && (
                 <div className="space-y-4">
                   <div className="bg-card p-3 sm:p-4 md:p-6 rounded-xl border border-border">
@@ -746,41 +691,52 @@ export default function CheckoutPage() {
                     >
                       <label
                         htmlFor="pix"
-                        className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          paymentMethod === 'pix' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                        className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                          paymentMethod === 'pix' ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10' : 'border-border hover:border-primary/50'
                         }`}
                       >
-                        <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="flex items-center gap-3">
                           <RadioGroupItem value="pix" id="pix" />
-                          <QrCode className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                          <div className="bg-primary/20 p-2 rounded-lg">
+                            <Zap className="h-6 w-6 text-primary fill-current" />
+                          </div>
                           <div>
-                            <p className="font-medium text-sm sm:text-base">PIX</p>
-                            <p className="text-xs sm:text-sm text-muted-foreground">Pagamento instantâneo</p>
+                            <p className="font-bold text-base sm:text-lg flex items-center gap-2">
+                              PIX
+                              <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full uppercase tracking-tighter">Recomendado</span>
+                            </p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">Aprovação imediata e 5% de desconto</p>
                           </div>
                         </div>
-                        <span className="bg-primary text-primary-foreground font-bold text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">
-                          5% OFF
-                        </span>
+                        <div className="text-right">
+                          <p className="font-bold text-primary text-lg">{formatCurrency(getTotalWithDiscount(5))}</p>
+                          <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency(getTotal() * 0.05)}</p>
+                        </div>
                       </label>
 
                       <label
                         htmlFor="credit_card"
-                        className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
                           paymentMethod === 'credit_card' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                         }`}
                       >
-                        <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="flex items-center gap-3">
                           <RadioGroupItem value="credit_card" id="credit_card" />
-                          <CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />
-                          <div>
-                            <p className="font-medium text-sm sm:text-base">Cartão de Crédito</p>
-                            <p className="text-xs sm:text-sm text-muted-foreground">Em até 12x</p>
+                          <div className="bg-muted p-2 rounded-lg">
+                            <CreditCard className="h-6 w-6" />
                           </div>
+                          <div>
+                            <p className="font-bold text-base sm:text-lg">Cartão de Crédito</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">Em até 12x sem juros</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-lg">{formatCurrency(getTotal())}</p>
+                          <p className="text-[10px] text-muted-foreground">12x de {formatCurrency(getTotal() / 12)}</p>
                         </div>
                       </label>
                     </RadioGroup>
 
-                    {/* Credit card fields */}
                     {paymentMethod === 'credit_card' && (
                       <div className="mt-6 pt-6 border-t border-border grid gap-4">
                         <div>
@@ -846,7 +802,7 @@ export default function CheckoutPage() {
                     <Button
                       type="submit"
                       size="lg"
-                      className="flex-1 h-12"
+                      className="flex-1 h-12 font-bold"
                       disabled={createOrder.isPending}
                     >
                       {createOrder.isPending ? (
@@ -857,7 +813,7 @@ export default function CheckoutPage() {
                       ) : (
                         <>
                           <Lock className="h-4 w-4 mr-2" />
-                          Finalizar - {formatCurrency(total)}
+                          Finalizar Pedido
                         </>
                       )}
                     </Button>
@@ -867,38 +823,48 @@ export default function CheckoutPage() {
             </form>
           </div>
 
-          {/* Order summary sidebar - hidden on mobile for steps 1 */}
           <div className="lg:col-span-1 hidden lg:block">
             <div className="bg-card p-6 rounded-xl border border-border sticky top-24">
-              <h2 className="font-semibold mb-4">Resumo</h2>
+              <h2 className="font-bold text-lg mb-6 flex items-center gap-2">
+                <ShoppingBag className="h-5 w-5 text-primary" />
+                Resumo do Pedido
+              </h2>
               
-              <div className="space-y-2 text-sm mb-4">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Itens ({items.reduce((sum, i) => sum + i.quantity, 0)})</span>
+              <div className="space-y-4 mb-6">
+                {items.map((item) => (
+                  <div key={item.product.id} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground line-clamp-1 flex-1 pr-4">
+                      {item.quantity}x {item.product.name}
+                    </span>
+                    <span className="font-medium shrink-0">{formatCurrency(item.product.price * item.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-2 pt-4 border-t border-border">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(getTotal())}</span>
                 </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Frete</span>
+                  <span className="text-success font-bold">GRÁTIS</span>
+                </div>
                 {paymentMethod === 'pix' && (
-                  <div className="flex justify-between text-success">
+                  <div className="flex justify-between text-sm text-success font-bold">
                     <span>Desconto PIX (5%)</span>
                     <span>-{formatCurrency(getTotal() * 0.05)}</span>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Frete</span>
-                  <span className="text-success">Grátis</span>
+                <div className="flex justify-between items-center pt-4 mt-2 border-t border-border">
+                  <span className="font-bold text-lg">Total</span>
+                  <span className="text-2xl font-black text-primary">{formatCurrency(total)}</span>
                 </div>
               </div>
 
-              <hr className="border-border my-4" />
-
-              <div className="flex justify-between font-bold text-lg mb-4">
-                <span>Total</span>
-                <span className="text-primary">{formatCurrency(total)}</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary p-3 rounded-lg">
-                <Lock className="h-4 w-4 shrink-0" />
-                <span>Pagamento 100% seguro e criptografado</span>
+              <div className="mt-6 flex items-center gap-2 text-[10px] text-muted-foreground bg-secondary/50 p-3 rounded-lg">
+                <Lock className="h-4 w-4 shrink-0 text-success" />
+                <span>Ambiente 100% seguro e criptografado. Seus dados estão protegidos.</span>
               </div>
             </div>
           </div>
