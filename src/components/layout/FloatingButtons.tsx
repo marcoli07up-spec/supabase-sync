@@ -7,7 +7,7 @@ import { useLocation } from 'react-router-dom';
 import { formatCurrency } from '@/lib/format';
 
 export function FloatingButtons() {
-  const { getItemCount, setIsOpen, isAnimating, getTotal, getTotalWithDiscount } = useCart();
+  const { getItemCount, setIsOpen, isAnimating } = useCart();
   const itemCount = getItemCount();
   const location = useLocation();
   const [chatOpen, setChatOpen] = useState(false);
@@ -42,10 +42,6 @@ export function FloatingButtons() {
   const handleCartClick = () => {
     setIsOpen(true);
   };
-
-  const pixDiscount = 5;
-  const totalCard = getTotal();
-  const totalWithPix = getTotalWithDiscount(pixDiscount);
 
   return (
     <div className={cn("fixed left-4 right-4 z-50 flex justify-between items-end pointer-events-none", isProductPage ? "bottom-[76px]" : "bottom-4")}>
@@ -135,13 +131,7 @@ export function FloatingButtons() {
             <span className="text-[10px] font-medium opacity-80 uppercase tracking-wider">
               {itemCount} {itemCount === 1 ? 'item' : 'itens'}
             </span>
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-sm">{formatCurrency(totalCard)}</span>
-              <div className="flex items-center gap-0.5 bg-primary-foreground/20 px-1.5 py-0.5 rounded text-[9px] font-bold">
-                <Zap className="h-2.5 w-2.5 fill-current" />
-                {formatCurrency(totalWithPix)}
-              </div>
-            </div>
+            <span className="font-bold text-sm">Ver carrinho</span>
           </div>
         </Button>
       )}
