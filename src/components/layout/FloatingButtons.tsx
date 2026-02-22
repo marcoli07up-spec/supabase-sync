@@ -44,6 +44,7 @@ export function FloatingButtons() {
   };
 
   const pixDiscount = 5;
+  const totalCard = getTotal();
   const totalWithPix = getTotalWithDiscount(pixDiscount);
 
   return (
@@ -135,10 +136,10 @@ export function FloatingButtons() {
               {itemCount} {itemCount === 1 ? 'item' : 'itens'}
             </span>
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-sm">{formatCurrency(totalWithPix)}</span>
+              <span className="font-bold text-sm">{formatCurrency(totalCard)}</span>
               <div className="flex items-center gap-0.5 bg-primary-foreground/20 px-1.5 py-0.5 rounded text-[9px] font-bold">
                 <Zap className="h-2.5 w-2.5 fill-current" />
-                PIX
+                {formatCurrency(totalWithPix)}
               </div>
             </div>
           </div>
