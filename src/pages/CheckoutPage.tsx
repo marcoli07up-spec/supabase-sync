@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, ArrowRight, CreditCard, QrCode, Lock, Loader2, ShoppingBag, Zap, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard, QrCode, Lock, Loader2, ShoppingBag, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -474,18 +474,14 @@ export default function CheckoutPage() {
         ))}
       </div>
 
-      <div className="space-y-2 pt-4 border-t border-border">
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatCurrency(getTotal())}</span>
-        </div>
+      <div className="space-y-4 pt-4 border-t border-border">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Frete</span>
           <span className="text-success font-bold">GRÁTIS</span>
         </div>
         
         {/* PIX Highlighted Discount */}
-        <div className="bg-primary/10 p-4 rounded-xl mt-4 border border-primary/20">
+        <div className="bg-primary/10 p-4 rounded-xl border border-primary/20">
           <div className="flex justify-between items-center mb-1">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary fill-current" />
@@ -501,8 +497,8 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center pt-4 mt-2 border-t border-border">
-          <span className="font-bold text-sm text-muted-foreground">Total no Cartão</span>
+        <div className="flex justify-between items-center pt-2">
+          <span className="font-bold text-sm text-muted-foreground">Total</span>
           <span className="font-bold text-lg">{formatCurrency(getTotal())}</span>
         </div>
       </div>
