@@ -68,7 +68,7 @@ export default function TermsPage() {
           <h2>9. Contato</h2>
           <p>
             Para dúvidas sobre estes termos, entre em contato através do email: 
-            contato@icamstore.com.br
+            contato@camerasprime.com.br
           </p>
         </div>
       </div>
