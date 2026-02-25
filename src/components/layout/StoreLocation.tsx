@@ -27,7 +27,7 @@ export function StoreLocation() {
               <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border">
                 <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">iCamStore</p>
+                  <p className="font-medium">Câmeras Prime</p>
                    <p className="text-sm text-muted-foreground">
                      Av. Brasil, 284 - Zona 05<br />
                      Maringá - PR, 87050-465

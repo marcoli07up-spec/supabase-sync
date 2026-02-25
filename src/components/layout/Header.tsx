@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, Search, ChevronDown, X } from 'lucide-react';
+import { Menu, Search, ChevronDown, X, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useCategories } from '@/hooks/useCategories';
 import { useSearchProducts } from '@/hooks/useProducts';
-import logoImg from '@/assets/logo.png';
+import { useCart } from '@/contexts/CartContext';
 import { formatCurrency } from '@/lib/format';
 
 export function Header() {
@@ -18,6 +18,8 @@ export function Header() {
   const { data: suggestions } = useSearchProducts(searchTerm);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { getItemCount, setIsOpen } = useCart();
+  const itemCount = getItemCount();
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -87,8 +89,8 @@ export function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img 
-              src={logoImg} 
-              alt="iCamStore" 
+              src="https://i.ibb.co/CpmLv0N9/490471327-1074848954471870-8936448961432822653-n-Editado.png" 
+              alt="Câmeras Prime" 
               className="h-8 sm:h-12"
             />
           </Link>
@@ -168,6 +170,20 @@ export function Header() {
             {/* Mobile search toggle */}
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsSearchOpen(!isSearchOpen)}>
               <Search className="h-5 w-5" />
+            </Button>
+            {/* Cart button - desktop */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="hidden md:flex relative"
+              onClick={() => setIsOpen(true)}
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
             </Button>
           </div>
         </div>

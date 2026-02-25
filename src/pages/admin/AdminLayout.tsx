@@ -48,7 +48,7 @@ export default function AdminLayout() {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <span className="ml-3 font-bold">iCamStore Admin</span>
+        <span className="ml-3 font-bold">Câmeras Prime Admin</span>
       </header>
 
       {/* Mobile sidebar overlay */}
@@ -67,7 +67,7 @@ export default function AdminLayout() {
       )}>
         <div className="p-4 border-b border-border flex items-center justify-between">
           <Link to="/admin" className="font-bold text-lg">
-            iCamStore Admin
+            Câmeras Prime Admin
           </Link>
           <Button
             variant="ghost"

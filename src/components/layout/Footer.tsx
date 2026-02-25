@@ -9,7 +9,7 @@ export function Footer() {
           {/* About */}
           <div>
             <div className="mb-4">
-              <img src={logoImg} alt="iCamStore" className="h-10" />
+              <img src="https://i.ibb.co/CpmLv0N9/490471327-1074848954471870-8936448961432822653-n-Editado.png" alt="Câmeras Prime" className="h-10" />
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Paixão por imagem e compromisso com confiança. Somos uma loja especializada em câmeras e equipamentos fotográficos seminovos.
@@ -116,7 +116,7 @@ export function Footer() {
       <div className="border-t border-border">
         <div className="container-custom py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-            <p>© 2024 iCamStore. Todos os direitos reservados.</p>
+            <p>© 2024 Câmeras Prime. Todos os direitos reservados.</p>
             <div className="flex items-center gap-4">
               <span>Pagamento seguro</span>
               <div className="flex gap-2">

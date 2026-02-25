@@ -24,7 +24,7 @@ export default function PrivacyPage() {
           <h2>2. Como Usamos suas Informações</h2>
           <p>Utilizamos suas informações para:</p>
           <ul>
-            <li>Processar e entregar seus pedidos</li>
+            <li>Processar e entregar seus pedidos na Câmeras Prime</li>
             <li>Enviar atualizações sobre seu pedido</li>
             <li>Responder suas dúvidas e solicitações</li>
             <li>Melhorar nossos produtos e serviços</li>
