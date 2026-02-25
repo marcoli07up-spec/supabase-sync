@@ -1,102 +1,52 @@
 import { useState, useEffect } from 'react';
-import { Copy, QrCode, Check, Settings, RefreshCw, Save } from 'lucide-react';
+import { Save, ShieldCheck, MessageCircle, CreditCard, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { QRCodeSVG } from 'qrcode.react';
-import { usePixSettings, useUpdatePixSettings, generatePixEMV } from '@/hooks/usePixSettings';
-
-// Generate unique order ID
-const generateOrderId = () => {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `PED${timestamp}${random}`;
-};
+import { usePixSettings, useUpdatePixSettings } from '@/hooks/usePixSettings';
 
 export default function AdminPix() {
   const { data: pixSettings, isLoading } = usePixSettings();
   const updateSettings = useUpdatePixSettings();
 
   const [pixKey, setPixKey] = useState('');
-  const [merchantName, setMerchantName] = useState('iCamStore');
-  const [merchantCity, setMerchantCity] = useState('SAO PAULO');
-  const [amount, setAmount] = useState('');
-  const [orderId, setOrderId] = useState('');
-  const [generatedCode, setGeneratedCode] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [merchantName, setMerchantName] = useState('');
+  const [merchantCity, setMerchantCity] = useState('');
+  const [whatsappThresholdEnabled, setWhatsappThresholdEnabled] = useState(true);
+  const [whatsappThresholdValue, setWhatsappThresholdValue] = useState(2500);
 
-  // Load saved settings
   useEffect(() => {
     if (pixSettings) {
-      if (pixSettings.pix_key) setPixKey(pixSettings.pix_key);
-      if (pixSettings.merchant_name) setMerchantName(pixSettings.merchant_name);
-      if (pixSettings.merchant_city) setMerchantCity(pixSettings.merchant_city);
+      setPixKey(pixSettings.pix_key || '');
+      setMerchantName(pixSettings.merchant_name || '');
+      setMerchantCity(pixSettings.merchant_city || '');
+      setWhatsappThresholdEnabled(pixSettings.whatsapp_threshold_enabled ?? true);
+      setWhatsappThresholdValue(pixSettings.whatsapp_threshold_value ?? 2500);
     }
   }, [pixSettings]);
 
-  // Auto-generate order ID on mount
-  useEffect(() => {
-    setOrderId(generateOrderId());
-  }, []);
+  const handleSave = async () => {
+    if (!pixKey.trim()) {
+      toast.error('A chave PIX é obrigatória');
+      return;
+    }
 
-  const regenerateOrderId = () => {
-    setOrderId(generateOrderId());
-    toast.success('Novo ID gerado!');
-  };
-
-  const saveSettings = async () => {
     try {
       await updateSettings.mutateAsync({
         pix_key: pixKey,
-        merchant_name: merchantName,
-        merchant_city: merchantCity,
+        merchant_name: merchantName || 'iCamStore',
+        merchant_city: merchantCity || 'SAO PAULO',
+        whatsapp_threshold_enabled: whatsappThresholdEnabled,
+        whatsapp_threshold_value: whatsappThresholdValue,
       });
-      toast.success('Configurações do PIX salvas!');
+      toast.success('Configurações de pagamento salvas com sucesso!');
     } catch (error) {
       toast.error('Erro ao salvar configurações');
       console.error(error);
     }
-  };
-
-  // Generate PIX code
-  const handleGeneratePixCode = () => {
-    if (!pixKey.trim()) {
-      toast.error('Informe a chave PIX');
-      return;
-    }
-
-    const code = generatePixEMV({
-      pixKey,
-      merchantName,
-      merchantCity,
-      amount: parseFloat(amount) || undefined,
-      txId: orderId,
-    });
-
-    setGeneratedCode(code);
-    toast.success('Código PIX gerado com sucesso!');
-  };
-
-  const copyCode = () => {
-    if (generatedCode) {
-      navigator.clipboard.writeText(generatedCode);
-      setCopied(true);
-      toast.success('Código PIX copiado!');
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const formatCurrency = (value: string) => {
-    const num = value.replace(/\D/g, '');
-    const formatted = (parseInt(num || '0') / 100).toFixed(2);
-    return formatted;
-  };
-
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCurrency(e.target.value);
-    setAmount(formatted);
   };
 
   if (isLoading) {
@@ -110,203 +60,127 @@ export default function AdminPix() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Gerador de PIX</h1>
+        <h1 className="text-2xl font-bold">Configurações de Pagamento</h1>
         <p className="text-muted-foreground">
-          Gere códigos PIX copia e cola para seus clientes
+          Gerencie como seus clientes pagam e como o suporte via WhatsApp é acionado.
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Configuration Card */}
+      <div className="grid gap-6 max-w-4xl">
+        {/* PIX Configuration */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Configuração do PIX
+              <CreditCard className="h-5 w-5 text-primary" />
+              Dados do Recebedor (PIX)
             </CardTitle>
+            <CardDescription>
+              Esses dados são usados para gerar o código PIX "Copia e Cola" no checkout.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* PIX Key */}
-            <div>
-              <Label htmlFor="pix-key">Chave PIX *</Label>
-              <Input
-                id="pix-key"
-                value={pixKey}
-                onChange={(e) => setPixKey(e.target.value)}
-                placeholder="Sua chave PIX (CPF, CNPJ, email, telefone ou aleatória)"
-                className="mt-1"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Digite a chave exatamente como cadastrada no banco
-              </p>
-            </div>
-
-            {/* Merchant Name */}
-            <div>
-              <Label htmlFor="merchant-name">Nome do Recebedor</Label>
-              <Input
-                id="merchant-name"
-                value={merchantName}
-                onChange={(e) => setMerchantName(e.target.value)}
-                placeholder="Nome que aparecerá no PIX"
-                className="mt-1"
-                maxLength={25}
-              />
-            </div>
-
-            {/* Merchant City */}
-            <div>
-              <Label htmlFor="merchant-city">Cidade</Label>
-              <Input
-                id="merchant-city"
-                value={merchantCity}
-                onChange={(e) => setMerchantCity(e.target.value)}
-                placeholder="Cidade do recebedor"
-                className="mt-1"
-                maxLength={15}
-              />
-            </div>
-
-            {/* Save Settings Button */}
-            <Button 
-              variant="outline" 
-              onClick={saveSettings} 
-              className="w-full"
-              disabled={updateSettings.isPending}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {updateSettings.isPending ? 'Salvando...' : 'Salvar Configurações do PIX'}
-            </Button>
-
-            <div className="border-t pt-4">
-              <Label htmlFor="amount">Valor (R$)</Label>
-              <Input
-                id="amount"
-                value={amount}
-                onChange={handleAmountChange}
-                placeholder="0.00"
-                className="mt-1"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Deixe em branco para valor livre
-              </p>
-            </div>
-
-            {/* Order ID */}
-            <div>
-              <Label htmlFor="order-id">ID do Pedido</Label>
-              <div className="flex gap-2 mt-1">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <Label htmlFor="pix_key">Chave PIX *</Label>
                 <Input
-                  id="order-id"
-                  value={orderId}
-                  onChange={(e) => setOrderId(e.target.value)}
-                  placeholder="PEDIDO123"
-                  className="flex-1"
+                  id="pix_key"
+                  value={pixKey}
+                  onChange={(e) => setPixKey(e.target.value)}
+                  placeholder="CPF, CNPJ, E-mail ou Chave Aleatória"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="merchant_name">Nome do Beneficiário</Label>
+                <Input
+                  id="merchant_name"
+                  value={merchantName}
+                  onChange={(e) => setMerchantName(e.target.value)}
+                  placeholder="Ex: iCamStore"
+                  className="mt-1"
                   maxLength={25}
                 />
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="icon"
-                  onClick={regenerateOrderId}
-                  title="Gerar novo ID"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                ID gerado automaticamente para rastreio
-              </p>
+              <div>
+                <Label htmlFor="merchant_city">Cidade</Label>
+                <Input
+                  id="merchant_city"
+                  value={merchantCity}
+                  onChange={(e) => setMerchantCity(e.target.value)}
+                  placeholder="Ex: SAO PAULO"
+                  className="mt-1"
+                  maxLength={15}
+                />
+              </div>
             </div>
-
-            <Button onClick={handleGeneratePixCode} className="w-full" size="lg">
-              <QrCode className="h-4 w-4 mr-2" />
-              Gerar Código PIX
-            </Button>
           </CardContent>
         </Card>
 
-        {/* Result Card */}
+        {/* WhatsApp Threshold */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <QrCode className="h-5 w-5" />
-              Código PIX Gerado
+              <MessageCircle className="h-5 w-5 text-primary" />
+              Limitador de WhatsApp
             </CardTitle>
+            <CardDescription>
+              Define até qual valor o cliente pode solicitar o pagamento via WhatsApp.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            {generatedCode ? (
-              <div className="space-y-4">
-                {/* QR Code */}
-                <div className="flex justify-center p-4 bg-white rounded-lg">
-                  <QRCodeSVG 
-                    value={generatedCode} 
-                    size={200}
-                    level="M"
-                    includeMargin={true}
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
+              <div className="space-y-0.5">
+                <Label className="text-base">Habilitar Limitador</Label>
+                <p className="text-sm text-muted-foreground">
+                  Se desativado, o botão de WhatsApp aparecerá para qualquer valor.
+                </p>
+              </div>
+              <Switch
+                checked={whatsappThresholdEnabled}
+                onCheckedChange={setWhatsappThresholdEnabled}
+              />
+            </div>
+
+            {whatsappThresholdEnabled && (
+              <div className="space-y-2 max-w-xs">
+                <Label htmlFor="threshold_value">Valor Máximo para WhatsApp (R$)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+                  <Input
+                    id="threshold_value"
+                    type="number"
+                    value={whatsappThresholdValue}
+                    onChange={(e) => setWhatsappThresholdValue(Number(e.target.value))}
+                    className="pl-9"
                   />
                 </div>
-
-                <div className="bg-muted p-4 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-2">PIX Copia e Cola:</p>
-                  <code className="block text-sm break-all font-mono bg-background p-3 rounded border">
-                    {generatedCode}
-                  </code>
-                </div>
-
-                <Button 
-                  onClick={copyCode} 
-                  className="w-full" 
-                  variant={copied ? "secondary" : "default"}
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-4 w-4 mr-2" />
-                      Copiado!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copiar Código PIX
-                    </>
-                  )}
-                </Button>
-
-                <div className="bg-primary/10 p-4 rounded-lg text-sm space-y-2">
-                  <p><strong>Recebedor:</strong> {merchantName}</p>
-                  <p><strong>Cidade:</strong> {merchantCity}</p>
-                  <p><strong>Chave:</strong> {pixKey}</p>
-                  {parseFloat(amount) > 0 && (
-                    <p><strong>Valor:</strong> R$ {parseFloat(amount).toFixed(2)}</p>
-                  )}
-                  {orderId && (
-                    <p><strong>ID do Pedido:</strong> {orderId}</p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <QrCode className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                <p>Preencha os dados e clique em "Gerar Código PIX"</p>
+                <p className="text-xs text-muted-foreground">
+                  Pedidos acima deste valor não mostrarão o botão de solicitar PIX no WhatsApp.
+                </p>
               </div>
             )}
+
+            <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                <strong>Dica de Segurança:</strong> Limitar o WhatsApp para valores altos ajuda a evitar fraudes e garante que pagamentos maiores passem pelo fluxo automático do site.
+              </p>
+            </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Instructions */}
-      <Card>
-        <CardContent className="py-4">
-          <h3 className="font-semibold mb-2">Como usar:</h3>
-          <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-            <li>Informe sua chave PIX cadastrada no banco</li>
-            <li>Preencha o valor (ou deixe em branco para valor livre)</li>
-            <li>Clique em "Gerar Código PIX"</li>
-            <li>Copie o código ou escaneie o QR Code</li>
-            <li>O cliente cola no app do banco para pagar</li>
-          </ol>
-        </CardContent>
-      </Card>
+        <div className="flex justify-end">
+          <Button 
+            size="lg" 
+            onClick={handleSave} 
+            disabled={updateSettings.isPending}
+            className="w-full sm:w-auto"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {updateSettings.isPending ? 'Salvando...' : 'Salvar Configurações'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

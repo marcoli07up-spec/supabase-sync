@@ -10,7 +10,7 @@ import {
   ChevronLeft,
   Truck,
   Star,
-  QrCode,
+  Settings,
   MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ const navItems = [
   { to: '/admin/categorias', icon: Tags, label: 'Categorias' },
   { to: '/admin/rastreios', icon: Truck, label: 'Rastreios' },
   { to: '/admin/avaliacoes', icon: Star, label: 'Avaliações' },
-  { to: '/admin/pix', icon: QrCode, label: 'Gerar PIX' },
+  { to: '/admin/pix', icon: Settings, label: 'Configurações PIX' },
   { to: '/admin/carrinhos-abandonados', icon: ShoppingCart, label: 'Carrinhos' },
   { to: '/admin/whatsapp', icon: MessageCircle, label: 'WhatsApp' },
 ];
