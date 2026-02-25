@@ -3,17 +3,21 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 
 export interface PixSettings {
+  pix_mode: 'manual' | 'street_pay';
   pix_key: string;
   merchant_name: string;
   merchant_city: string;
+  street_pay_api_key: string;
   whatsapp_threshold_enabled: boolean;
   whatsapp_threshold_value: number;
 }
 
 const DEFAULT_PIX_SETTINGS: PixSettings = {
+  pix_mode: 'manual',
   pix_key: '470e1c06-a98c-4fd9-ad77-e221114722bc',
   merchant_name: 'CAMERAS PRIME',
   merchant_city: 'MARINGA',
+  street_pay_api_key: '',
   whatsapp_threshold_enabled: true,
   whatsapp_threshold_value: 2500,
 };

@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// ===== PIX EMV / CRC16 =====
+// ===== PIX EMV / CRC16 (Para Modo Manual) =====
 function crc16(payload: string) {
   let crc = 0xffff;
   for (let i = 0; i < payload.length; i++) {
@@ -25,19 +25,10 @@ function formatField(id: string, value: string) {
   return `${id}${len}${v}`;
 }
 
-// Gera Pix "copia e cola" para chave estática
-function gerarPixCopiaECola(params: {
-  chave: string;
-  nome: string;
-  cidade: string;
-  valor: number;
-  txid?: string;
-}) {
-  const chave = (params.chave || "").trim(); // importantíssimo
+function gerarPixManual(params: { chave: string; nome: string; cidade: string; valor: number; txid?: string }) {
+  const chave = (params.chave || "").trim();
   const nome = (params.nome || "").trim();
   const cidade = (params.cidade || "").trim();
-
-  // TXID: alguns bancos preferem simples
   const txid = (params.txid || "***").trim().slice(0, 25) || "***";
 
   const merchantAccountInfo = [
@@ -54,7 +45,7 @@ function gerarPixCopiaECola(params: {
     formatField("58", "BR"),
     formatField("59", nome.slice(0, 25)),
     formatField("60", cidade.slice(0, 15)),
-    formatField("62", formatField("05", txid)), // TXID
+    formatField("62", formatField("05", txid)),
     "6304",
   ].join("");
 
@@ -68,47 +59,76 @@ Deno.serve(async (req) => {
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get(
-      "SUPABASE_SERVICE_ROLE_KEY",
-    )!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const body = await req.json().catch(() => ({}));
     const orderId = body?.orderId;
 
     if (!orderId) {
-      return new Response(JSON.stringify({ error: "orderId is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "orderId is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Buscar pedido
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("id", orderId)
-      .single();
+    // Buscar pedido e configurações
+    const { data: order } = await supabase.from("orders").select("*").eq("id", orderId).single();
+    const { data: settingsData } = await supabase.from("site_settings").select("value").eq("key", "pix_config").single();
+    
+    const settings = settingsData?.value || {};
+    const mode = settings.pix_mode || 'manual';
 
-    if (orderError || !order) {
-      return new Response(JSON.stringify({ error: "Order not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let pixCode = "";
+    let qrCodeImage = null;
+
+    if (mode === 'street_pay' && settings.street_pay_api_key) {
+      // Chamada para API da Street Pay
+      try {
+        const response = await fetch("https://api.streetpayments.com.br/v1/transaction", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${settings.street_pay_api_key}`
+          },
+          body: JSON.stringify({
+            amount: Math.round(order.total * 100), // Centavos
+            payment_method: "pix",
+            external_id: order.id,
+            customer: {
+              name: order.customer_name,
+              email: order.customer_email,
+              cpf_cnpj: order.customer_cpf.replace(/\D/g, ''),
+              phone: order.customer_phone.replace(/\D/g, '')
+            }
+          })
+        });
+
+        const data = await response.json();
+        if (data.pix_code) {
+          pixCode = data.pix_code;
+          qrCodeImage = data.pix_qr_code_url;
+        } else {
+          throw new Error("Street Pay failed to return PIX code");
+        }
+      } catch (e) {
+        console.error("Street Pay Error:", e);
+        // Fallback para manual se a API falhar
+        pixCode = gerarPixManual({
+          chave: settings.pix_key,
+          nome: settings.merchant_name,
+          cidade: settings.merchant_city,
+          valor: order.total,
+          txid: order.id.slice(0, 8)
+        });
+      }
+    } else {
+      // Modo Manual
+      pixCode = gerarPixManual({
+        chave: settings.pix_key,
+        nome: settings.merchant_name,
+        cidade: settings.merchant_city,
+        valor: order.total,
+        txid: order.id.slice(0, 8)
       });
     }
-
-    // ======= SUA CHAVE PIX (CHAVE ALEATÓRIA) =======
-    const PIX_KEY = "470e1c06-a98c-4fd9-ad77-e221114722bc";
-    const PIX_NAME = "PONTO DAS UTILIDADES"; // ajuste se quiser
-    const PIX_CITY = "SAOPAULO"; // ajuste se quiser (sem acentos)
-
-    const pixCode = gerarPixCopiaECola({
-      chave: PIX_KEY,
-      nome: PIX_NAME,
-      cidade: PIX_CITY,
-      valor: Number(order.total || 0),
-      txid: String(orderId), // ou "***"
-    });
 
     // Salvar no pedido
     await supabase
@@ -116,31 +136,16 @@ Deno.serve(async (req) => {
       .update({
         pix_code: pixCode,
         pix_qr_code: pixCode,
-        pix_qr_code_image: null,
-        podpay_transaction_id: null,
+        pix_qr_code_image: qrCodeImage,
         status: "awaiting_payment",
       })
       .eq("id", orderId);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        pixQrCode: pixCode,
-        pixQrCodeImage: null,
-        transactionId: orderId,
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
-  } catch (error: unknown) {
-    console.error("Error creating PIX payment:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
+    return new Response(JSON.stringify({ success: true, pixQrCode: pixCode, pixQrCodeImage: qrCodeImage }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
