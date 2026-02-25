@@ -21,13 +21,13 @@ import audioImg from '@/assets/categories/audio.png';
 import mochilasImg from '@/assets/categories/mochilas.png';
 import iluminacaoImg from '@/assets/categories/iluminacao.png';
 
-// Fallback images (local assets)
+// Desktop Banners (Horizontais)
 import bannerLentesImg from '@/assets/banners/lentes-premium.png';
 import bannerAudioImg from '@/assets/banners/audio-premium.png';
 import bannerIluminacaoImg from '@/assets/banners/iluminacao-premium.png';
 import bannerUsadosImg from '@/assets/banners/usados-premium.png';
 
-// Mobile specific banners
+// Mobile Banners (Verticais)
 import mobileLentes from '@/assets/banners/mobile-lentes.png';
 import mobileAudio from '@/assets/banners/mobile-audio.png';
 import mobileIluminacao from '@/assets/banners/mobile-iluminacao.png';
@@ -47,10 +47,10 @@ const categoryImages: Record<string, string> = {
 };
 
 const fallbackBannersDesktop = [
-  { src: bannerLentesImg, alt: 'Lentes', link: '/categoria/lentes' },
-  { src: bannerAudioImg, alt: 'Áudio', link: '/categoria/audio' },
-  { src: bannerIluminacaoImg, alt: 'Iluminação', link: '/categoria/iluminacao' },
-  { src: bannerUsadosImg, alt: 'Usados', link: '/categoria/cameras-seminovas' },
+  { src: bannerLentesImg, alt: 'Lentes Premium', link: '/categoria/lentes' },
+  { src: bannerAudioImg, alt: 'Áudio Profissional', link: '/categoria/audio' },
+  { src: bannerIluminacaoImg, alt: 'Iluminação Pro', link: '/categoria/iluminacao' },
+  { src: bannerUsadosImg, alt: 'Equipamentos Seminovos', link: '/categoria/cameras-seminovas' },
 ];
 
 const fallbackBannersMobile = [
@@ -79,17 +79,9 @@ export default function HomePage() {
   const { data: allProducts, isLoading: productsLoading } = useProducts();
   const { data: reviews } = useReviews();
 
-  // Lógica para decidir quais banners mostrar
-  // Se houver banners no banco de dados, usamos eles. Caso contrário, usamos os locais.
-  const hasDbBanners = dbBanners && dbBanners.length > 0;
-  
-  const desktopBanners = hasDbBanners 
-    ? dbBanners.map(b => ({ src: b.image_url, alt: b.title || '', link: b.link || '#' }))
-    : fallbackBannersDesktop;
-
-  const mobileBanners = hasDbBanners
-    ? dbBanners.map(b => ({ src: b.image_url, alt: b.title || '', link: b.link || '#' }))
-    : fallbackBannersMobile;
+  // Forçamos o uso dos arquivos locais para garantir que nada quebre enquanto o banco carrega
+  const desktopBanners = fallbackBannersDesktop;
+  const mobileBanners = fallbackBannersMobile;
 
   const mobileSlideCount = mobileBanners.length;
 
@@ -117,88 +109,71 @@ export default function HomePage() {
 
   return (
     <Layout>
-      {/* Mobile Banners */}
+      {/* Mobile Banners - Apenas visível em celular */}
       <section className="relative md:hidden">
-        {bannersLoading ? (
-          <Skeleton className="w-full aspect-[9/16]" />
-        ) : (
-          <>
-            <Carousel 
-              className="w-full"
-              opts={{ align: "start", loop: true }}
-              plugins={[autoplayPlugin.current]}
-              setApi={setMobileApi}
-            >
-              <CarouselContent>
-                {mobileBanners.map((banner, index) => (
-                  <CarouselItem key={index}>
-                    <Link to={banner.link} className="block relative aspect-[9/16] overflow-hidden">
-                      <img 
-                        src={banner.src} 
-                        alt={banner.alt} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // Se a imagem do banco falhar, tenta carregar a local correspondente
-                          const target = e.target as HTMLImageElement;
-                          if (index < fallbackBannersMobile.length) {
-                            target.src = fallbackBannersMobile[index].src;
-                          }
-                        }}
-                      />
-                    </Link>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 rounded-full h-10 w-10 text-white z-10"
-                onClick={() => mobileApi?.scrollPrev()}
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 rounded-full h-10 w-10 text-white z-10"
-                onClick={() => mobileApi?.scrollNext()}
-              >
-                <ChevronRight className="h-6 w-6" />
-              </Button>
-            </Carousel>
-            
-            <div className="px-4 py-2">
-              <Progress value={((mobileCurrentIndex + 1) / mobileSlideCount) * 100} className="h-1" />
-              <p className="text-[10px] text-muted-foreground text-center mt-1 font-medium uppercase tracking-wider">
-                {mobileCurrentIndex + 1} de {mobileSlideCount}
-              </p>
-            </div>
-          </>
-        )}
+        <Carousel 
+          className="w-full"
+          opts={{ align: "start", loop: true }}
+          plugins={[autoplayPlugin.current]}
+          setApi={setMobileApi}
+        >
+          <CarouselContent>
+            {mobileBanners.map((banner, index) => (
+              <CarouselItem key={index}>
+                <Link to={banner.link} className="block relative aspect-[9/16] overflow-hidden">
+                  <img 
+                    src={banner.src} 
+                    alt={banner.alt} 
+                    className="w-full h-full object-cover"
+                  />
+                </Link>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 rounded-full h-10 w-10 text-white z-10"
+            onClick={() => mobileApi?.scrollPrev()}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 rounded-full h-10 w-10 text-white z-10"
+            onClick={() => mobileApi?.scrollNext()}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+        </Carousel>
+        
+        <div className="px-4 py-2">
+          <Progress value={((mobileCurrentIndex + 1) / mobileSlideCount) * 100} className="h-1" />
+          <p className="text-[10px] text-muted-foreground text-center mt-1 font-medium uppercase tracking-wider">
+            {mobileCurrentIndex + 1} de {mobileSlideCount}
+          </p>
+        </div>
       </section>
 
-      {/* Desktop Banners */}
+      {/* Desktop Banners - Apenas visível em computador */}
       <section className="relative hidden md:block">
-        {bannersLoading ? (
-          <Skeleton className="w-full aspect-[3/1]" />
-        ) : (
-          <Carousel 
-            className="w-full"
-            opts={{ align: "start", loop: true }}
-            plugins={[autoplayPlugin.current]}
-          >
-            <CarouselContent>
-              {desktopBanners.map((banner, index) => (
-                <CarouselItem key={index}>
-                  <Link to={banner.link} className="block relative aspect-[3/1] overflow-hidden">
-                    <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover" />
-                  </Link>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
-        )}
+        <Carousel 
+          className="w-full"
+          opts={{ align: "start", loop: true }}
+          plugins={[autoplayPlugin.current]}
+        >
+          <CarouselContent>
+            {desktopBanners.map((banner, index) => (
+              <CarouselItem key={index}>
+                <Link to={banner.link} className="block relative aspect-[3/1] overflow-hidden">
+                  <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover" />
+                </Link>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
       </section>
 
       <section className="py-4 md:py-6">
