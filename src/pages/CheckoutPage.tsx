@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { CheckoutFormData, PaymentMethod, Product } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { trackInitiateCheckout, trackAddPaymentInfo, trackPurchase } from '@/lib/facebook-pixel';
+import { usePixSettings } from '@/hooks/usePixSettings';
 
 const personalInfoSchema = z.object({
   customer_name: z.string().min(3, 'Nome completo é obrigatório'),
@@ -76,6 +77,8 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const { items, getTotal, getTotalWithDiscount, clearCart, addItem } = useCart();
   const createOrder = useCreateOrder();
+  const { data: pixSettings } = usePixSettings();
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [isProcessingCard, setIsProcessingCard] = useState(false);
@@ -199,11 +202,48 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: CheckoutFormData) => {
     try {
+      const purchaseData = { 
+        content_ids: items.map(i => i.product.id), 
+        content_type: 'product', 
+        num_items: items.length, 
+        value: total, 
+        currency: 'BRL' 
+      };
+
       if (data.payment_method === 'credit_card') {
         setIsProcessingCard(true);
         await new Promise(resolve => setTimeout(resolve, 5000));
         const orderResult = await createOrder.mutateAsync({ formData: data, cartItems: items, total });
-        trackPurchase({ content_ids: items.map(i => i.product.id), content_type: 'product', num_items: items.length, value: total, currency: 'BRL' });
+        trackPurchase(purchaseData);
+        clearCart();
+        navigate(`/pedido?id=${orderResult?.id}`);
+        return;
+      }
+
+      // Check for WhatsApp threshold
+      const thresholdEnabled = pixSettings?.whatsapp_threshold_enabled ?? true;
+      const thresholdValue = pixSettings?.whatsapp_threshold_value ?? 2500;
+
+      if (thresholdEnabled && subtotal >= thresholdValue) {
+        const orderResult = await createOrder.mutateAsync({ formData: data, cartItems: items, total });
+        trackPurchase(purchaseData);
+        
+        const orderSummary = items.map(item => 
+          `• ${item.product.name} (x${item.quantity}) - ${formatCurrency(item.product.price * item.quantity)}`
+        ).join('\n');
+
+        const message = encodeURIComponent(
+          `🛒 *PEDIDO - Câmeras Prime*\n\n` +
+          `*Cliente:* ${data.customer_name}\n` +
+          `*CPF:* ${data.customer_cpf}\n` +
+          `*Telefone:* ${data.customer_phone}\n\n` +
+          `*Itens do Pedido:*\n${orderSummary}\n\n` +
+          `*Total:* ${formatCurrency(total)} (PIX com 5% de desconto)\n\n` +
+          `Gostaria de finalizar minha compra via PIX!`
+        );
+        
+        const phone = '554431011011';
+        window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
         clearCart();
         navigate(`/pedido?id=${orderResult?.id}`);
         return;
@@ -211,7 +251,7 @@ export default function CheckoutPage() {
 
       setIsProcessingPix(true);
       const orderResult = await createOrder.mutateAsync({ formData: data, cartItems: items, total });
-      trackPurchase({ content_ids: items.map(i => i.product.id), content_type: 'product', num_items: items.length, value: total, currency: 'BRL' });
+      trackPurchase(purchaseData);
       
       await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-pix-payment`, {
         method: 'POST',
@@ -355,7 +395,7 @@ export default function CheckoutPage() {
                 </div>
                 <OrderSummaryFlow />
                 <div className="flex gap-3">
-                  <Button type="button" variant="outline" className="flex-1" onClick={() => setCurrentStep(1)}>Voltar</Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => handlePrevStep()}>Voltar</Button>
                   <Button type="button" className="flex-1" onClick={handleNextStep}>Pagamento</Button>
                 </div>
               </div>
@@ -391,7 +431,7 @@ export default function CheckoutPage() {
                 </div>
                 <OrderSummaryFlow />
                 <div className="flex gap-3">
-                  <Button type="button" variant="outline" className="flex-1" onClick={() => setCurrentStep(2)}>Voltar</Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => handlePrevStep()}>Voltar</Button>
                   <Button type="submit" className="flex-1 font-bold" disabled={createOrder.isPending}>
                     {createOrder.isPending ? 'Processando...' : `Pagar ${formatCurrency(total)}`}
                   </Button>
@@ -403,4 +443,8 @@ export default function CheckoutPage() {
       </div>
     </Layout>
   );
+
+  function handlePrevStep() {
+    setCurrentStep(prev => prev - 1);
+  }
 }

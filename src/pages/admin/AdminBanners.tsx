@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useRef } from 'react';
-import { Plus, Pencil, Trash2, Upload, Link as LinkIcon, ImagePlus, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, ImagePlus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { useAllBanners, useCreateBanner, useUpdateBanner, useDeleteBanner } from '@/hooks/useAdmin';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Banner } from '@/types';
@@ -85,10 +86,14 @@ export default function AdminBanners() {
 
   const handleDelete = async () => {
     if (bannerToDelete) {
-      await deleteBanner.mutateAsync(bannerToDelete.id);
-      toast.success('Banner excluído com sucesso!');
-      setDeleteDialogOpen(false);
-      setBannerToDelete(null);
+      try {
+        await deleteBanner.mutateAsync(bannerToDelete.id);
+        toast.success('Banner excluído com sucesso!');
+        setDeleteDialogOpen(false);
+        setBannerToDelete(null);
+      } catch (error) {
+        toast.error('Erro ao excluir banner');
+      }
     }
   };
 
@@ -113,7 +118,7 @@ export default function AdminBanners() {
         .getPublicUrl(filePath);
 
       setFormData(prev => ({ ...prev, image_url: publicUrl }));
-      toast.success('Imagem enviada!');
+      toast.success('Imagem enviada com sucesso!');
     } catch (error) {
       console.error(error);
       toast.error('Erro ao enviar imagem');
@@ -135,13 +140,13 @@ export default function AdminBanners() {
           id: selectedBanner.id,
           ...formData,
         });
-        toast.success('Banner atualizado!');
+        toast.success('Banner atualizado com sucesso!');
       } else {
         await createBanner.mutateAsync(formData);
-        toast.success('Banner criado!');
+        toast.success('Banner criado com sucesso!');
       }
       setDialogOpen(false);
-    } catch {
+    } catch (error) {
       toast.error('Erro ao salvar banner');
     }
   };
@@ -158,15 +163,15 @@ export default function AdminBanners() {
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
       ) : banners && banners.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {banners.map((banner) => (
             <Card key={banner.id} className={!banner.active ? 'opacity-50' : ''}>
               <CardContent className="p-4">
-                <div className="aspect-[3/1] mb-4 rounded-lg overflow-hidden bg-muted">
+                <div className="aspect-[3/1] mb-4 rounded-lg overflow-hidden bg-muted border border-border">
                   <img 
                     src={banner.image_url} 
                     alt={banner.title || 'Banner'}
@@ -231,7 +236,7 @@ export default function AdminBanners() {
                 <Label>Imagem do Banner *</Label>
                 <div className="mt-2 flex gap-4 items-start">
                   <div 
-                    className="w-32 h-20 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors overflow-hidden"
+                    className="w-32 h-20 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors overflow-hidden bg-muted"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {formData.image_url ? (
