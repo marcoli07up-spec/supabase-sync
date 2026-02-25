@@ -1,96 +1,48 @@
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin, Instagram, Facebook, Youtube } from 'lucide-react';
-import logoImg from '@/assets/logo.png';
+import { Mail, MapPin } from 'lucide-react';
+
 export function Footer() {
-  return <footer className="bg-secondary border-t border-border">
-      {/* Main footer */}
+  const logoUrl = "https://i.ibb.co/CpmLv0N9/490471327-1074848954471870-8936448961432822653-n-Editado.png";
+
+  return (
+    <footer className="bg-secondary border-t border-border">
       <div className="container-custom py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* About */}
           <div>
             <div className="mb-4">
-              <img src="https://i.ibb.co/CpmLv0N9/490471327-1074848954471870-8936448961432822653-n-Editado.png" alt="Câmeras Prime" className="h-10" />
+              <img src={logoUrl} alt="Câmeras Prime" className="h-10" />
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Paixão por imagem e compromisso com confiança. Somos uma loja especializada em câmeras e equipamentos fotográficos seminovos.
             </p>
-            
           </div>
 
-          {/* Categories */}
           <div>
             <h4 className="font-semibold mb-4 text-foreground">Categorias</h4>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/categoria/cameras" className="text-muted-foreground hover:text-primary transition-colors">
-                  Câmeras
-                </Link>
-              </li>
-              <li>
-                <Link to="/categoria/lentes" className="text-muted-foreground hover:text-primary transition-colors">
-                  Lentes
-                </Link>
-              </li>
-              <li>
-                <Link to="/categoria/audio" className="text-muted-foreground hover:text-primary transition-colors">
-                  Áudio
-                </Link>
-              </li>
-              <li>
-                <Link to="/categoria/mochilas" className="text-muted-foreground hover:text-primary transition-colors">
-                  Mochilas
-                </Link>
-              </li>
-              <li>
-                <Link to="/categoria/iluminacao" className="text-muted-foreground hover:text-primary transition-colors">
-                  Iluminação
-                </Link>
-              </li>
+              <li><Link to="/categoria/cameras" className="text-muted-foreground hover:text-primary transition-colors">Câmeras</Link></li>
+              <li><Link to="/categoria/lentes" className="text-muted-foreground hover:text-primary transition-colors">Lentes</Link></li>
+              <li><Link to="/categoria/audio" className="text-muted-foreground hover:text-primary transition-colors">Áudio</Link></li>
+              <li><Link to="/categoria/mochilas" className="text-muted-foreground hover:text-primary transition-colors">Mochilas</Link></li>
+              <li><Link to="/categoria/iluminacao" className="text-muted-foreground hover:text-primary transition-colors">Iluminação</Link></li>
             </ul>
           </div>
 
-          {/* Institutional */}
           <div>
             <h4 className="font-semibold mb-4 text-foreground">Institucional</h4>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/sobre" className="text-muted-foreground hover:text-primary transition-colors">
-                  Sobre Nós
-                </Link>
-              </li>
-              <li>
-                <Link to="/contato" className="text-muted-foreground hover:text-primary transition-colors">
-                  Contato
-                </Link>
-              </li>
-              <li>
-                <Link to="/rastreio" className="text-muted-foreground hover:text-primary transition-colors">
-                  Rastrear Pedido
-                </Link>
-              </li>
-              <li>
-                <Link to="/politica-privacidade" className="text-muted-foreground hover:text-primary transition-colors">
-                  Política de Privacidade
-                </Link>
-              </li>
-              <li>
-                <Link to="/termos-uso" className="text-muted-foreground hover:text-primary transition-colors">
-                  Termos de Uso
-                </Link>
-              </li>
-              <li>
-                <Link to="/trocas-devolucoes" className="text-muted-foreground hover:text-primary transition-colors">
-                  Trocas e Devoluções
-                </Link>
-              </li>
+              <li><Link to="/sobre" className="text-muted-foreground hover:text-primary transition-colors">Sobre Nós</Link></li>
+              <li><Link to="/contato" className="text-muted-foreground hover:text-primary transition-colors">Contato</Link></li>
+              <li><Link to="/rastreio" className="text-muted-foreground hover:text-primary transition-colors">Rastrear Pedido</Link></li>
+              <li><Link to="/politica-privacidade" className="text-muted-foreground hover:text-primary transition-colors">Política de Privacidade</Link></li>
+              <li><Link to="/termos-uso" className="text-muted-foreground hover:text-primary transition-colors">Termos de Uso</Link></li>
+              <li><Link to="/trocas-devolucoes" className="text-muted-foreground hover:text-primary transition-colors">Trocas e Devoluções</Link></li>
             </ul>
           </div>
 
-          {/* Contact */}
           <div>
             <h4 className="font-semibold mb-4 text-foreground">Contato</h4>
             <ul className="space-y-3 text-sm">
-              
               <li className="flex items-start gap-2 text-muted-foreground">
                 <Mail className="h-4 w-4 mt-0.5 text-primary" />
                 <span>contato@icamstore.com.br</span>
@@ -100,7 +52,6 @@ export function Footer() {
                 <span>Av. Brasil, 284 - Zona 05, Maringá - PR</span>
               </li>
             </ul>
-
             <div className="mt-6 p-4 bg-background rounded-lg">
               <p className="text-xs text-muted-foreground">
                 <strong className="text-foreground">Horário de Atendimento:</strong><br />
@@ -112,7 +63,6 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div className="border-t border-border">
         <div className="container-custom py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
@@ -128,5 +78,6 @@ export function Footer() {
           </div>
         </div>
       </div>
-    </footer>;
+    </footer>
+  );
 }
