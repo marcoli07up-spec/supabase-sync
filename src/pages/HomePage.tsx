@@ -29,10 +29,8 @@ import bannerUsadosImg from '@/assets/banners/usados-premium.png';
 
 // Mobile specific banners
 import mobileLentes from '@/assets/banners/mobile-lentes.png';
-import mobileMochilas from '@/assets/banners/mobile-mochilas.png';
+import mobileAudio from '@/assets/banners/mobile-audio.png';
 import mobileIluminacao from '@/assets/banners/mobile-iluminacao.png';
-import mobileAudioPro from '@/assets/banners/mobile-audio-pro.png';
-import mobileCamera from '@/assets/banners/mobile-cameras.png';
 
 // Promo images
 import freteGratisImg from '@/assets/promos/frete-gratis.png';
@@ -56,11 +54,9 @@ const fallbackBannersDesktop = [
 ];
 
 const fallbackBannersMobile = [
-  { src: mobileLentes, alt: 'Lentes Premium', link: '/categoria/lentes' },
-  { src: mobileMochilas, alt: 'Mochilas Profissionais', link: '/categoria/mochilas' },
-  { src: mobileIluminacao, alt: 'Iluminação Pro', link: '/categoria/iluminacao' },
-  { src: mobileAudioPro, alt: 'Áudio Profissional', link: '/categoria/audio' },
-  { src: mobileCamera, alt: 'Câmeras Seminovas', link: '/categoria/cameras' },
+  { src: mobileLentes, alt: 'Lentes', link: '/categoria/lentes' },
+  { src: mobileAudio, alt: 'Áudio', link: '/categoria/audio' },
+  { src: mobileIluminacao, alt: 'Iluminação', link: '/categoria/iluminacao' },
 ];
 
 const promoImages = [
@@ -83,7 +79,8 @@ export default function HomePage() {
   const { data: allProducts, isLoading: productsLoading } = useProducts();
   const { data: reviews } = useReviews();
 
-  // Use DB banners if available, otherwise use fallbacks
+  // Lógica para decidir quais banners mostrar
+  // Se houver banners no banco de dados, usamos eles. Caso contrário, usamos os locais.
   const hasDbBanners = dbBanners && dbBanners.length > 0;
   
   const desktopBanners = hasDbBanners 
@@ -136,7 +133,18 @@ export default function HomePage() {
                 {mobileBanners.map((banner, index) => (
                   <CarouselItem key={index}>
                     <Link to={banner.link} className="block relative aspect-[9/16] overflow-hidden">
-                      <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover" />
+                      <img 
+                        src={banner.src} 
+                        alt={banner.alt} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Se a imagem do banco falhar, tenta carregar a local correspondente
+                          const target = e.target as HTMLImageElement;
+                          if (index < fallbackBannersMobile.length) {
+                            target.src = fallbackBannersMobile[index].src;
+                          }
+                        }}
+                      />
                     </Link>
                   </CarouselItem>
                 ))}
@@ -145,18 +153,18 @@ export default function HomePage() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/40 hover:bg-background/60 rounded-full h-10 w-10 text-white"
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 rounded-full h-10 w-10 text-white z-10"
                 onClick={() => mobileApi?.scrollPrev()}
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-6 w-6" />
               </Button>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/40 hover:bg-background/60 rounded-full h-10 w-10 text-white"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 rounded-full h-10 w-10 text-white z-10"
                 onClick={() => mobileApi?.scrollNext()}
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-6 w-6" />
               </Button>
             </Carousel>
             
@@ -309,7 +317,7 @@ export default function HomePage() {
                 <p className="text-xs text-muted-foreground">Atendimento especializado</p>
               </div>
               <div className="p-4 bg-secondary rounded-lg">
-                <CreditCard className="h-8 w-8 text-primary mx-auto mb-2" />
+                <Shield className="h-8 w-8 text-primary mx-auto mb-2" />
                 <p className="font-semibold text-sm">Compra Segura</p>
                 <p className="text-xs text-muted-foreground">PIX e Cartão</p>
               </div>
