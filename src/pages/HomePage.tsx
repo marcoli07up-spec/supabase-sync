@@ -26,13 +26,13 @@ import bannerLentesImg from '@/assets/banners/lentes-premium.png';
 import bannerAudioImg from '@/assets/banners/audio-premium.png';
 import bannerIluminacaoImg from '@/assets/banners/iluminacao-premium.png';
 import bannerUsadosImg from '@/assets/banners/usados-premium.png';
-import mobileCamera from '@/assets/banners/mobile-cameras.png';
-import mobileAudio from '@/assets/banners/mobile-audio.png';
-import mobileAudioPro from '@/assets/banners/mobile-audio-pro.png';
-import mobileTripe from '@/assets/banners/mobile-tripe.png';
+
+// Mobile specific banners
 import mobileLentes from '@/assets/banners/mobile-lentes.png';
 import mobileMochilas from '@/assets/banners/mobile-mochilas.png';
 import mobileIluminacao from '@/assets/banners/mobile-iluminacao.png';
+import mobileAudioPro from '@/assets/banners/mobile-audio-pro.png';
+import mobileCamera from '@/assets/banners/mobile-cameras.png';
 
 // Promo images
 import freteGratisImg from '@/assets/promos/frete-gratis.png';
@@ -56,13 +56,11 @@ const fallbackBannersDesktop = [
 ];
 
 const fallbackBannersMobile = [
-  { src: mobileCamera, alt: 'Câmeras', link: '/categoria/cameras' },
-  { src: mobileAudio, alt: 'Áudio', link: '/categoria/audio' },
-  { src: mobileAudioPro, alt: 'Áudio Pro', link: '/categoria/audio' },
-  { src: mobileTripe, alt: 'Tripés', link: '/categoria/acessorios' },
-  { src: mobileLentes, alt: 'Lentes', link: '/categoria/lentes' },
-  { src: mobileMochilas, alt: 'Mochilas', link: '/categoria/mochilas' },
-  { src: mobileIluminacao, alt: 'Iluminação', link: '/categoria/iluminacao' },
+  { src: mobileLentes, alt: 'Lentes Premium', link: '/categoria/lentes' },
+  { src: mobileMochilas, alt: 'Mochilas Profissionais', link: '/categoria/mochilas' },
+  { src: mobileIluminacao, alt: 'Iluminação Pro', link: '/categoria/iluminacao' },
+  { src: mobileAudioPro, alt: 'Áudio Profissional', link: '/categoria/audio' },
+  { src: mobileCamera, alt: 'Câmeras Seminovas', link: '/categoria/cameras' },
 ];
 
 const promoImages = [
@@ -125,7 +123,7 @@ export default function HomePage() {
       {/* Mobile Banners */}
       <section className="relative md:hidden">
         {bannersLoading ? (
-          <Skeleton className="w-full aspect-[2/3]" />
+          <Skeleton className="w-full aspect-[9/16]" />
         ) : (
           <>
             <Carousel 
@@ -137,7 +135,7 @@ export default function HomePage() {
               <CarouselContent>
                 {mobileBanners.map((banner, index) => (
                   <CarouselItem key={index}>
-                    <Link to={banner.link} className="block relative aspect-[2/3] overflow-hidden">
+                    <Link to={banner.link} className="block relative aspect-[9/16] overflow-hidden">
                       <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover" />
                     </Link>
                   </CarouselItem>
@@ -147,7 +145,7 @@ export default function HomePage() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 rounded-full h-10 w-10"
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/40 hover:bg-background/60 rounded-full h-10 w-10 text-white"
                 onClick={() => mobileApi?.scrollPrev()}
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -155,7 +153,7 @@ export default function HomePage() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 rounded-full h-10 w-10"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/40 hover:bg-background/60 rounded-full h-10 w-10 text-white"
                 onClick={() => mobileApi?.scrollNext()}
               >
                 <ChevronRight className="h-5 w-5" />
@@ -164,8 +162,8 @@ export default function HomePage() {
             
             <div className="px-4 py-2">
               <Progress value={((mobileCurrentIndex + 1) / mobileSlideCount) * 100} className="h-1" />
-              <p className="text-xs text-muted-foreground text-center mt-1">
-                {mobileCurrentIndex + 1} / {mobileSlideCount}
+              <p className="text-[10px] text-muted-foreground text-center mt-1 font-medium uppercase tracking-wider">
+                {mobileCurrentIndex + 1} de {mobileSlideCount}
               </p>
             </div>
           </>
