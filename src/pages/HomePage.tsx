@@ -30,6 +30,7 @@ import bannerUsadosImg from '@/assets/banners/usados-premium.png';
 // Banner images - Mobile
 import mobileCamera from '@/assets/banners/mobile-cameras.png';
 import mobileAudio from '@/assets/banners/mobile-audio.png';
+import mobileAudioPro from '@/assets/banners/mobile-audio-pro.png';
 import mobileTripe from '@/assets/banners/mobile-tripe.png';
 import mobileLentes from '@/assets/banners/mobile-lentes.png';
 import mobileMochilas from '@/assets/banners/mobile-mochilas.png';
@@ -57,8 +58,9 @@ const fallbackBannersDesktop = [
 ];
 
 const fallbackBannersMobile = [
-  { src: mobileCamera, alt: 'Câmeras de Ação', link: '/categoria/cameras' },
-  { src: mobileAudio, alt: 'Áudio Pro', link: '/categoria/audio' },
+  { src: mobileCamera, alt: 'Câmeras', link: '/categoria/cameras' },
+  { src: mobileAudio, alt: 'Áudio', link: '/categoria/audio' },
+  { src: mobileAudioPro, alt: 'Áudio Pro', link: '/categoria/audio' },
   { src: mobileTripe, alt: 'Tripés', link: '/categoria/acessorios' },
   { src: mobileLentes, alt: 'Lentes', link: '/categoria/lentes' },
   { src: mobileMochilas, alt: 'Mochilas', link: '/categoria/mochilas' },
