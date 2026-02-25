@@ -22,9 +22,8 @@ export function CartDrawer() {
     navigate('/checkout');
   };
 
-  const pixDiscount = 5;
   const subtotal = getTotal();
-  const totalWithPixDiscount = getTotalWithDiscount(pixDiscount);
+  const totalWithPixDiscount = getTotalWithDiscount(5);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
