@@ -36,16 +36,16 @@ export default function AdminPix() {
 
     try {
       await updateSettings.mutateAsync({
-        pix_key: pixKey,
-        merchant_name: merchantName || 'iCamStore',
-        merchant_city: merchantCity || 'SAO PAULO',
+        pix_key: pixKey.trim(),
+        merchant_name: merchantName.trim() || 'iCamStore',
+        merchant_city: merchantCity.trim() || 'SAO PAULO',
         whatsapp_threshold_enabled: whatsappThresholdEnabled,
         whatsapp_threshold_value: whatsappThresholdValue,
       });
       toast.success('Configurações de pagamento salvas com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao salvar configurações');
-      console.error(error);
+    } catch (error: any) {
+      console.error('Erro ao salvar:', error);
+      toast.error(`Erro ao salvar: ${error.message || 'Verifique as permissões do banco de dados'}`);
     }
   };
 

@@ -50,29 +50,21 @@ export function useUpdatePixSettings() {
 
   return useMutation({
     mutationFn: async (settings: PixSettings) => {
-      const { data: existing } = await supabase
-        .from('site_settings')
-        .select('id')
-        .eq('key', 'pix_config')
-        .maybeSingle();
-
       const jsonValue: Json = settings as unknown as Json;
 
-      if (existing) {
-        const { error } = await supabase
-          .from('site_settings')
-          .update({ value: jsonValue })
-          .eq('key', 'pix_config');
-        
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('site_settings')
-          .insert([{ key: 'pix_config', value: jsonValue }]);
-        
-        if (error) throw error;
-      }
-
+      // Usando upsert para inserir ou atualizar baseado na coluna 'key'
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert(
+          { 
+            key: 'pix_config', 
+            value: jsonValue,
+            updated_at: new Date().toISOString()
+          }, 
+          { onConflict: 'key' }
+        );
+      
+      if (error) throw error;
       return settings;
     },
     onSuccess: () => {
