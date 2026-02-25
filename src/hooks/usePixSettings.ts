@@ -52,7 +52,7 @@ export function useUpdatePixSettings() {
     mutationFn: async (settings: PixSettings) => {
       const jsonValue: Json = settings as unknown as Json;
 
-      // Usando upsert para inserir ou atualizar baseado na coluna 'key'
+      // Usando upsert com onConflict para garantir que a chave 'pix_config' seja única
       const { error } = await supabase
         .from('site_settings')
         .upsert(
