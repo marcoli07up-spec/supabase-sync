@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ShoppingCart, Send, X, Zap } from 'lucide-react';
+import { ShoppingCart, Send, X } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -7,7 +7,7 @@ import { useLocation } from 'react-router-dom';
 import { formatCurrency } from '@/lib/format';
 
 export function FloatingButtons() {
-  const { getItemCount, setIsOpen, isAnimating } = useCart();
+  const { getItemCount, setIsOpen, isAnimating, getTotal } = useCart();
   const itemCount = getItemCount();
   const location = useLocation();
   const [chatOpen, setChatOpen] = useState(false);
@@ -121,17 +121,15 @@ export function FloatingButtons() {
           size="lg"
           className={cn(
             "pointer-events-auto h-16 rounded-full shadow-lg hover:shadow-xl transition-all",
-            "flex items-center gap-3 px-6",
+            "flex items-center gap-2 px-6",
             isAnimating && "animate-bounce scale-110"
           )}
           aria-label="Abrir carrinho"
         >
           <ShoppingCart className={cn("h-6 w-6", isAnimating && "animate-pulse")} />
-          <div className="flex flex-col items-start leading-tight">
-            <span className="text-[10px] font-medium opacity-80 uppercase tracking-wider">
-              {itemCount} {itemCount === 1 ? 'item' : 'itens'}
-            </span>
-            <span className="font-bold text-sm">Ver carrinho</span>
+          <div className="flex flex-col items-start leading-none">
+            <span className="text-xs font-medium opacity-90">{itemCount} {itemCount === 1 ? 'item' : 'itens'}</span>
+            <span className="font-bold text-sm">{formatCurrency(getTotal())}</span>
           </div>
         </Button>
       )}

@@ -15,7 +15,7 @@ export default function AboutPage() {
                 <Camera className="h-8 w-8 text-primary-foreground" />
               </div>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Sobre a Câmeras Prime</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">Sobre a iCamStore</h1>
             <p className="text-lg text-muted-foreground">
               Paixão por imagem e compromisso com confiança desde 2018
             </p>

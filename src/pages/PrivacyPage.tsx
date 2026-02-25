@@ -24,7 +24,7 @@ export default function PrivacyPage() {
           <h2>2. Como Usamos suas Informações</h2>
           <p>Utilizamos suas informações para:</p>
           <ul>
-            <li>Processar e entregar seus pedidos na Câmeras Prime</li>
+            <li>Processar e entregar seus pedidos</li>
             <li>Enviar atualizações sobre seu pedido</li>
             <li>Responder suas dúvidas e solicitações</li>
             <li>Melhorar nossos produtos e serviços</li>
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
           <h2>7. Contato</h2>
           <p>
             Para questões sobre esta política ou sobre seus dados pessoais, entre em 
-            contato através do email: contato@camerasprime.com.br
+            contato através do email: contato@icamstore.com.br
           </p>
         </div>
       </div>

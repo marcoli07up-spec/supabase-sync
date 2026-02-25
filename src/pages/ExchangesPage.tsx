@@ -81,8 +81,8 @@ export default function ExchangesPage() {
               Para solicitar troca ou devolução, entre em contato:
             </p>
             <ul>
-              <li>WhatsApp: (44) 3101-1011</li>
-              <li>Email: contato@camerasprime.com.br</li>
+              <li>WhatsApp: (11) 99999-9999</li>
+              <li>Email: contato@icamstore.com.br</li>
             </ul>
           </div>
         </div>

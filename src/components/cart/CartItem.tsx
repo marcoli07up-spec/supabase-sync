@@ -25,7 +25,8 @@ export function CartItem({ item }: CartItemProps) {
       {/* Product details */}
       <div className="flex-1 min-w-0">
         <h4 className="font-medium text-sm line-clamp-2 mb-1">{item.product.name}</h4>
-        
+        <p className="text-primary font-bold">{formatCurrency(item.product.price)}</p>
+
         {/* Quantity controls */}
         <div className="flex items-center gap-2 mt-2">
           <Button

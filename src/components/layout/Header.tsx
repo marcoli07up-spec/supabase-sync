@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, Search, ChevronDown, X, ShoppingCart } from 'lucide-react';
+import { Menu, Search, ChevronDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useCategories } from '@/hooks/useCategories';
 import { useSearchProducts } from '@/hooks/useProducts';
-import { useCart } from '@/contexts/CartContext';
+import logoImg from '@/assets/logo.png';
 import { formatCurrency } from '@/lib/format';
 
 export function Header() {
@@ -18,11 +18,8 @@ export function Header() {
   const { data: suggestions } = useSearchProducts(searchTerm);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { getItemCount, setIsOpen } = useCart();
-  const itemCount = getItemCount();
 
-  const logoUrl = "https://i.ibb.co/CpmLv0N9/490471327-1074848954471870-8936448961432822653-n-Editado.png";
-
+  // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -49,8 +46,10 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-background border-b">
+      {/* Main header */}
       <div className="container-custom py-4">
         <div className="flex items-center justify-between gap-4">
+          {/* Mobile menu */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="lg:hidden">
@@ -85,14 +84,16 @@ export function Header() {
             </SheetContent>
           </Sheet>
 
+          {/* Logo */}
           <Link to="/" className="flex items-center">
             <img 
-              src={logoUrl} 
-              alt="Câmeras Prime" 
+              src={logoImg} 
+              alt="iCamStore" 
               className="h-8 sm:h-12"
             />
           </Link>
 
+          {/* Search - Desktop */}
           <div ref={searchRef} className="hidden md:flex flex-1 max-w-xl relative">
             <form onSubmit={handleSearch} className="w-full">
               <div className="relative w-full">
@@ -127,6 +128,7 @@ export function Header() {
               </div>
             </form>
             
+            {/* Search Suggestions Dropdown */}
             {showSuggestions && searchTerm.length >= 2 && suggestions && suggestions.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
                 {suggestions.slice(0, 6).map(product => (
@@ -161,26 +163,16 @@ export function Header() {
             )}
           </div>
 
+          {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Mobile search toggle */}
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsSearchOpen(!isSearchOpen)}>
               <Search className="h-5 w-5" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="hidden md:flex relative"
-              onClick={() => setIsOpen(true)}
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {itemCount}
-                </span>
-              )}
             </Button>
           </div>
         </div>
 
+        {/* Mobile search */}
         {isSearchOpen && (
           <form onSubmit={handleSearch} className="mt-4 md:hidden">
             <div className="relative">
@@ -199,6 +191,7 @@ export function Header() {
         )}
       </div>
 
+      {/* Categories bar - Desktop */}
       <nav className="hidden lg:block border-t bg-muted/30">
         <div className="container-custom">
           <ul className="flex items-center gap-8 py-3">

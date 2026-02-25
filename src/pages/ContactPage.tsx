@@ -33,7 +33,7 @@ export default function ContactPage() {
                 <Phone className="h-6 w-6 text-primary shrink-0" />
                 <div>
                   <p className="font-medium">Telefone / WhatsApp</p>
-                  <p className="text-muted-foreground">(44) 3101-1011</p>
+                  <p className="text-muted-foreground">(11) 99999-9999</p>
                 </div>
               </div>
 
@@ -41,7 +41,7 @@ export default function ContactPage() {
                 <Mail className="h-6 w-6 text-primary shrink-0" />
                 <div>
                   <p className="font-medium">Email</p>
-                  <p className="text-muted-foreground">contato@camerasprime.com.br</p>
+                  <p className="text-muted-foreground">contato@icamstore.com.br</p>
                 </div>
               </div>
 
@@ -66,7 +66,7 @@ export default function ContactPage() {
 
               {whatsapp?.enabled && (
                 <Button className="w-full" size="lg" onClick={() => {
-                  const phone = whatsapp.phone || '554431011011';
+                  const phone = whatsapp.phone || '5511999999999';
                   window.open(`https://wa.me/${phone}`, '_blank');
                 }}>
                   <MessageCircle className="h-5 w-5 mr-2" />
@@ -90,7 +90,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <Label htmlFor="phone">Telefone</Label>
-                  <Input id="phone" placeholder="(44) 99999-9999" />
+                  <Input id="phone" placeholder="(11) 99999-9999" />
                 </div>
                 <div>
                   <Label htmlFor="message">Mensagem</Label>

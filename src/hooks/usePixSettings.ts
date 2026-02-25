@@ -3,23 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 
 export interface PixSettings {
-  pix_mode: 'manual' | 'street_pay';
   pix_key: string;
   merchant_name: string;
   merchant_city: string;
-  street_pay_api_key: string;
-  whatsapp_threshold_enabled: boolean;
-  whatsapp_threshold_value: number;
 }
 
 const DEFAULT_PIX_SETTINGS: PixSettings = {
-  pix_mode: 'manual',
-  pix_key: '470e1c06-a98c-4fd9-ad77-e221114722bc',
-  merchant_name: 'CAMERAS PRIME',
-  merchant_city: 'MARINGA',
-  street_pay_api_key: '',
-  whatsapp_threshold_enabled: true,
-  whatsapp_threshold_value: 2500,
+  pix_key: '',
+  merchant_name: 'iCamStore',
+  merchant_city: 'SAO PAULO',
 };
 
 export function usePixSettings() {
@@ -40,7 +32,7 @@ export function usePixSettings() {
       if (data?.value && typeof data.value === 'object' && !Array.isArray(data.value)) {
         return {
           ...DEFAULT_PIX_SETTINGS,
-          ...(data.value as unknown as Partial<PixSettings>),
+          ...(data.value as Partial<PixSettings>),
         };
       }
 
@@ -54,24 +46,27 @@ export function useUpdatePixSettings() {
 
   return useMutation({
     mutationFn: async (settings: PixSettings) => {
+      // Check if setting exists
       const { data: existing } = await supabase
         .from('site_settings')
         .select('id')
         .eq('key', 'pix_config')
         .maybeSingle();
 
-      const jsonValue = settings as unknown as Json;
+      const jsonValue: Json = settings as unknown as Json;
 
       if (existing) {
         const { error } = await supabase
           .from('site_settings')
           .update({ value: jsonValue })
           .eq('key', 'pix_config');
+        
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('site_settings')
           .insert([{ key: 'pix_config', value: jsonValue }]);
+        
         if (error) throw error;
       }
 
@@ -99,6 +94,7 @@ export const calculateCRC16 = (str: string): string => {
   return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
 };
 
+// Generate PIX EMV code
 export function generatePixEMV(params: {
   pixKey: string;
   merchantName: string;
@@ -107,45 +103,56 @@ export function generatePixEMV(params: {
   txId?: string;
 }): string {
   const { pixKey, merchantName, merchantCity, amount, txId } = params;
+
   if (!pixKey.trim()) return '';
 
-  const formatField = (id: string, value: string) => {
-    const len = value.length.toString().padStart(2, '0');
-    return `${id}${len}${value}`;
-  };
+  let payload = '';
 
-  let payload = '000201';
-  
+  // Payload Format Indicator
+  payload += '000201';
+
+  // Merchant Account Information (PIX)
   const gui = '0014br.gov.bcb.pix';
   const key = `01${String(pixKey.length).padStart(2, '0')}${pixKey}`;
   const merchantAccount = gui + key;
   payload += `26${String(merchantAccount.length).padStart(2, '0')}${merchantAccount}`;
-  
+
+  // Merchant Category Code
   payload += '52040000';
+
+  // Transaction Currency (BRL = 986)
   payload += '5303986';
 
+  // Transaction Amount (if provided)
   if (amount && amount > 0) {
     const amountStr = amount.toFixed(2);
     payload += `54${String(amountStr.length).padStart(2, '0')}${amountStr}`;
   }
 
+  // Country Code
   payload += '5802BR';
-  
+
+  // Merchant Name (max 25 chars)
   const name = merchantName.substring(0, 25).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   payload += `59${String(name.length).padStart(2, '0')}${name}`;
 
+  // Merchant City (max 15 chars)
   const city = merchantCity.substring(0, 15).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   payload += `60${String(city.length).padStart(2, '0')}${city}`;
 
+  // Additional Data Field Template (txId)
   if (txId?.trim()) {
     const cleanTxId = txId.substring(0, 25).toUpperCase().replace(/[^A-Z0-9]/g, '');
     const additionalData = `05${String(cleanTxId.length).padStart(2, '0')}${cleanTxId}`;
     payload += `62${String(additionalData.length).padStart(2, '0')}${additionalData}`;
   } else {
-    payload += '62070503***';
+    payload += '6207' + '0503***';
   }
 
+  // CRC16 placeholder
   payload += '6304';
+
+  // Calculate CRC16
   const crc = calculateCRC16(payload);
   payload += crc;
 

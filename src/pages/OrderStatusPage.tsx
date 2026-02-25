@@ -8,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Order, OrderItem } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { usePixSettings } from '@/hooks/usePixSettings';
 
 const statusConfig: Record<string, { icon: React.ElementType; label: string; color: string; description: string }> = {
   pending: { icon: Clock, label: 'Pendente', color: 'text-yellow-500', description: 'Seu pedido está sendo processado.' },
@@ -20,6 +19,8 @@ const statusConfig: Record<string, { icon: React.ElementType; label: string; col
   cancelled: { icon: Clock, label: 'Cancelado', color: 'text-red-500', description: 'Este pedido foi cancelado.' },
 };
 
+const PODPAY_THRESHOLD = 2500;
+
 export default function OrderStatusPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -30,7 +31,6 @@ export default function OrderStatusPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   
-  const { data: pixSettings } = usePixSettings();
 
   const orderWithPix = order as Order & { 
     pix_qr_code?: string; 
@@ -38,10 +38,7 @@ export default function OrderStatusPage() {
     podpay_transaction_id?: string;
   };
 
-  // Lógica dinâmica para decidir se mostra o PIX ou o botão do WhatsApp
-  const thresholdEnabled = pixSettings?.whatsapp_threshold_enabled ?? true;
-  const thresholdValue = pixSettings?.whatsapp_threshold_value ?? 2500;
-  const isPodPayOrder = orderWithPix && (!thresholdEnabled || orderWithPix.total < thresholdValue);
+const isPodPayOrder = orderWithPix && orderWithPix.total < PODPAY_THRESHOLD;
 
   // Fetch order and items
   useEffect(() => {
@@ -92,6 +89,7 @@ export default function OrderStatusPage() {
           const updated = payload.new as Order;
           setOrder(updated);
           
+          // If payment just confirmed, show success toast
           if (updated.status === 'paid' && order?.status === 'awaiting_payment') {
             toast.success('🎉 Pagamento confirmado! Seu pedido será enviado em breve.');
           }
@@ -104,7 +102,7 @@ export default function OrderStatusPage() {
     };
   }, [orderId, order?.status]);
 
-  // Auto-poll for PIX data
+  // Auto-poll for PIX data when order is awaiting payment but PIX code not yet available
   useEffect(() => {
     if (!orderId || !order) return;
     if (order.status !== 'awaiting_payment') return;
@@ -112,6 +110,7 @@ export default function OrderStatusPage() {
     const oWithPix = order as Order & { pix_qr_code?: string; podpay_transaction_id?: string };
     if (!oWithPix.podpay_transaction_id || oWithPix.pix_qr_code) return;
 
+    // Poll every 3 seconds for PIX code
     const interval = setInterval(async () => {
       const { data } = await supabase
         .from('orders')
@@ -128,6 +127,29 @@ export default function OrderStatusPage() {
     return () => clearInterval(interval);
   }, [orderId, order]);
 
+  // Auto-poll payment status every 10 seconds
+  useEffect(() => {
+    if (!orderId || !order) return;
+    if (order.status !== 'awaiting_payment') return;
+
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('orders')
+        .select('status, tracking_code')
+        .eq('id', orderId)
+        .single();
+
+      if (data && data.status !== 'awaiting_payment') {
+        setOrder(prev => prev ? { ...prev, ...data } as Order : null);
+        clearInterval(interval);
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [orderId, order?.status]);
+
+  // No longer needed - PIX code shows automatically
+
   const copyPixCode = async () => {
     if (orderWithPix?.pix_qr_code) {
       try {
@@ -136,6 +158,7 @@ export default function OrderStatusPage() {
         toast.success('Código PIX copiado! Cole no app do seu banco.');
         setTimeout(() => setCopied(false), 3000);
       } catch {
+        // Fallback for older browsers
         const textArea = document.createElement('textarea');
         textArea.value = orderWithPix.pix_qr_code;
         document.body.appendChild(textArea);
@@ -194,7 +217,7 @@ export default function OrderStatusPage() {
   const StatusIcon = statusInfo.icon;
 
   const openWhatsApp = (customMessage?: string) => {
-    const phone = '554431011011';
+    const phone = '5511972238165';
     const message = customMessage ? encodeURIComponent(customMessage) : encodeURIComponent(
       `Olá! Tenho uma dúvida sobre meu pedido #${order.id.slice(0, 8).toUpperCase()}.\n\n` +
       `Nome: ${order.customer_name}\n` +
@@ -279,7 +302,7 @@ export default function OrderStatusPage() {
             </div>
           </div>
 
-          {/* PodPay PIX Payment */}
+          {/* PodPay PIX Payment (orders ≤ R$2499.99) */}
           {status === 'awaiting_payment' && isPodPayOrder && (
             <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-6 mb-6">
               <div className="flex items-center gap-2 mb-4">
@@ -287,6 +310,7 @@ export default function OrderStatusPage() {
                 <h2 className="font-bold text-lg">Pague com PIX</h2>
               </div>
 
+              {/* If PIX code not yet available - show loading */}
               {!hasPixCode && (
                 <div className="text-center py-6">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-orange-500" />
@@ -295,8 +319,10 @@ export default function OrderStatusPage() {
                 </div>
               )}
 
+              {/* PIX code available - show immediately */}
               {hasPixCode && (
                 <div className="space-y-4">
+                  {/* QR Code Image */}
                   {orderWithPix.pix_qr_code_image && (
                     <div className="flex justify-center">
                       <img 
@@ -307,6 +333,7 @@ export default function OrderStatusPage() {
                     </div>
                   )}
 
+                  {/* Copy-paste PIX code */}
                   <div>
                     <p className="text-sm font-medium mb-2 text-center">
                       PIX Copia e Cola:
@@ -345,7 +372,7 @@ export default function OrderStatusPage() {
             </div>
           )}
 
-          {/* WhatsApp PIX Payment */}
+          {/* WhatsApp PIX Payment (orders > R$2499.99 or no PodPay) */}
           {status === 'awaiting_payment' && !isPodPayOrder && (
             <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
@@ -365,7 +392,7 @@ export default function OrderStatusPage() {
             </div>
           )}
 
-          {/* Payment confirmed */}
+          {/* Payment confirmed - show tracking & delivery info */}
           {(status === 'paid' || status === 'processing') && (
             <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
