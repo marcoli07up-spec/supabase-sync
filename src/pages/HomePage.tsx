@@ -21,16 +21,19 @@ import audioImg from '@/assets/categories/audio.png';
 import mochilasImg from '@/assets/categories/mochilas.png';
 import iluminacaoImg from '@/assets/categories/iluminacao.png';
 
-// Fallback Banner images - Desktop
+// Banner images - Desktop
 import bannerLentesImg from '@/assets/banners/lentes-premium.png';
 import bannerAudioImg from '@/assets/banners/audio-premium.png';
 import bannerIluminacaoImg from '@/assets/banners/iluminacao-premium.png';
 import bannerUsadosImg from '@/assets/banners/usados-premium.png';
 
-// Fallback Banner images - Mobile
+// Banner images - Mobile
 import mobileCamera from '@/assets/banners/mobile-cameras.png';
 import mobileAudio from '@/assets/banners/mobile-audio.png';
 import mobileTripe from '@/assets/banners/mobile-tripe.png';
+import mobileLentes from '@/assets/banners/mobile-lentes.png';
+import mobileMochilas from '@/assets/banners/mobile-mochilas.png';
+import mobileIluminacao from '@/assets/banners/mobile-iluminacao.png';
 
 // Promo images
 import freteGratisImg from '@/assets/promos/frete-gratis.png';
@@ -57,21 +60,17 @@ const fallbackBannersMobile = [
   { src: mobileCamera, alt: 'Câmeras de Ação', link: '/categoria/cameras' },
   { src: mobileAudio, alt: 'Áudio Pro', link: '/categoria/audio' },
   { src: mobileTripe, alt: 'Tripés', link: '/categoria/acessorios' },
+  { src: mobileLentes, alt: 'Lentes', link: '/categoria/lentes' },
+  { src: mobileMochilas, alt: 'Mochilas', link: '/categoria/mochilas' },
+  { src: mobileIluminacao, alt: 'Iluminação', link: '/categoria/iluminacao' },
 ];
 
-const promoImages = [{
-  src: freteGratisImg,
-  alt: 'Frete Grátis'
-}, {
-  src: pixDescontoImg,
-  alt: 'Desconto no PIX'
-}, {
-  src: garantiaImg,
-  alt: '1 Ano de Garantia'
-}, {
-  src: pagamentoSeguroImg,
-  alt: 'Pagamento Seguro'
-}];
+const promoImages = [
+  { src: freteGratisImg, alt: 'Frete Grátis' },
+  { src: pixDescontoImg, alt: 'Desconto no PIX' },
+  { src: garantiaImg, alt: '1 Ano de Garantia' },
+  { src: pagamentoSeguroImg, alt: 'Pagamento Seguro' }
+];
 
 export default function HomePage() {
   const autoplayPlugin = useRef(
@@ -86,7 +85,6 @@ export default function HomePage() {
   const { data: allProducts, isLoading: productsLoading } = useProducts();
   const { data: reviews } = useReviews();
 
-  // Use DB banners if available, otherwise use fallbacks
   const displayBanners = dbBanners && dbBanners.length > 0 
     ? dbBanners.map(b => ({ src: b.image_url, alt: b.title || '', link: b.link || '#' }))
     : null;
