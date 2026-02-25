@@ -27,7 +27,8 @@ export default function AdminPix() {
         merchant_name: pixSettings.merchant_name || '',
         merchant_city: pixSettings.merchant_city || '',
         whatsapp_threshold_enabled: pixSettings.whatsapp_threshold_enabled ?? true,
-        whatsapp_threshold_value: pixSettings.whatsapp_threshold_value || 2500,
+        // Usando ?? para permitir que o valor 0 seja carregado corretamente
+        whatsapp_threshold_value: pixSettings.whatsapp_threshold_value ?? 2500,
       });
     }
   }, [pixSettings]);
@@ -137,11 +138,11 @@ export default function AdminPix() {
                   id="threshold_value"
                   type="number"
                   value={formData.whatsapp_threshold_value}
-                  onChange={(e) => setFormData({ ...formData, whatsapp_threshold_value: parseFloat(e.target.value) || 0 })}
-                  placeholder="2500"
+                  onChange={(e) => setFormData({ ...formData, whatsapp_threshold_value: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                  placeholder="0"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Pedidos ≥ este valor não gerarão PIX automático.
+                  Pedidos ≥ este valor não gerarão PIX automático. Coloque 0 para todos irem ao WhatsApp.
                 </p>
               </div>
             )}
