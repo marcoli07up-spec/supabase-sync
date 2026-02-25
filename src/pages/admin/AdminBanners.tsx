@@ -75,7 +75,7 @@ export default function AdminBanners() {
 
   const handleSyncWithSupabase = async () => {
     setIsSyncing(true);
-    const toastId = toast.loading('Enviando imagens para o Supabase...');
+    const toastId = toast.loading('Enviando imagens para o Supabase Storage...');
 
     try {
       const defaultBanners = [
@@ -84,27 +84,31 @@ export default function AdminBanners() {
         { src: bannerIluminacao, name: 'iluminacao-premium.png', title: 'Iluminação', link: '/categoria/iluminacao' },
         { src: bannerUsados, name: 'usados-premium.png', title: 'Equipamentos Seminovos', link: '/categoria/cameras-seminovas' },
         { src: mobileCamera, name: 'mobile-cameras.png', title: 'Câmeras Mobile', link: '/categoria/cameras' },
+        { src: mobileAudio, name: 'mobile-audio.png', title: 'Áudio Mobile', link: '/categoria/audio' },
+        { src: mobileAudioPro, name: 'mobile-audio-pro.png', title: 'Áudio Pro Mobile', link: '/categoria/audio' },
+        { src: mobileTripe, name: 'mobile-tripe.png', title: 'Tripés Mobile', link: '/categoria/acessorios' },
+        { src: mobileLentes, name: 'mobile-lentes.png', title: 'Lentes Mobile', link: '/categoria/lentes' },
+        { src: mobileMochilas, name: 'mobile-mochilas.png', title: 'Mochilas Mobile', link: '/categoria/mochilas' },
+        { src: mobileIluminacao, name: 'mobile-iluminacao.png', title: 'Iluminação Mobile', link: '/categoria/iluminacao' },
       ];
 
       for (const item of defaultBanners) {
-        // Fetch the image and convert to blob
         const response = await fetch(item.src);
         const blob = await response.blob();
-        const fileName = `banners/${Date.now()}-${item.name}`;
+        const fileName = `banners/${item.name}`;
 
-        // Upload to Supabase Storage
+        // Upload to Supabase Storage (bucket: product-images)
         const { error: uploadError } = await supabase.storage
           .from('product-images')
-          .upload(fileName, blob);
+          .upload(fileName, blob, { upsert: true });
 
         if (uploadError) throw uploadError;
 
-        // Get Public URL
         const { data: { publicUrl } } = supabase.storage
           .from('product-images')
           .getPublicUrl(fileName);
 
-        // Create Banner in DB
+        // Create or Update Banner in DB
         await createBanner.mutateAsync({
           title: item.title,
           subtitle: 'Ofertas Especiais',
@@ -116,10 +120,10 @@ export default function AdminBanners() {
         });
       }
 
-      toast.success('Imagens sincronizadas com sucesso!', { id: toastId });
+      toast.success('Todas as imagens foram salvas no seu Supabase!', { id: toastId });
     } catch (error) {
       console.error(error);
-      toast.error('Erro ao sincronizar imagens.', { id: toastId });
+      toast.error('Erro ao sincronizar imagens com o banco.', { id: toastId });
     } finally {
       setIsSyncing(false);
     }
@@ -170,8 +174,8 @@ export default function AdminBanners() {
     setIsUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `banners/${fileName}`;
+      const fileName = `banners/${Date.now()}.${fileExt}`;
+      const filePath = fileName;
 
       const { error: uploadError } = await supabase.storage
         .from('product-images')
