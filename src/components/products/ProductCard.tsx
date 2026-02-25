@@ -73,30 +73,30 @@ export function ProductCard({ product }: ProductCardProps) {
         </Link>
 
         <div className="mb-3 space-y-0.5">
-          <p className="text-foreground font-bold text-2xl sm:text-3xl">
+          <p className="text-foreground font-bold text-xl sm:text-2xl">
             {formatCurrency(cardPrice)}
           </p>
-          <p className="text-xs text-muted-foreground">no cartão</p>
+          <p className="text-[10px] text-muted-foreground">no cartão</p>
           
           <div className="bg-primary/10 border border-primary/20 rounded-lg p-2 sm:p-3 mb-2">
             <div className="flex items-center gap-1.5 mb-1">
-              <Zap className="h-4 w-4 text-primary fill-current" />
-              <span className="font-bold text-primary text-lg sm:text-xl">
+              <Zap className="h-3.5 w-3.5 text-primary fill-current" />
+              <span className="font-bold text-primary text-base sm:text-lg">
                 {formatCurrency(pixPrice)}
               </span>
-              <span className="text-xs text-primary font-medium">no PIX</span>
+              <span className="text-[10px] text-primary font-medium">no PIX</span>
               {discount > 0 && (
                 <Badge variant="destructive" className="text-[8px] ml-auto">
                   -{discount}%
                 </Badge>
               )}
             </div>
-            <p className="text-[9px] text-muted-foreground ml-6">
+            <p className="text-[8px] text-muted-foreground ml-5">
               Economize {formatCurrency(cardPrice - pixPrice)}
             </p>
           </div>
 
-          <p className="price-installment text-[9px] sm:text-[11px]">
+          <p className="price-installment text-[8px] sm:text-[10px]">
             em até 12x de {formatCurrency(cardPrice / 12)} sem juros
           </p>
         </div>
