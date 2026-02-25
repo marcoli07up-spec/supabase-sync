@@ -37,10 +37,11 @@ export default function ProductPage() {
   ].filter(Boolean) as string[] : [];
   
   const currentImage = selectedImage || allImages[currentIndex] || product?.image_url || '/placeholder.svg';
-  const pixPrice = product ? product.price * 0.95 : 0;
-  const cardPrice = product ? product.price * 1.05 : 0;
+  
+  // Preços corrigidos: Cartão é o preço base, PIX tem 5% de desconto
+  const cardPrice = product ? product.price : 0;
+  const pixPrice = cardPrice * 0.95;
 
-  // Swipe handling for mobile image gallery
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -116,7 +117,6 @@ export default function ProductPage() {
 
   return (
     <Layout>
-      {/* Breadcrumb */}
       <div className="bg-secondary/50 py-2 sm:py-3">
         <div className="container-custom">
           <nav className="flex items-center gap-1.5 text-[11px] sm:text-sm text-muted-foreground">
@@ -130,12 +130,8 @@ export default function ProductPage() {
       <section className="py-2 sm:py-8">
         <div className="container-custom px-0 sm:px-4">
           <div className="grid lg:grid-cols-2 gap-0 sm:gap-8 lg:gap-12">
-            
-            {/* === IMAGE SECTION === */}
             <div className="space-y-2 sm:space-y-4">
-              {/* Main image - full width on mobile with swipe */}
               <div
-                ref={mainImageRef}
                 className="relative"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
@@ -147,7 +143,6 @@ export default function ProductPage() {
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
-                  
                   {(product.stock ?? 0) <= 0 && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                       <span className="bg-destructive text-destructive-foreground text-lg sm:text-2xl font-bold px-4 py-2 rounded-lg uppercase tracking-wider shadow-lg">
@@ -156,8 +151,6 @@ export default function ProductPage() {
                     </div>
                   )}
                 </div>
-                
-                {/* Badges */}
                 {(product.stock ?? 0) > 0 && (
                   <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-1.5">
                     {discount > 0 && (
@@ -165,11 +158,8 @@ export default function ProductPage() {
                         -{discount}%
                       </Badge>
                     )}
-                    
                   </div>
                 )}
-
-                {/* Image counter dots on mobile */}
                 {allImages.length > 1 && (
                   <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 sm:hidden">
                     {allImages.map((_, i) => (
@@ -181,21 +171,7 @@ export default function ProductPage() {
                     ))}
                   </div>
                 )}
-
-                {/* Stock warning */}
-                {(product.stock ?? 0) <= 3 && (product.stock ?? 0) > 0 && (
-                  <div className="absolute bottom-10 sm:bottom-4 left-3 right-3 sm:left-4 sm:right-4">
-                    <div className="bg-destructive/90 text-destructive-foreground text-xs sm:text-sm font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 shrink-0" />
-                      {product.name.toLowerCase().includes('seminov') 
-                        ? 'Última unidade disponível!' 
-                        : `Apenas ${product.stock} unidade${product.stock !== 1 ? 's' : ''} disponível!`}
-                    </div>
-                  </div>
-                )}
               </div>
-              
-              {/* Thumbnail gallery - desktop & tablet only */}
               {allImages.length > 1 && (
                 <div className="relative hidden sm:block px-0">
                   <button
@@ -233,10 +209,7 @@ export default function ProductPage() {
               )}
             </div>
 
-            {/* === PRODUCT INFO === */}
             <div className="flex flex-col min-w-0 px-4 sm:px-0 pt-3 sm:pt-0">
-              
-              {/* Rating */}
               {!product.name.toLowerCase().includes('seminov') && productReviews && productReviews.length > 0 && (
                 <div className="flex items-center gap-1.5 mb-2">
                   <div className="flex">
@@ -255,12 +228,10 @@ export default function ProductPage() {
                 </div>
               )}
 
-              {/* Title */}
               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4 leading-tight">
                 {product.name}
               </h1>
 
-              {/* Stock */}
               <div className="mb-3 sm:mb-4">
                 {(product.stock ?? 0) > 0 ? (
                   <span className="inline-flex items-center gap-1.5 bg-success/10 text-success px-2.5 py-1 rounded-full text-xs sm:text-sm font-medium">
@@ -274,7 +245,6 @@ export default function ProductPage() {
                 )}
               </div>
 
-              {/* Pricing Card */}
               <div className="bg-secondary/50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
                 {product.original_price && product.original_price > product.price && (
                   <p className="text-sm sm:text-lg text-muted-foreground line-through mb-1">
@@ -282,7 +252,6 @@ export default function ProductPage() {
                   </p>
                 )}
                 
-                {/* PIX */}
                 <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 sm:p-4 mb-3">
                   <div className="flex items-center gap-2 mb-0.5">
                     <Zap className="h-5 w-5 text-primary shrink-0" />
@@ -301,7 +270,6 @@ export default function ProductPage() {
                   </p>
                 </div>
 
-                {/* Card */}
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <CreditCard className="h-4 w-4 shrink-0" />
                   <span className="text-xs sm:text-sm">
@@ -313,7 +281,6 @@ export default function ProductPage() {
                 </p>
               </div>
 
-              {/* CTA - desktop only */}
               <div className="hidden sm:block space-y-3 mb-6">
                 <Button
                   size="lg"
@@ -324,12 +291,8 @@ export default function ProductPage() {
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Comprar agora
                 </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  * Produto seminovo - unidade única disponível
-                </p>
               </div>
 
-              {/* Benefits - 2x2 grid on mobile */}
               <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
                 {[
                   { icon: Truck, label: 'Frete Grátis', sub: 'Todo o Brasil' },
@@ -347,12 +310,10 @@ export default function ProductPage() {
                 ))}
               </div>
 
-              {/* Shipping Calculator */}
               <div className="mb-4 sm:mb-6">
                 <ShippingCalculator />
               </div>
 
-              {/* Description */}
               {product.description && (
                 <div className="border-t border-border pt-4 sm:pt-6 min-w-0">
                   <h3 className="font-semibold mb-3 text-base sm:text-lg">Descrição do Produto</h3>
@@ -380,7 +341,6 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* Reviews */}
       {product.name.toLowerCase().includes('seminov') ? (
         <section className="py-4">
           <div className="container-custom max-w-md mx-auto">
@@ -403,7 +363,6 @@ export default function ProductPage() {
         </section>
       )}
 
-      {/* Related products */}
       {relatedProducts && relatedProducts.length > 0 && (
         <section className="py-6 sm:py-8 bg-secondary">
           <div className="container-custom">
@@ -413,12 +372,10 @@ export default function ProductPage() {
         </section>
       )}
 
-      {/* Reviews Carousel */}
       {reviews && reviews.length > 0 && (
         <ReviewsCarousel reviews={reviews} />
       )}
 
-      {/* Sticky mobile buy bar */}
       {(product.stock ?? 0) > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border p-3 sm:hidden">
           <div className="flex items-center gap-3">
@@ -443,8 +400,6 @@ export default function ProductPage() {
           </div>
         </div>
       )}
-
-      {/* Spacer for sticky bar */}
       <div className="h-[72px] sm:hidden" />
     </Layout>
   );

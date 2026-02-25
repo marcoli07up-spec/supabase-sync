@@ -1,13 +1,23 @@
-import React from 'react';
+import { forwardRef } from 'react';
 
-export function AnnouncementBar() {
+export const AnnouncementBar = forwardRef<HTMLDivElement>((_, ref) => {
+  const announcements = [
+    '🎉 REINAUGURAÇÃO — Frete Grátis em TODOS os produtos!',
+    '🚚 Aproveite: Frete Grátis para todo o Brasil na reinauguração!',
+    '🎊 Promoção de Reinauguração — Envio Grátis para qualquer lugar!',
+  ];
+
   return (
-    <div className="announcement-bar">
-      <div className="container-custom">
-        <p className="animate-marquee">
-          🎉 Câmeras Prime - Frete Grátis em todo o Brasil • 12x sem juros • Garantia de 1 ano
-        </p>
+    <div ref={ref} className="bg-primary text-primary-foreground py-2 overflow-hidden">
+      <div className="flex animate-marquee whitespace-nowrap">
+        {[...announcements, ...announcements, ...announcements].map((text, index) => (
+          <span key={index} className="mx-8 text-sm font-medium">
+            {text}
+          </span>
+        ))}
       </div>
     </div>
   );
-}
+});
+
+AnnouncementBar.displayName = 'AnnouncementBar';

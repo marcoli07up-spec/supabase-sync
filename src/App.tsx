@@ -29,6 +29,8 @@ import {
   AdminProducts,
   AdminCategories,
   AdminAbandonedCarts,
+  AdminBanners,
+  AdminLoginPage,
 } from "./pages/admin";
 import AdminTracking from "./pages/admin/AdminTracking";
 import AdminReviews from "./pages/admin/AdminReviews";
@@ -60,11 +62,13 @@ const App = () => (
             <Route path="/trocas-devolucoes" element={<ExchangesPage />} />
             
             {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="pedidos" element={<AdminOrders />} />
               <Route path="produtos" element={<AdminProducts />} />
               <Route path="categorias" element={<AdminCategories />} />
+              <Route path="banners" element={<AdminBanners />} />
               <Route path="rastreios" element={<AdminTracking />} />
               <Route path="avaliacoes" element={<AdminReviews />} />
               <Route path="pix" element={<AdminPix />} />
@@ -72,7 +76,6 @@ const App = () => (
               <Route path="whatsapp" element={<AdminWhatsApp />} />
             </Route>
             
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

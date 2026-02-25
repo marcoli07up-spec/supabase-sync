@@ -1,1 +1,68 @@
-// Replace "iCamStore" with "Câmeras Prime" in the location section
+import { Instagram, MapPin } from 'lucide-react';
+import storeFrontImg from '@/assets/store-front.png';
+
+export function StoreLocation() {
+  return (
+    <section className="py-8 md:py-12 bg-secondary border-t border-border">
+      <div className="container-custom">
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+          
+          {/* Store Photo (removed) */}
+          <div className="relative aspect-video rounded-2xl overflow-hidden bg-background border border-border flex items-center justify-center">
+            <div className="text-center px-6">
+              <MapPin className="h-10 w-10 text-primary mx-auto mb-3" />
+              <p className="font-semibold">Loja Física - Maringá, PR</p>
+             
+            </div>
+          </div>
+
+
+          {/* Store Info and Instagram */}
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold mb-3">Visite Nossa Loja</h2>
+              <p className="text-muted-foreground mb-4">
+                Atendimento presencial de segunda a sexta, das 9h às 18h, e aos sábados das 9h às 13h.
+              </p>
+              <div className="flex items-start gap-3 p-4 bg-background rounded-xl border border-border">
+                <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Câmeras Prime</p>
+                   <p className="text-sm text-muted-foreground">
+                     Av. Brasil, 284 - Zona 05<br />
+                     Maringá - PR, 87050-465
+39:                   </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Instagram Section */}
+            <div>
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Instagram className="h-5 w-5 text-primary" />
+                Siga-nos no Instagram
+              </h3>
+              <a
+                href="https://instagram.com/cameras.icam"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-4 p-4 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-xl border border-border hover:border-primary/50 transition-all"
+              >
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shrink-0">
+                  <Instagram className="h-8 w-8 text-primary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-lg group-hover:text-primary transition-colors">@cameras.icam</p>
+                  <p className="text-sm text-muted-foreground">Novidades, dicas e bastidores</p>
+                </div>
+                <span className="px-4 py-2 bg-primary text-primary-foreground rounded-full font-medium text-sm group-hover:scale-105 transition-transform">
+                  Seguir
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

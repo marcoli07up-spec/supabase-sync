@@ -10,7 +10,7 @@ interface CartContextType {
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   getTotal: () => number;
-  getTotalWithDiscount: (discount?: number) => number;
+  getTotalWithDiscount: (discount?: number, additionalCost?: number) => number;
   getItemCount: () => number;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
@@ -26,7 +26,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem(CART_STORAGE_KEY);
     if (savedCart) {
@@ -38,7 +37,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }, [items]);
@@ -58,7 +56,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [...currentItems, { product, quantity }];
     });
     
-    // Track Add to Cart event
     trackAddToCart({
       content_name: product.name,
       content_ids: [product.id],
@@ -67,14 +64,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       currency: 'BRL',
     });
     
-    // Trigger animation and show toast (positioned above floating cart)
     setIsAnimating(true);
     toast.success(`${product.name} adicionado ao carrinho!`, {
       position: 'top-center',
       duration: 2000,
     });
     
-    // Extended animation for visibility
     setTimeout(() => setIsAnimating(false), 1200);
   }, []);
 
@@ -105,9 +100,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return items.reduce((total, item) => total + item.product.price * item.quantity, 0);
   };
 
-  const getTotalWithDiscount = (discount = 0) => {
-    const total = getTotal();
-    return total - (total * discount / 100);
+  const getTotalWithDiscount = (discount = 0, additionalCost = 0) => {
+    const baseTotal = getTotal() + additionalCost;
+    return baseTotal - (baseTotal * discount / 100);
   };
 
   const getItemCount = () => {

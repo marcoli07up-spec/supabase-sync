@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Order, OrderItem, Product, Category } from '@/types';
+import { Order, OrderItem, Product, Category, Banner } from '@/types';
 
 // Orders hooks
 export function useAllOrders() {
@@ -204,6 +204,84 @@ export function useDeleteCategory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'categories'] });
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+    },
+  });
+}
+
+// Banners hooks
+export function useAllBanners() {
+  return useQuery({
+    queryKey: ['admin', 'banners'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('banners')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      return data as Banner[];
+    },
+  });
+}
+
+export function useCreateBanner() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (banner: Omit<Banner, 'id' | 'created_at'>) => {
+      const { data, error } = await supabase
+        .from('banners')
+        .insert(banner)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Banner;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'banners'] });
+      queryClient.invalidateQueries({ queryKey: ['banners'] });
+    },
+  });
+}
+
+export function useUpdateBanner() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...banner }: Partial<Banner> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('banners')
+        .update(banner)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Banner;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'banners'] });
+      queryClient.invalidateQueries({ queryKey: ['banners'] });
+    },
+  });
+}
+
+export function useDeleteBanner() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('banners')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'banners'] });
+      queryClient.invalidateQueries({ queryKey: ['banners'] });
     },
   });
 }

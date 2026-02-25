@@ -1,16 +1,16 @@
+"use client";
+
 import { Shield, CheckCircle, Award, Users, Star, Truck } from 'lucide-react';
 
 export function SocialProof() {
   return (
     <section className="py-8 bg-gradient-to-r from-primary/5 via-secondary to-primary/5">
       <div className="container-custom">
-        {/* Title */}
         <div className="text-center mb-6">
-          <h3 className="text-lg font-bold mb-2">Por que comprar na iCamStore?</h3>
+          <h3 className="text-lg font-bold mb-2">Por que comprar na Câmeras Prime?</h3>
           <p className="text-sm text-muted-foreground">Mais de 5.000 clientes satisfeitos</p>
         </div>
 
-        {/* Trust Badges Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="flex flex-col items-center p-4 bg-background rounded-xl border border-border text-center">
             <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-2">
