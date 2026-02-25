@@ -7,9 +7,11 @@ import { Layout } from '@/components/layout';
 import { ProductGrid } from '@/components/products';
 import { useFeaturedProducts, useProducts } from '@/hooks/useProducts';
 import { useReviews } from '@/hooks/useReviews';
+import { useBanners } from '@/hooks/useBanners';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import Autoplay from 'embla-carousel-autoplay';
 
 // Category images
@@ -19,13 +21,13 @@ import audioImg from '@/assets/categories/audio.png';
 import mochilasImg from '@/assets/categories/mochilas.png';
 import iluminacaoImg from '@/assets/categories/iluminacao.png';
 
-// Banner images - Desktop
+// Fallback Banner images - Desktop
 import bannerLentesImg from '@/assets/banners/lentes-premium.png';
 import bannerAudioImg from '@/assets/banners/audio-premium.png';
 import bannerIluminacaoImg from '@/assets/banners/iluminacao-premium.png';
 import bannerUsadosImg from '@/assets/banners/usados-premium.png';
 
-// Banner images - Mobile
+// Fallback Banner images - Mobile
 import mobileCamera from '@/assets/banners/mobile-cameras.png';
 import mobileAudio from '@/assets/banners/mobile-audio.png';
 import mobileTripe from '@/assets/banners/mobile-tripe.png';
@@ -44,14 +46,14 @@ const categoryImages: Record<string, string> = {
   iluminacao: iluminacaoImg
 };
 
-const bannerImagesDesktop = [
+const fallbackBannersDesktop = [
   { src: bannerLentesImg, alt: 'Lentes', link: '/categoria/lentes' },
   { src: bannerAudioImg, alt: 'Áudio', link: '/categoria/audio' },
   { src: bannerIluminacaoImg, alt: 'Iluminação', link: '/categoria/iluminacao' },
   { src: bannerUsadosImg, alt: 'Usados', link: '/categoria/cameras-seminovas' },
 ];
 
-const bannerImagesMobile = [
+const fallbackBannersMobile = [
   { src: mobileCamera, alt: 'Câmeras de Ação', link: '/categoria/cameras' },
   { src: mobileAudio, alt: 'Áudio Pro', link: '/categoria/audio' },
   { src: mobileTripe, alt: 'Tripés', link: '/categoria/acessorios' },
@@ -78,7 +80,20 @@ export default function HomePage() {
 
   const [mobileApi, setMobileApi] = useState<CarouselApi>();
   const [mobileCurrentIndex, setMobileCurrentIndex] = useState(0);
-  const mobileSlideCount = bannerImagesMobile.length;
+
+  const { data: dbBanners, isLoading: bannersLoading } = useBanners();
+  const { data: featuredProducts, isLoading: featuredLoading } = useFeaturedProducts();
+  const { data: allProducts, isLoading: productsLoading } = useProducts();
+  const { data: reviews } = useReviews();
+
+  // Use DB banners if available, otherwise use fallbacks
+  const displayBanners = dbBanners && dbBanners.length > 0 
+    ? dbBanners.map(b => ({ src: b.image_url, alt: b.title || '', link: b.link || '#' }))
+    : null;
+
+  const desktopBanners = displayBanners || fallbackBannersDesktop;
+  const mobileBanners = displayBanners || fallbackBannersMobile;
+  const mobileSlideCount = mobileBanners.length;
 
   const onMobileSelect = useCallback(() => {
     if (!mobileApi) return;
@@ -94,112 +109,97 @@ export default function HomePage() {
     };
   }, [mobileApi, onMobileSelect]);
 
-  const {
-    data: featuredProducts,
-    isLoading: featuredLoading
-  } = useFeaturedProducts();
+  const categories = [
+    { id: '1', name: 'Câmeras', slug: 'cameras' },
+    { id: '2', name: 'Lentes', slug: 'lentes' },
+    { id: '3', name: 'Áudio', slug: 'audio' },
+    { id: '4', name: 'Mochilas', slug: 'mochilas' },
+    { id: '5', name: 'Iluminação', slug: 'iluminacao' }
+  ];
 
-  const {
-    data: allProducts,
-    isLoading: productsLoading
-  } = useProducts();
-
-  const {
-    data: reviews
-  } = useReviews();
-
-  const categories = [{
-    id: '1',
-    name: 'Câmeras',
-    slug: 'cameras'
-  }, {
-    id: '2',
-    name: 'Lentes',
-    slug: 'lentes'
-  }, {
-    id: '3',
-    name: 'Áudio',
-    slug: 'audio'
-  }, {
-    id: '4',
-    name: 'Mochilas',
-    slug: 'mochilas'
-  }, {
-    id: '5',
-    name: 'Iluminação',
-    slug: 'iluminacao'
-  }];
-
-  return <Layout>
+  return (
+    <Layout>
+      {/* Mobile Banners */}
       <section className="relative md:hidden">
-        <Carousel 
-          className="w-full"
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          plugins={[autoplayPlugin.current]}
-          setApi={setMobileApi}
-        >
-          <CarouselContent>
-            {bannerImagesMobile.map((banner, index) => <CarouselItem key={index}>
-                <Link to={banner.link} className="block relative aspect-[2/3] overflow-hidden">
-                  <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover" />
-                </Link>
-              </CarouselItem>)}
-          </CarouselContent>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 rounded-full h-10 w-10"
-            onClick={() => mobileApi?.scrollPrev()}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 rounded-full h-10 w-10"
-            onClick={() => mobileApi?.scrollNext()}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </Carousel>
-        
-        <div className="px-4 py-2">
-          <Progress value={((mobileCurrentIndex + 1) / mobileSlideCount) * 100} className="h-1" />
-          <p className="text-xs text-muted-foreground text-center mt-1">
-            {mobileCurrentIndex + 1} / {mobileSlideCount}
-          </p>
-        </div>
+        {bannersLoading ? (
+          <Skeleton className="w-full aspect-[2/3]" />
+        ) : (
+          <>
+            <Carousel 
+              className="w-full"
+              opts={{ align: "start", loop: true }}
+              plugins={[autoplayPlugin.current]}
+              setApi={setMobileApi}
+            >
+              <CarouselContent>
+                {mobileBanners.map((banner, index) => (
+                  <CarouselItem key={index}>
+                    <Link to={banner.link} className="block relative aspect-[2/3] overflow-hidden">
+                      <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover" />
+                    </Link>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 rounded-full h-10 w-10"
+                onClick={() => mobileApi?.scrollPrev()}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 rounded-full h-10 w-10"
+                onClick={() => mobileApi?.scrollNext()}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </Carousel>
+            
+            <div className="px-4 py-2">
+              <Progress value={((mobileCurrentIndex + 1) / mobileSlideCount) * 100} className="h-1" />
+              <p className="text-xs text-muted-foreground text-center mt-1">
+                {mobileCurrentIndex + 1} / {mobileSlideCount}
+              </p>
+            </div>
+          </>
+        )}
       </section>
 
+      {/* Desktop Banners */}
       <section className="relative hidden md:block">
-        <Carousel 
-          className="w-full"
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          plugins={[autoplayPlugin.current]}
-        >
-          <CarouselContent>
-            {bannerImagesDesktop.map((banner, index) => <CarouselItem key={index}>
-                <Link to={banner.link} className="block relative aspect-[3/1] overflow-hidden">
-                  <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover" />
-                </Link>
-              </CarouselItem>)}
-          </CarouselContent>
-        </Carousel>
+        {bannersLoading ? (
+          <Skeleton className="w-full aspect-[3/1]" />
+        ) : (
+          <Carousel 
+            className="w-full"
+            opts={{ align: "start", loop: true }}
+            plugins={[autoplayPlugin.current]}
+          >
+            <CarouselContent>
+              {desktopBanners.map((banner, index) => (
+                <CarouselItem key={index}>
+                  <Link to={banner.link} className="block relative aspect-[3/1] overflow-hidden">
+                    <img src={banner.src} alt={banner.alt} className="w-full h-full object-cover" />
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        )}
       </section>
 
       <section className="py-4 md:py-6">
         <div className="container-custom">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            {promoImages.map((promo, index) => <div key={index} className="aspect-video overflow-hidden rounded-xl">
+            {promoImages.map((promo, index) => (
+              <div key={index} className="aspect-video overflow-hidden rounded-xl">
                 <img src={promo.src} alt={promo.alt} className="w-full h-full object-cover" />
-              </div>)}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -220,13 +220,15 @@ export default function HomePage() {
         <div className="container-custom">
           <h2 className="text-xl md:text-2xl font-bold mb-6 text-center">Navegue por Categoria</h2>
           <div className="flex flex-col md:grid md:grid-cols-5 gap-3 md:gap-4">
-            {categories.map(category => <Link key={category.id} to={`/categoria/${category.slug}`} className="relative aspect-[16/9] md:aspect-[3/4] rounded-2xl overflow-hidden group">
+            {categories.map(category => (
+              <Link key={category.id} to={`/categoria/${category.slug}`} className="relative aspect-[16/9] md:aspect-[3/4] rounded-2xl overflow-hidden group">
                 <img src={categoryImages[category.slug]} alt={category.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">
                   <h3 className="text-white font-bold text-lg">{category.name}</h3>
                 </div>
-              </Link>)}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -238,7 +240,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {reviews && reviews.length > 0 && <section className="py-8 md:py-12 bg-secondary">
+      {reviews && reviews.length > 0 && (
+        <section className="py-8 md:py-12 bg-secondary">
           <div className="container-custom">
             <div className="text-center mb-6">
               <h2 className="text-xl md:text-2xl font-bold mb-2">O que nossos clientes dizem</h2>
@@ -252,11 +255,12 @@ export default function HomePage() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {reviews.slice(0, 4).map(review => <div key={review.id} className="bg-card p-6 rounded-lg border border-border">
+              {reviews.slice(0, 4).map(review => (
+                <div key={review.id} className="bg-card p-6 rounded-lg border border-border">
                   <div className="flex gap-1 mb-3">
-                    {Array.from({
-                length: 5
-              }).map((_, i) => <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'text-primary fill-primary' : 'text-muted'}`} />)}
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'text-primary fill-primary' : 'text-muted'}`} />
+                    ))}
                   </div>
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
                     "{review.comment}"
@@ -268,10 +272,12 @@ export default function HomePage() {
                       Verificado
                     </span>
                   </div>
-                </div>)}
+                </div>
+              ))}
             </div>
           </div>
-        </section>}
+        </section>
+      )}
 
       <section className="py-8 md:py-12">
         <div className="container-custom">
@@ -310,5 +316,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-    </Layout>;
+    </Layout>
+  );
 }
