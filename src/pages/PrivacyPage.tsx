@@ -67,7 +67,7 @@ export default function PrivacyPage() {
           <h2>7. Contato</h2>
           <p>
             Para questões sobre esta política ou sobre seus dados pessoais, entre em 
-            contato através do email: contato@camerasprime.com.br
+            contato através do email: contato@icamstore.com.br
           </p>
         </div>
       </div>
