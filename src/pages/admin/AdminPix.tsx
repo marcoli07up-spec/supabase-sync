@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Save, ShieldCheck, MessageCircle, CreditCard, AlertCircle } from 'lucide-react';
+import { Save, ShieldCheck, MessageCircle, CreditCard, AlertCircle, Copy, Check, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { usePixSettings, useUpdatePixSettings } from '@/hooks/usePixSettings';
+import { usePixSettings, useUpdatePixSettings, generatePixEMV } from '@/hooks/usePixSettings';
 
 export default function AdminPix() {
   const { data: pixSettings, isLoading } = usePixSettings();
@@ -17,6 +17,9 @@ export default function AdminPix() {
   const [merchantCity, setMerchantCity] = useState('');
   const [whatsappThresholdEnabled, setWhatsappThresholdEnabled] = useState(true);
   const [whatsappThresholdValue, setWhatsappThresholdValue] = useState(2500);
+  
+  const [testCode, setTestCode] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (pixSettings) {
@@ -27,6 +30,22 @@ export default function AdminPix() {
       setWhatsappThresholdValue(pixSettings.whatsapp_threshold_value ?? 2500);
     }
   }, [pixSettings]);
+
+  // Gera um código de teste sempre que os dados mudam
+  useEffect(() => {
+    if (pixKey.trim()) {
+      const code = generatePixEMV({
+        pixKey: pixKey.trim(),
+        merchantName: merchantName || 'iCamStore',
+        merchantCity: merchantCity || 'SAO PAULO',
+        amount: 100.00, // Valor de teste
+        txId: 'TESTE'
+      });
+      setTestCode(code);
+    } else {
+      setTestCode('');
+    }
+  }, [pixKey, merchantName, merchantCity]);
 
   const handleSave = async () => {
     if (!pixKey.trim()) {
@@ -42,11 +61,23 @@ export default function AdminPix() {
         whatsapp_threshold_enabled: whatsappThresholdEnabled,
         whatsapp_threshold_value: whatsappThresholdValue,
       });
-      toast.success('Configurações de pagamento salvas com sucesso!');
+      toast.success('Configurações salvas com sucesso!');
     } catch (error: any) {
       console.error('Erro ao salvar:', error);
-      toast.error(`Erro ao salvar: ${error.message || 'Verifique as permissões do banco de dados'}`);
+      // Mensagem amigável para erro de RLS
+      if (error.message?.includes('row-level security')) {
+        toast.error('Erro de permissão: Você precisa rodar o comando SQL no Supabase para liberar o acesso à tabela site_settings.');
+      } else {
+        toast.error(`Erro ao salvar: ${error.message}`);
+      }
     }
+  };
+
+  const copyTestCode = () => {
+    navigator.clipboard.writeText(testCode);
+    setCopied(true);
+    toast.success('Código de teste copiado!');
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (isLoading) {
@@ -62,7 +93,7 @@ export default function AdminPix() {
       <div>
         <h1 className="text-2xl font-bold">Configurações de Pagamento</h1>
         <p className="text-muted-foreground">
-          Gerencie como seus clientes pagam e como o suporte via WhatsApp é acionado.
+          Gerencie sua chave PIX e o limitador de suporte via WhatsApp.
         </p>
       </div>
 
@@ -75,7 +106,7 @@ export default function AdminPix() {
               Dados do Recebedor (PIX)
             </CardTitle>
             <CardDescription>
-              Esses dados são usados para gerar o código PIX "Copia e Cola" no checkout.
+              Configure a chave que receberá os pagamentos. Aceita E-mail, CPF, CNPJ ou Chave Aleatória.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -86,7 +117,7 @@ export default function AdminPix() {
                   id="pix_key"
                   value={pixKey}
                   onChange={(e) => setPixKey(e.target.value)}
-                  placeholder="CPF, CNPJ, E-mail ou Chave Aleatória"
+                  placeholder="Ex: seu-email@gmail.com ou 000.000.000-00"
                   className="mt-1"
                 />
               </div>
@@ -113,6 +144,20 @@ export default function AdminPix() {
                 />
               </div>
             </div>
+
+            {testCode && (
+              <div className="mt-4 p-4 bg-muted rounded-lg border border-dashed border-border">
+                <Label className="text-xs uppercase text-muted-foreground mb-2 block">Prévia do Código (Teste de R$ 100,00)</Label>
+                <div className="flex gap-2">
+                  <div className="bg-background p-2 rounded border text-[10px] font-mono break-all flex-1 max-h-16 overflow-y-auto">
+                    {testCode}
+                  </div>
+                  <Button size="icon" variant="outline" onClick={copyTestCode} className="shrink-0">
+                    {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -176,8 +221,12 @@ export default function AdminPix() {
             disabled={updateSettings.isPending}
             className="w-full sm:w-auto"
           >
-            <Save className="h-4 w-4 mr-2" />
-            {updateSettings.isPending ? 'Salvando...' : 'Salvar Configurações'}
+            {updateSettings.isPending ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Salvar Configurações
           </Button>
         </div>
       </div>
