@@ -21,13 +21,11 @@ import audioImg from '@/assets/categories/audio.png';
 import mochilasImg from '@/assets/categories/mochilas.png';
 import iluminacaoImg from '@/assets/categories/iluminacao.png';
 
-// Banner images - Desktop
+// Fallback images (local assets)
 import bannerLentesImg from '@/assets/banners/lentes-premium.png';
 import bannerAudioImg from '@/assets/banners/audio-premium.png';
 import bannerIluminacaoImg from '@/assets/banners/iluminacao-premium.png';
 import bannerUsadosImg from '@/assets/banners/usados-premium.png';
-
-// Banner images - Mobile
 import mobileCamera from '@/assets/banners/mobile-cameras.png';
 import mobileAudio from '@/assets/banners/mobile-audio.png';
 import mobileAudioPro from '@/assets/banners/mobile-audio-pro.png';
@@ -87,12 +85,17 @@ export default function HomePage() {
   const { data: allProducts, isLoading: productsLoading } = useProducts();
   const { data: reviews } = useReviews();
 
-  const displayBanners = dbBanners && dbBanners.length > 0 
+  // Use DB banners if available, otherwise use fallbacks
+  const hasDbBanners = dbBanners && dbBanners.length > 0;
+  
+  const desktopBanners = hasDbBanners 
     ? dbBanners.map(b => ({ src: b.image_url, alt: b.title || '', link: b.link || '#' }))
-    : null;
+    : fallbackBannersDesktop;
 
-  const desktopBanners = displayBanners || fallbackBannersDesktop;
-  const mobileBanners = displayBanners || fallbackBannersMobile;
+  const mobileBanners = hasDbBanners
+    ? dbBanners.map(b => ({ src: b.image_url, alt: b.title || '', link: b.link || '#' }))
+    : fallbackBannersMobile;
+
   const mobileSlideCount = mobileBanners.length;
 
   const onMobileSelect = useCallback(() => {

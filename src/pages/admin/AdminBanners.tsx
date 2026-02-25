@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from 'react';
-import { Plus, Pencil, Trash2, Upload, ImagePlus, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, ImagePlus, X, RefreshCw, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -24,6 +24,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+// Import assets for syncing
+import bannerLentes from '@/assets/banners/lentes-premium.png';
+import bannerAudio from '@/assets/banners/audio-premium.png';
+import bannerIluminacao from '@/assets/banners/iluminacao-premium.png';
+import bannerUsados from '@/assets/banners/usados-premium.png';
+import mobileCamera from '@/assets/banners/mobile-cameras.png';
+import mobileAudio from '@/assets/banners/mobile-audio.png';
+import mobileAudioPro from '@/assets/banners/mobile-audio-pro.png';
+import mobileTripe from '@/assets/banners/mobile-tripe.png';
+import mobileLentes from '@/assets/banners/mobile-lentes.png';
+import mobileMochilas from '@/assets/banners/mobile-mochilas.png';
+import mobileIluminacao from '@/assets/banners/mobile-iluminacao.png';
 
 type BannerFormData = {
   title: string;
@@ -57,7 +70,60 @@ export default function AdminBanners() {
   const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
   const [formData, setFormData] = useState<BannerFormData>(emptyBanner);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSyncWithSupabase = async () => {
+    setIsSyncing(true);
+    const toastId = toast.loading('Enviando imagens para o Supabase...');
+
+    try {
+      const defaultBanners = [
+        { src: bannerLentes, name: 'lentes-premium.png', title: 'Lentes Premium', link: '/categoria/lentes' },
+        { src: bannerAudio, name: 'audio-premium.png', title: 'Áudio Profissional', link: '/categoria/audio' },
+        { src: bannerIluminacao, name: 'iluminacao-premium.png', title: 'Iluminação', link: '/categoria/iluminacao' },
+        { src: bannerUsados, name: 'usados-premium.png', title: 'Equipamentos Seminovos', link: '/categoria/cameras-seminovas' },
+        { src: mobileCamera, name: 'mobile-cameras.png', title: 'Câmeras Mobile', link: '/categoria/cameras' },
+      ];
+
+      for (const item of defaultBanners) {
+        // Fetch the image and convert to blob
+        const response = await fetch(item.src);
+        const blob = await response.blob();
+        const fileName = `banners/${Date.now()}-${item.name}`;
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, blob);
+
+        if (uploadError) throw uploadError;
+
+        // Get Public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+
+        // Create Banner in DB
+        await createBanner.mutateAsync({
+          title: item.title,
+          subtitle: 'Ofertas Especiais',
+          image_url: publicUrl,
+          button_text: 'Ver Agora',
+          link: item.link,
+          active: true,
+          display_order: 0
+        });
+      }
+
+      toast.success('Imagens sincronizadas com sucesso!', { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao sincronizar imagens.', { id: toastId });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const openCreateDialog = () => {
     setSelectedBanner(null);
@@ -153,12 +219,26 @@ export default function AdminBanners() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Banners</h1>
-        <Button onClick={openCreateDialog}>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Banner
-        </Button>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Banners</h1>
+          <p className="text-sm text-muted-foreground">Gerencie os banners da página inicial</p>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleSyncWithSupabase} 
+            disabled={isSyncing}
+            className="border-primary text-primary hover:bg-primary/10"
+          >
+            {isSyncing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}
+            Sincronizar com Supabase
+          </Button>
+          <Button onClick={openCreateDialog}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Banner
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -213,11 +293,16 @@ export default function AdminBanners() {
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground mb-4">Nenhum banner cadastrado.</p>
-            <Button onClick={openCreateDialog}>
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar primeiro banner
-            </Button>
+            <p className="text-muted-foreground mb-4">Nenhum banner cadastrado no banco de dados.</p>
+            <div className="flex justify-center gap-4">
+              <Button variant="outline" onClick={handleSyncWithSupabase} disabled={isSyncing}>
+                Sincronizar Imagens Padrão
+              </Button>
+              <Button onClick={openCreateDialog}>
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Manualmente
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
