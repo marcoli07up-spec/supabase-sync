@@ -14,33 +14,12 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import Autoplay from 'embla-carousel-autoplay';
 
-// Category images
+// Category images (keeping these as assets for now as they are small)
 import camerasImg from '@/assets/categories/cameras.png';
 import lentesImg from '@/assets/categories/lentes.png';
 import audioImg from '@/assets/categories/audio.png';
 import mochilasImg from '@/assets/categories/mochilas.png';
 import iluminacaoImg from '@/assets/categories/iluminacao.png';
-
-// Banner images - Desktop
-import bannerLentesImg from '@/assets/banners/lentes-premium.png';
-import bannerAudioImg from '@/assets/banners/audio-premium.png';
-import bannerIluminacaoImg from '@/assets/banners/iluminacao-premium.png';
-import bannerUsadosImg from '@/assets/banners/usados-premium.png';
-
-// Banner images - Mobile
-import mobileCamera from '@/assets/banners/mobile-cameras.png';
-import mobileAudio from '@/assets/banners/mobile-audio.png';
-import mobileAudioPro from '@/assets/banners/mobile-audio-pro.png';
-import mobileTripe from '@/assets/banners/mobile-tripe.png';
-import mobileLentes from '@/assets/banners/mobile-lentes.png';
-import mobileMochilas from '@/assets/banners/mobile-mochilas.png';
-import mobileIluminacao from '@/assets/banners/mobile-iluminacao.png';
-
-// Promo images
-import freteGratisImg from '@/assets/promos/frete-gratis.png';
-import pixDescontoImg from '@/assets/promos/pix-desconto.png';
-import garantiaImg from '@/assets/promos/garantia.png';
-import pagamentoSeguroImg from '@/assets/promos/pagamento-seguro.png';
 
 const categoryImages: Record<string, string> = {
   cameras: camerasImg,
@@ -50,28 +29,29 @@ const categoryImages: Record<string, string> = {
   iluminacao: iluminacaoImg
 };
 
+// Static paths for banners and promos (served from /public)
 const fallbackBannersDesktop = [
-  { src: bannerLentesImg, alt: 'Lentes', link: '/categoria/lentes' },
-  { src: bannerAudioImg, alt: 'Áudio', link: '/categoria/audio' },
-  { src: bannerIluminacaoImg, alt: 'Iluminação', link: '/categoria/iluminacao' },
-  { src: bannerUsadosImg, alt: 'Usados', link: '/categoria/cameras-seminovas' },
+  { src: '/banners/lentes-premium.png', alt: 'Lentes', link: '/categoria/lentes' },
+  { src: '/banners/audio-premium.png', alt: 'Áudio', link: '/categoria/audio' },
+  { src: '/banners/iluminacao-premium.png', alt: 'Iluminação', link: '/categoria/iluminacao' },
+  { src: '/banners/usados-premium.png', alt: 'Usados', link: '/categoria/cameras-seminovas' },
 ];
 
 const fallbackBannersMobile = [
-  { src: mobileCamera, alt: 'Câmeras', link: '/categoria/cameras' },
-  { src: mobileAudio, alt: 'Áudio', link: '/categoria/audio' },
-  { src: mobileAudioPro, alt: 'Áudio Pro', link: '/categoria/audio' },
-  { src: mobileTripe, alt: 'Tripés', link: '/categoria/acessorios' },
-  { src: mobileLentes, alt: 'Lentes', link: '/categoria/lentes' },
-  { src: mobileMochilas, alt: 'Mochilas', link: '/categoria/mochilas' },
-  { src: mobileIluminacao, alt: 'Iluminação', link: '/categoria/iluminacao' },
+  { src: '/banners/mobile-cameras.png', alt: 'Câmeras', link: '/categoria/cameras' },
+  { src: '/banners/mobile-audio.png', alt: 'Áudio', link: '/categoria/audio' },
+  { src: '/banners/mobile-audio-pro.png', alt: 'Áudio Pro', link: '/categoria/audio' },
+  { src: '/banners/mobile-tripe.png', alt: 'Tripés', link: '/categoria/acessorios' },
+  { src: '/banners/mobile-lentes.png', alt: 'Lentes', link: '/categoria/lentes' },
+  { src: '/banners/mobile-mochilas.png', alt: 'Mochilas', link: '/categoria/mochilas' },
+  { src: '/banners/mobile-iluminacao.png', alt: 'Iluminação', link: '/categoria/iluminacao' },
 ];
 
 const promoImages = [
-  { src: freteGratisImg, alt: 'Frete Grátis' },
-  { src: pixDescontoImg, alt: 'Desconto no PIX' },
-  { src: garantiaImg, alt: '1 Ano de Garantia' },
-  { src: pagamentoSeguroImg, alt: 'Pagamento Seguro' }
+  { src: '/promos/frete-gratis.png', alt: 'Frete Grátis' },
+  { src: '/promos/pix-desconto.png', alt: 'Desconto no PIX' },
+  { src: '/promos/garantia.png', alt: '1 Ano de Garantia' },
+  { src: '/promos/pagamento-seguro.png', alt: 'Pagamento Seguro' }
 ];
 
 export default function HomePage() {
