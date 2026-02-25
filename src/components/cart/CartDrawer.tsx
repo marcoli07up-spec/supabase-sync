@@ -1,5 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingBag, Zap } from 'lucide-react';
+"use client";
+
+import { useNavigate } from 'react-router-dom';
+import { ShoppingBag, Zap, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -9,7 +11,6 @@ import {
 } from '@/components/ui/sheet';
 import { useCart } from '@/contexts/CartContext';
 import { CartItem } from './CartItem';
-import { CartUpsell } from './CartUpsell';
 import { formatCurrency } from '@/lib/format';
 
 export function CartDrawer() {
@@ -22,8 +23,8 @@ export function CartDrawer() {
   };
 
   const pixDiscount = 5;
-  const totalWithPixDiscount = getTotalWithDiscount(pixDiscount);
   const subtotal = getTotal();
+  const totalWithPixDiscount = getTotalWithDiscount(pixDiscount);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -55,34 +56,29 @@ export function CartDrawer() {
           </div>
         ) : (
           <>
-            {/* Cart items */}
             <div className="flex-1 overflow-y-auto py-4">
               {items.map((item) => (
                 <CartItem key={item.product.id} item={item} />
               ))}
             </div>
 
-            {/* Totals and checkout */}
             <div className="border-t border-border pt-4 space-y-4">
-              {/* Totals */}
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatCurrency(subtotal)}</span>
+                  <span className="text-muted-foreground">Valor no Cartão</span>
+                  <span className="font-medium">{formatCurrency(subtotal)}</span>
                 </div>
                 
-                {/* Free shipping highlight */}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Frete</span>
                   <span className="text-success font-bold">Grátis</span>
                 </div>
                 
-                {/* PIX Highlighted Discount */}
                 <div className="bg-primary/10 p-4 rounded-xl border border-primary/20">
                   <div className="flex justify-between items-center mb-1">
                     <div className="flex items-center gap-2">
                       <Zap className="h-4 w-4 text-primary fill-current" />
-                      <span className="text-xs font-bold text-primary uppercase tracking-wider">Total no PIX</span>
+                      <span className="text-xs font-bold text-primary uppercase tracking-wider">Valor no PIX</span>
                     </div>
                     <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full font-bold">5% OFF</span>
                   </div>
@@ -93,14 +89,8 @@ export function CartDrawer() {
                     <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency(subtotal * 0.05)}</p>
                   </div>
                 </div>
-
-                <div className="flex justify-between font-bold text-lg pt-1">
-                  <span className="text-muted-foreground text-sm">Total</span>
-                  <span>{formatCurrency(subtotal)}</span>
-                </div>
               </div>
 
-              {/* Checkout button */}
               <Button onClick={handleCheckout} className="w-full h-14 text-base font-bold" size="lg">
                 Finalizar Compra
                 <ArrowRight className="h-4 w-4 ml-2" />

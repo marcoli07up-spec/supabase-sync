@@ -1,3 +1,5 @@
+"use client";
+
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, RefreshCw, Shield, CreditCard, Star, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -5,7 +7,7 @@ import { Layout } from '@/components/layout';
 import { ProductGrid } from '@/components/products';
 import { useFeaturedProducts, useProducts } from '@/hooks/useProducts';
 import { useReviews } from '@/hooks/useReviews';
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext, type CarouselApi } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import Autoplay from 'embla-carousel-autoplay';
@@ -129,7 +131,6 @@ export default function HomePage() {
   }];
 
   return <Layout>
-      {/* Hero Banner Carousel - Mobile */}
       <section className="relative md:hidden">
         <Carousel 
           className="w-full"
@@ -148,7 +149,6 @@ export default function HomePage() {
               </CarouselItem>)}
           </CarouselContent>
           
-          {/* Mobile navigation arrows */}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -167,7 +167,6 @@ export default function HomePage() {
           </Button>
         </Carousel>
         
-        {/* Mobile progress bar */}
         <div className="px-4 py-2">
           <Progress value={((mobileCurrentIndex + 1) / mobileSlideCount) * 100} className="h-1" />
           <p className="text-xs text-muted-foreground text-center mt-1">
@@ -176,7 +175,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Hero Banner Carousel - Desktop */}
       <section className="relative hidden md:block">
         <Carousel 
           className="w-full"
@@ -193,12 +191,9 @@ export default function HomePage() {
                 </Link>
               </CarouselItem>)}
           </CarouselContent>
-          <CarouselPrevious className="left-4" />
-          <CarouselNext className="right-4" />
         </Carousel>
       </section>
 
-      {/* Benefits bar with promo images */}
       <section className="py-4 md:py-6">
         <div className="container-custom">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
@@ -209,7 +204,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products */}
       <section className="py-8 md:py-12">
         <div className="container-custom">
           <div className="flex items-center justify-between mb-6">
@@ -222,7 +216,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories with Images */}
       <section className="py-8 md:py-12 bg-background">
         <div className="container-custom">
           <h2 className="text-xl md:text-2xl font-bold mb-6 text-center">Navegue por Categoria</h2>
@@ -238,7 +231,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* All Products */}
       <section className="py-8 md:py-12">
         <div className="container-custom">
           <h2 className="text-xl md:text-2xl font-bold mb-6">Todos os Produtos</h2>
@@ -246,7 +238,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Reviews with Reclame Aqui Badge */}
       {reviews && reviews.length > 0 && <section className="py-8 md:py-12 bg-secondary">
           <div className="container-custom">
             <div className="text-center mb-6">
@@ -279,18 +270,9 @@ export default function HomePage() {
                   </div>
                 </div>)}
             </div>
-            <div className="text-center mt-6">
-              <a href="https://www.reclameaqui.com.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <img src="https://www.reclameaqui.com.br/dist/img/logo-reclame-aqui.svg" alt="Reclame Aqui" className="h-5" onError={e => {
-              e.currentTarget.style.display = 'none';
-            }} />
-                Ver todas as avaliações
-              </a>
-            </div>
           </div>
         </section>}
 
-      {/* About section */}
       <section className="py-8 md:py-12">
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto">

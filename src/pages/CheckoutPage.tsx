@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -318,7 +320,7 @@ export default function CheckoutPage() {
           `• ${item.product.name} (x${item.quantity}) - ${formatCurrency(item.product.price * item.quantity)}`
         ).join('\n');
         const message = encodeURIComponent(
-          `🛒 *PEDIDO - iCamStore*\n\n` +
+          `🛒 *PEDIDO - Câmeras Prime*\n\n` +
           `*Cliente:* ${data.customer_name}\n` +
           `*CPF:* ${data.customer_cpf}\n` +
           `*Telefone:* ${data.customer_phone}\n` +
@@ -455,7 +457,6 @@ export default function CheckoutPage() {
 
   const cartProductIds = items.map(item => item.product.id);
 
-  // Reusable Order Summary Component for the flow
   const OrderSummaryFlow = () => (
     <div className="bg-card p-4 md:p-6 rounded-xl border border-border">
       <h2 className="font-semibold mb-4 text-lg">Resumo do Pedido</h2>
@@ -476,7 +477,6 @@ export default function CheckoutPage() {
         ))}
       </div>
 
-      {/* Shipping Options */}
       <div className="border-t border-border pt-4 mb-4">
         <h3 className="font-semibold text-sm mb-3">Opções de Frete</h3>
         
@@ -527,43 +527,31 @@ export default function CheckoutPage() {
 
       <div className="space-y-4 pt-4 border-t border-border">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Subtotal</span>
-          <span>{formatCurrency(subtotal)}</span>
+          <span className="text-muted-foreground">Valor no Cartão</span>
+          <span className="font-medium">{formatCurrency(subtotal)}</span>
         </div>
         
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Frete</span>
-          <span className={shippingOption === 'free' ? 'text-success font-bold' : ''}>
+          <span className={shippingOption === 'free' ? 'text-success font-bold' : 'font-medium'}>
             {shippingOption === 'free' ? 'Grátis' : formatCurrency(shippingCost)}
           </span>
         </div>
         
-        {/* PIX Highlighted Discount */}
-        {paymentMethod === 'pix' && (
-          <div className="bg-primary/10 p-4 rounded-xl border border-primary/20">
-            <div className="flex justify-between items-center mb-1">
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-primary fill-current" />
-                <span className="text-xs font-bold text-primary uppercase tracking-wider">Total no PIX</span>
-              </div>
-              <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full font-bold">5% OFF</span>
+        <div className="bg-primary/10 p-4 rounded-xl border border-primary/20">
+          <div className="flex justify-between items-center mb-1">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary fill-current" />
+              <span className="text-xs font-bold text-primary uppercase tracking-wider">Valor no PIX</span>
             </div>
-            <div className="flex justify-between items-end">
-              <p className="text-2xl font-black text-primary leading-none">
-                {formatCurrency(getTotalWithDiscount(5, shippingOption === 'express' ? shippingCost : 0))}
-              </p>
-              <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency((subtotal + (shippingOption === 'express' ? shippingCost : 0)) * 0.05)}</p>
-            </div>
+            <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full font-bold">5% OFF</span>
           </div>
-        )}
-
-        <div className="flex justify-between items-center pt-2">
-          <span className="font-bold text-sm text-muted-foreground">Total</span>
-          <span className="font-bold text-lg">
-            {paymentMethod === 'pix' 
-              ? formatCurrency(getTotalWithDiscount(5, shippingOption === 'express' ? shippingCost : 0)) 
-              : formatCurrency(totalWithShipping)}
-          </span>
+          <div className="flex justify-between items-end">
+            <p className="text-2xl font-black text-primary leading-none">
+              {formatCurrency(getTotalWithDiscount(5, shippingOption === 'express' ? shippingCost : 0))}
+            </p>
+            <p className="text-[10px] text-success font-bold uppercase">Economize {formatCurrency((subtotal + (shippingOption === 'express' ? shippingCost : 0)) * 0.05)}</p>
+          </div>
         </div>
       </div>
     </div>
