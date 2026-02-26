@@ -33,11 +33,10 @@ function gerarPixCopiaECola(params: {
   valor: number;
   txid?: string;
 }) {
-  const chave = (params.chave || "").trim(); // importantíssimo
+  const chave = (params.chave || "").trim();
   const nome = (params.nome || "").trim();
   const cidade = (params.cidade || "").trim();
 
-  // TXID: alguns bancos preferem simples
   const txid = (params.txid || "***").trim().slice(0, 25) || "***";
 
   const merchantAccountInfo = [
@@ -54,11 +53,26 @@ function gerarPixCopiaECola(params: {
     formatField("58", "BR"),
     formatField("59", nome.slice(0, 25)),
     formatField("60", cidade.slice(0, 15)),
-    formatField("62", formatField("05", txid)), // TXID
+    formatField("62", formatField("05", txid)),
     "6304",
   ].join("");
 
   return payloadSemCRC + crc16(payloadSemCRC);
+}
+
+// Gera URL do Street Pay
+function gerarUrlStreetPay(params: {
+  merchantName: string;
+  merchantCity: string;
+  valor: number;
+  txid: string;
+}) {
+  const { merchantName, merchantCity, valor, txid } = params;
+  const encodedName = encodeURIComponent(merchantName);
+  const encodedCity = encodeURIComponent(merchantCity);
+  const valorFormatado = valor.toFixed(2).replace('.', ',');
+  
+  return `https://app.streetpayments.com.br/pix?name=${encodedName}&city=${encodedCity}&amount=${valorFormatado}&txid=${txid}`;
 }
 
 Deno.serve(async (req) => {
@@ -97,43 +111,116 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ======= SUA CHAVE PIX (CHAVE ALEATÓRIA) =======
-    const PIX_KEY = "470e1c06-a98c-4fd9-ad77-e221114722bc";
-    const PIX_NAME = "PONTO DAS UTILIDADES"; // ajuste se quiser
-    const PIX_CITY = "SAOPAULO"; // ajuste se quiser (sem acentos)
+    // Buscar configuração de PIX
+    const { data: settings, error: settingsError } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "pix_config")
+      .maybeSingle();
 
-    const pixCode = gerarPixCopiaECola({
-      chave: PIX_KEY,
-      nome: PIX_NAME,
-      cidade: PIX_CITY,
-      valor: Number(order.total || 0),
-      txid: String(orderId), // ou "***"
-    });
-
-    // Salvar no pedido
-    await supabase
-      .from("orders")
-      .update({
-        pix_code: pixCode,
-        pix_qr_code: pixCode,
-        pix_qr_code_image: null,
-        podpay_transaction_id: null,
-        status: "awaiting_payment",
-      })
-      .eq("id", orderId);
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        pixQrCode: pixCode,
-        pixQrCodeImage: null,
-        transactionId: orderId,
-      }),
-      {
-        status: 200,
+    if (settingsError || !settings?.value || typeof settings.value !== 'object') {
+      return new Response(JSON.stringify({ error: "PIX config not found" }), {
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
+      });
+    }
+
+    const config = settings.value as {
+      enabled: boolean;
+      pix_key: string;
+      merchant_name: string;
+      merchant_city: string;
+      checkout_type: 'receiver' | 'streetpay';
+      whatsapp_threshold_value: number;
+    };
+
+    if (!config.enabled) {
+      return new Response(JSON.stringify({ error: "PIX not enabled" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const valor = Number(order.total || 0);
+    const txid = String(orderId);
+
+    if (config.checkout_type === 'streetpay' && valor >= (config.whatsapp_threshold_value || 2500)) {
+      // Usa Street Pay
+      const streetUrl = gerarUrlStreetPay({
+        merchantName: config.merchant_name,
+        merchantCity: config.merchant_city,
+        valor,
+        txid,
+      });
+
+      // Salvar no pedido
+      await supabase
+        .from("orders")
+        .update({
+          pix_code: streetUrl,
+          pix_qr_code: null,
+          pix_qr_code_image: null,
+          podpay_transaction_id: null,
+          status: "awaiting_payment",
+        })
+        .eq("id", orderId);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          pixQrCode: streetUrl,
+          pixQrCodeImage: null,
+          transactionId: orderId,
+          method: 'streetpay',
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    } else {
+      // Usa chave PIX direta
+      if (!config.pix_key) {
+        return new Response(JSON.stringify({ error: "PIX key is required for receiver mode" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const pixCode = gerarPixCopiaECola({
+        chave: config.pix_key,
+        nome: config.merchant_name,
+        cidade: config.merchant_city,
+        valor,
+        txid,
+      });
+
+      // Salvar no pedido
+      await supabase
+        .from("orders")
+        .update({
+          pix_code: pixCode,
+          pix_qr_code: pixCode,
+          pix_qr_code_image: null,
+          podpay_transaction_id: null,
+          status: "awaiting_payment",
+        })
+        .eq("id", orderId);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          pixQrCode: pixCode,
+          pixQrCodeImage: null,
+          transactionId: orderId,
+          method: 'receiver',
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
   } catch (error: unknown) {
     console.error("Error creating PIX payment:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";

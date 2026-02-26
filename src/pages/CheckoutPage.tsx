@@ -220,11 +220,10 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Check for WhatsApp threshold
-      const thresholdEnabled = pixSettings?.whatsapp_threshold_enabled ?? true;
-      const thresholdValue = pixSettings?.whatsapp_threshold_value ?? 2500;
+      // Verifica se deve usar Street Pay
+      const useStreetPay = pixSettings?.checkout_type === 'streetpay' && subtotal >= (pixSettings.whatsapp_threshold_value || 2500);
 
-      if (thresholdEnabled && subtotal >= thresholdValue) {
+      if (useStreetPay) {
         const orderResult = await createOrder.mutateAsync({ formData: data, cartItems: items, total });
         trackPurchase(purchaseData);
         
