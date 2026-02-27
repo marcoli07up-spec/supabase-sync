@@ -60,7 +60,7 @@ export function FloatingButtons() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-white font-semibold text-sm">iCam Cameras</p>
+                    <p className="text-white font-semibold text-sm">Câmeras Prime</p>
                     <p className="text-white/80 text-xs">Online agora</p>
                   </div>
                 </div>
