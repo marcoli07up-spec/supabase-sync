@@ -9,7 +9,7 @@ export interface WhatsAppSettings {
 
 const DEFAULT_SETTINGS: WhatsAppSettings = {
   enabled: false,
-  phone: '554431011011',
+  phone: '556699220280',
 };
 
 export function useWhatsAppSettings() {
