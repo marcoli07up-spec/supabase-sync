@@ -55,11 +55,11 @@ export default function AdminWhatsApp() {
             id="phone"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="5544999999999"
+            placeholder="556699220280"
             className="mt-1"
           />
           <p className="text-xs text-muted-foreground mt-1">
-            Formato: código do país + DDD + número (ex: 5544999999999)
+            Formato: código do país + DDD + número (ex: 556699220280)
           </p>
         </div>
 
